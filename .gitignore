@@ -38,9 +38,9 @@ tweetcache/
 twitter_cookies.json
 timeline_cache.json
 
-*.sqlite
+# *.sqlite
 
-characters/
+# characters/
 
 packages/core/src/providers/cache
 packages/core/src/providers/cache/*
