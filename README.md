@@ -1,7 +1,7 @@
 # nounspace Tom 🤖
 
 <div align="center">
-  <img src="./docs/static/img/tom_banner.png" alt="Tom Banner" width="30%" />
+  <img src="./docs/static/img/you-are-a-partner-now.png" alt="Tom Banner" width="30%" />
 </div>
 
 <div align="center">
