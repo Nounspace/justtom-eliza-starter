@@ -11,8 +11,8 @@ import { SlackClientInterface } from "@elizaos/client-slack";
 import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 // import { ReclaimAdapter } from "@elizaos/plugin-reclaim";
-import { DirectClient } from "@elizaos/client-direct";
-import { PrimusAdapter } from "@elizaos/plugin-primus";
+// import { DirectClient } from "@elizaos/client-direct";
+// import { PrimusAdapter } from "@elizaos/plugin-primus";
 
 import {
     AgentRuntime,
@@ -42,9 +42,9 @@ import createGoatPlugin from "@elizaos/plugin-goat";
 import { DirectClient } from "@elizaos/client-direct";
 import { ThreeDGenerationPlugin } from "@elizaos/plugin-3d-generation";
 import { abstractPlugin } from "@elizaos/plugin-abstract";
-import { alloraPlugin } from "@elizaos/plugin-allora";
+// import { alloraPlugin } from "@elizaos/plugin-allora";
 import { aptosPlugin } from "@elizaos/plugin-aptos";
-import { artheraPlugin } from "@elizaos/plugin-arthera";
+// import { artheraPlugin } from "@elizaos/plugin-arthera";
 import { availPlugin } from "@elizaos/plugin-avail";
 import { avalanchePlugin } from "@elizaos/plugin-avalanche";
 import { binancePlugin } from "@elizaos/plugin-binance";
@@ -56,7 +56,7 @@ import {
     tradePlugin,
     webhookPlugin,
 } from "@elizaos/plugin-coinbase";
-import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
+// import { coinmarketcapPlugin } from "@elizaos/plugin-coinmarketcap";
 import { coingeckoPlugin } from "@elizaos/plugin-coingecko";
 import { confluxPlugin } from "@elizaos/plugin-conflux";
 import { createCosmosPlugin } from "@elizaos/plugin-cosmos";
@@ -69,18 +69,18 @@ import { genLayerPlugin } from "@elizaos/plugin-genlayer";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { lensPlugin } from "@elizaos/plugin-lensNetwork";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
-import { nearPlugin } from "@elizaos/plugin-near";
+// import { nearPlugin } from "@elizaos/plugin-near";
 import { nftGenerationPlugin } from "@elizaos/plugin-nft-generation";
 import { createNodePlugin } from "@elizaos/plugin-node";
 import { obsidianPlugin } from "@elizaos/plugin-obsidian";
 import { sgxPlugin } from "@elizaos/plugin-sgx";
-import { solanaPlugin } from "@elizaos/plugin-solana";
-import { solanaAgentkitPlguin } from "@elizaos/plugin-solana-agentkit";
+// import { solanaPlugin } from "@elizaos/plugin-solana";
+// import { solanaAgentkitPlguin } from "@elizaos/plugin-solana-agentkit";
 import { autonomePlugin } from "@elizaos/plugin-autonome";
 import { storyPlugin } from "@elizaos/plugin-story";
 import { suiPlugin } from "@elizaos/plugin-sui";
 import { TEEMode, teePlugin } from "@elizaos/plugin-tee";
-import { teeLogPlugin } from "@elizaos/plugin-tee-log";
+// import { teeLogPlugin } from "@elizaos/plugin-tee-log";
 import { teeMarlinPlugin } from "@elizaos/plugin-tee-marlin";
 import { tonPlugin } from "@elizaos/plugin-ton";
 import { webSearchPlugin } from "@elizaos/plugin-web-search";
@@ -88,13 +88,13 @@ import { webSearchPlugin } from "@elizaos/plugin-web-search";
 import { giphyPlugin } from "@elizaos/plugin-giphy";
 import { letzAIPlugin } from "@elizaos/plugin-letzai";
 import { thirdwebPlugin } from "@elizaos/plugin-thirdweb";
-import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
-import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
+// import { hyperliquidPlugin } from "@elizaos/plugin-hyperliquid";
+// import { zksyncEraPlugin } from "@elizaos/plugin-zksync-era";
 
 import { OpacityAdapter } from "@elizaos/plugin-opacity";
 import { openWeatherPlugin } from "@elizaos/plugin-open-weather";
-import { stargazePlugin } from "@elizaos/plugin-stargaze";
-import { akashPlugin } from "@elizaos/plugin-akash";
+// import { stargazePlugin } from "@elizaos/plugin-stargaze";
+// import { akashPlugin } from "@elizaos/plugin-akash";
 import { quaiPlugin } from "@elizaos/plugin-quai";
 import Database from "better-sqlite3";
 import fs from "fs";
@@ -102,7 +102,7 @@ import net from "net";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
-import {dominosPlugin} from "@elizaos/plugin-dominos";
+// import {dominosPlugin} from "@elizaos/plugin-dominos";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -690,14 +690,14 @@ export async function createAgent(
         process.env.PRIMUS_APP_ID &&
         process.env.PRIMUS_APP_SECRET &&
         process.env.VERIFIABLE_INFERENCE_ENABLED === "true"){
-        verifiableInferenceAdapter = new PrimusAdapter({
-            appId: process.env.PRIMUS_APP_ID,
-            appSecret: process.env.PRIMUS_APP_SECRET,
-            attMode: "proxytls",
-            modelProvider: character.modelProvider,
-            token,
-        });
-        elizaLogger.log("Verifiable inference primus adapter initialized");
+        // verifiableInferenceAdapter = new PrimusAdapter({
+        //     appId: process.env.PRIMUS_APP_ID,
+        //     appSecret: process.env.PRIMUS_APP_SECRET,
+        //     attMode: "proxytls",
+        //     modelProvider: character.modelProvider,
+        //     token,
+        // });
+        // elizaLogger.log("Verifiable inference primus adapter initialized");
     }
 
     return new AgentRuntime({
@@ -714,20 +714,20 @@ export async function createAgent(
                 : null,
             nodePlugin,
             getSecret(character, "TAVILY_API_KEY") ? webSearchPlugin : null,
-            getSecret(character, "SOLANA_PUBLIC_KEY") ||
-            (getSecret(character, "WALLET_PUBLIC_KEY") &&
-                !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
-                ? solanaPlugin
-                : null,
-            getSecret(character, "SOLANA_PRIVATE_KEY")
-                ? solanaAgentkitPlguin
-                : null,
+            // getSecret(character, "SOLANA_PUBLIC_KEY") ||
+            // (getSecret(character, "WALLET_PUBLIC_KEY") &&
+            //     !getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
+            //     ? solanaPlugin
+            //     : null,
+            // getSecret(character, "SOLANA_PRIVATE_KEY")
+            //     ? solanaAgentkitPlguin
+            //     : null,
             getSecret(character, "AUTONOME_JWT_TOKEN") ? autonomePlugin : null,
-            (getSecret(character, "NEAR_ADDRESS") ||
-                getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
-            getSecret(character, "NEAR_WALLET_SECRET_KEY")
-                ? nearPlugin
-                : null,
+            // (getSecret(character, "NEAR_ADDRESS") ||
+            //     getSecret(character, "NEAR_WALLET_PUBLIC_KEY")) &&
+            // getSecret(character, "NEAR_WALLET_SECRET_KEY")
+            //     ? nearPlugin
+            //     : null,
             getSecret(character, "EVM_PUBLIC_KEY") ||
             (getSecret(character, "WALLET_PUBLIC_KEY") &&
                 getSecret(character, "WALLET_PUBLIC_KEY")?.startsWith("0x"))
@@ -806,7 +806,7 @@ export async function createAgent(
                 : null,
             getSecret(character, "APTOS_PRIVATE_KEY") ? aptosPlugin : null,
             getSecret(character, "MVX_PRIVATE_KEY") ? multiversxPlugin : null,
-            getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
+            // getSecret(character, "ZKSYNC_PRIVATE_KEY") ? zksyncEraPlugin : null,
             getSecret(character, "CRONOSZKEVM_PRIVATE_KEY")
                 ? cronosZkEVMPlugin
                 : null,
@@ -824,7 +824,7 @@ export async function createAgent(
                 ? echoChambersPlugin
                 : null,
             getSecret(character, "LETZAI_API_KEY") ? letzAIPlugin : null,
-            getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
+            // getSecret(character, "STARGAZE_ENDPOINT") ? stargazePlugin : null,
             getSecret(character, "GIPHY_API_KEY") ? giphyPlugin : null,
             getSecret(character, "GENLAYER_PRIVATE_KEY")
                 ? genLayerPlugin
@@ -841,16 +841,16 @@ export async function createAgent(
                 ? artheraPlugin
                 : null,
             getSecret(character, "ALLORA_API_KEY") ? alloraPlugin : null,
-            getSecret(character, "HYPERLIQUID_PRIVATE_KEY")
-                ? hyperliquidPlugin
-                : null,
-            getSecret(character, "HYPERLIQUID_TESTNET")
-                ? hyperliquidPlugin
-                : null,
+            // getSecret(character, "HYPERLIQUID_PRIVATE_KEY")
+            //     ? hyperliquidPlugin
+            //     : null,
+            // getSecret(character, "HYPERLIQUID_TESTNET")
+            //     ? hyperliquidPlugin
+            //     : null,
             getSecret(character, "AKASH_MNEMONIC") &&
-            getSecret(character, "AKASH_WALLET_ADDRESS")
-                ? akashPlugin
-                : null,
+            // getSecret(character, "AKASH_WALLET_ADDRESS")
+            //     ? akashPlugin
+            //     : null,
             getSecret(character, "QUAI_PRIVATE_KEY")
                 ? quaiPlugin
                 : null,
