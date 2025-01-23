@@ -747,9 +747,9 @@ export async function createAgent(
                 ? nftGenerationPlugin
                 : null,
             getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
-            getSecret(character, "COINMARKETCAP_API_KEY")
-                ? coinmarketcapPlugin
-                : null,
+            // getSecret(character, "COINMARKETCAP_API_KEY")
+            //     ? coinmarketcapPlugin
+            //     : null,
             getSecret(character, "COINBASE_COMMERCE_KEY")
                 ? coinbaseCommercePlugin
                 : null,
@@ -773,11 +773,11 @@ export async function createAgent(
                 : []),
             ...(teeMode !== TEEMode.OFF && walletSecretSalt ? [teePlugin] : []),
             getSecret(character, "SGX") ? sgxPlugin : null,
-            getSecret(character, "ENABLE_TEE_LOG") &&
-            ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
-                getSecret(character, "SGX"))
-                ? teeLogPlugin
-                : null,
+            // getSecret(character, "ENABLE_TEE_LOG") &&
+            // ((teeMode !== TEEMode.OFF && walletSecretSalt) ||
+            //     getSecret(character, "SGX"))
+            //     ? teeLogPlugin
+            //     : null,
             getSecret(character, "COINBASE_API_KEY") &&
             getSecret(character, "COINBASE_PRIVATE_KEY") &&
             getSecret(character, "COINBASE_NOTIFICATION_URI")
@@ -837,10 +837,10 @@ export async function createAgent(
                 ? openWeatherPlugin
                 : null,
             getSecret(character, "OBSIDIAN_API_TOKEN") ? obsidianPlugin : null,
-            getSecret(character, "ARTHERA_PRIVATE_KEY")?.startsWith("0x")
-                ? artheraPlugin
-                : null,
-            getSecret(character, "ALLORA_API_KEY") ? alloraPlugin : null,
+            // getSecret(character, "ARTHERA_PRIVATE_KEY")?.startsWith("0x")
+            //     ? artheraPlugin
+            //     : null,
+            // getSecret(character, "ALLORA_API_KEY") ? alloraPlugin : null,
             // getSecret(character, "HYPERLIQUID_PRIVATE_KEY")
             //     ? hyperliquidPlugin
             //     : null,
