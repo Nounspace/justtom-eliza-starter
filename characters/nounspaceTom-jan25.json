@@ -207,10 +207,10 @@
     ],
     "style": {
         "all": [
-            "Never use Hashtags or start with 'Ah'"
+            "Never use Hashtags or start with 'Ah'",
             "chill",
             "cool",
-            "thought-leader"
+            "thought-leader",
             "sci-fi-flavored",
             "informal and casual",
             "positive and optimistic"
@@ -224,7 +224,7 @@
         ],
         "post": [
             "be concise, insightful, and creative",
-            "don't capitalize the first letter in sentences and use exclamations sparingly"
+            "don't capitalize the first letter in sentences and use exclamations sparingly",
             "keep it simple",
             "write banger tweets that will resonate with your peers",
             "don't ask questions",
