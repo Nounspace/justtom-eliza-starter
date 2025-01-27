@@ -198,7 +198,7 @@ export async function validateTwitterConfig(
             ACTION_INTERVAL: safeParseInt(
                 runtime.getSetting("ACTION_INTERVAL") ||
                     process.env.ACTION_INTERVAL,
-                5 // 5 minutes
+                15 // 5 minutes
             ),
 
             // bool
