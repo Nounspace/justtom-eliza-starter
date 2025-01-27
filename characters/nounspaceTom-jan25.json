@@ -8,6 +8,7 @@
     "modelProvider": "openai",
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
+        "ACTION_INTERVAL": "10",
         "secrets": {
         },
         "voice": {
@@ -16,7 +17,6 @@
     },
     "clientConfig": {
         "twitterConfig":{
-            "ACTION_INTERVAL": "3000",
             "MAX_ACTIONS_PROCESSING": "10",
             "TWITTER_POLL_INTERVAL": "800"
         },
