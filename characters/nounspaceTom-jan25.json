@@ -8,15 +8,18 @@
     "modelProvider": "openai",
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
-        "ACTION_INTERVAL": "10",
+        "ACTION_INTERVAL": "14",
+
         "secrets": {
         },
+
         "voice": {
             "model": "en_US-ryan-low"
         }
     },
     "clientConfig": {
-        "twitterConfig":{
+        "twitterConfig": {
+            "ACTION_INTERVAL": "15",
             "MAX_ACTIONS_PROCESSING": "10",
             "TWITTER_POLL_INTERVAL": "800"
         },
