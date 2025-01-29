@@ -8,7 +8,7 @@
     "modelProvider": "venice",
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
-        "ACTION_INTERVAL": "14",
+        "ACTION_INTERVAL": "7",
 
         "secrets": {
         },
@@ -21,7 +21,7 @@
         "twitterConfig": {
             "ACTION_INTERVAL": "15",
             "MAX_ACTIONS_PROCESSING": "10",
-            "TWITTER_POLL_INTERVAL": "800"
+            "TWITTER_POLL_INTERVAL": "420"
         },
         "discord":{
             "autoPost": {
