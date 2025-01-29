@@ -960,7 +960,11 @@ export async function generateText({
                     maxTokens: max_response_length,
                 });
 
-                response = veniceResponse;
+                //rferrari remove all text from <think> to </think>\n\n
+                response = veniceResponse
+                    .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, '');
+
+                // response = veniceResponse;
                 elizaLogger.debug("Received response from Venice model.");
                 break;
             }
@@ -991,7 +995,11 @@ export async function generateText({
                     experimental_telemetry: experimental_telemetry,
                 });
 
-                response = deepseekResponse;
+                //rferrari remove all text from <think> to </think>\n\n
+                response = deepseekResponse
+                    // .replace(/<think>[\s\S]*?<\/think>/g, '')
+                    .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, '');
+
                 elizaLogger.debug("Received response from Deepseek model.");
                 break;
             }
