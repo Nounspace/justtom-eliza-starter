@@ -198,8 +198,8 @@ export const parseActionResponseFromText = (
     for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed === "[LIKE]") actions.like = true;
-        if (trimmed === "[RETWEET]") actions.retweet = true;
-        if (trimmed === "[QUOTE]") actions.quote = true;
+        if (trimmed === "[RETWEET]") actions.like = true;
+        if (trimmed === "[QUOTE]") actions.like = true;
         if (trimmed === "[REPLY]") actions.reply = true;
     }
 
