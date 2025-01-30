@@ -193,6 +193,7 @@ export const parseActionResponseFromText = (
     // actions.retweet = retweetPattern.test(text);
     // actions.quote = quotePattern.test(text);
     actions.reply = replyPattern.test(text);
+if(actions.reply)
     actions.like = replyPattern.test(text);
 
     // Also do line by line parsing as backup
