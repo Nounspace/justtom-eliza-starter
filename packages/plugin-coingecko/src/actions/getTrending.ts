@@ -1,14 +1,14 @@
 import {
-    ActionExample,
+    type ActionExample,
     composeContext,
-    Content,
+    type Content,
     elizaLogger,
     generateObject,
-    HandlerCallback,
-    IAgentRuntime,
-    Memory,
+    type HandlerCallback,
+    type IAgentRuntime,
+    type Memory,
     ModelClass,
-    State,
+    type State,
     type Action
 } from "@elizaos/core";
 import axios from "axios";
@@ -74,6 +74,7 @@ export default {
         "POPULAR_COINS",
         "TRENDING_SEARCH",
     ],
+    // eslint-disable-next-line
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         await validateCoingeckoConfig(runtime);
         return true;

@@ -1,4 +1,4 @@
-import { IAgentRuntime, elizaLogger } from "@elizaos/core";
+import { type IAgentRuntime, elizaLogger } from "@elizaos/core";
 
 export async function validateEchoChamberConfig(
     runtime: IAgentRuntime
@@ -23,7 +23,7 @@ export async function validateEchoChamberConfig(
     // Validate API URL format
     try {
         new URL(apiUrl);
-    } catch (error) {
+    } catch {
         elizaLogger.error(
             `Invalid ECHOCHAMBERS_API_URL format: ${apiUrl}. Please provide a valid URL.`
         );
@@ -34,8 +34,9 @@ export async function validateEchoChamberConfig(
     const username =
         runtime.getSetting("ECHOCHAMBERS_USERNAME") ||
         `agent-${runtime.agentId}`;
-    const defaultRoom =
-        runtime.getSetting("ECHOCHAMBERS_DEFAULT_ROOM") || "general";
+    // Change from DEFAULT_ROOM to ROOMS
+    const rooms = runtime.getSetting("ECHOCHAMBERS_ROOMS")?.split(",").map(r => r.trim()) || ["general"];
+
     const pollInterval = Number(
         runtime.getSetting("ECHOCHAMBERS_POLL_INTERVAL") || 120
     );
@@ -50,6 +51,6 @@ export async function validateEchoChamberConfig(
     elizaLogger.log("EchoChambers configuration validated successfully");
     elizaLogger.log(`API URL: ${apiUrl}`);
     elizaLogger.log(`Username: ${username}`);
-    elizaLogger.log(`Default Room: ${defaultRoom}`);
+    elizaLogger.log(`Watching Rooms: ${rooms.join(", ")}`);
     elizaLogger.log(`Poll Interval: ${pollInterval}s`);
 }
