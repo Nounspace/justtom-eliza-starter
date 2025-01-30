@@ -169,7 +169,7 @@ export function parseJSONObjectFromText(
     }
 }
 
-export const postActionResponseFooter = `Choose any combination of [LIKE], [RETWEET], [QUOTE], and [REPLY] that are appropriate. Each action must be on its own line. Your response must only include the chosen actions.`;
+export const postActionResponseFooter = `Choose any combination of [LIKE] and/or [REPLY] that are appropriate. Each action must be on its own line. Your response must only include the chosen actions.`;
 
 export const parseActionResponseFromText = (
     text: string
@@ -189,8 +189,8 @@ export const parseActionResponseFromText = (
 
     // Check with regex
     actions.like = likePattern.test(text);
-    actions.retweet = retweetPattern.test(text);
-    actions.quote = quotePattern.test(text);
+    // actions.retweet = retweetPattern.test(text);
+    // actions.quote = quotePattern.test(text);
     actions.reply = replyPattern.test(text);
 
     // Also do line by line parsing as backup
@@ -198,8 +198,8 @@ export const parseActionResponseFromText = (
     for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed === "[LIKE]") actions.like = true;
-        if (trimmed === "[RETWEET]") actions.like = true;
-        if (trimmed === "[QUOTE]") actions.like = true;
+        // if (trimmed === "[RETWEET]") actions.retweet = true;
+        // if (trimmed === "[QUOTE]") actions.quote = true;
         if (trimmed === "[REPLY]") actions.reply = true;
     }
 

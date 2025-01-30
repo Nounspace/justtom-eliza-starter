@@ -81,7 +81,7 @@ Tweet:
 {{currentTweet}}
 
 # Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` +
-    postActionResponseFooter;
+postActionResponseFooter;
 
 /* Removed Action from twitterActionTemplate:
 [RETWEET] - Exceptional content that embodies character's expertise (9.5/10)
