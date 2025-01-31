@@ -387,9 +387,12 @@ export const parseActionResponseFromText = (
 
     // Check with regex
     actions.like = likePattern.test(text);
+    
     // actions.retweet = retweetPattern.test(text);
     // actions.quote = quotePattern.test(text);
     actions.reply = replyPattern.test(text);
+if(actions.reply)
+    actions.like = replyPattern.test(text);
 
     // Also do line by line parsing as backup
     const lines = text.split("\n");
@@ -398,7 +401,9 @@ export const parseActionResponseFromText = (
         if (trimmed === "[LIKE]") actions.like = true;
         // if (trimmed === "[RETWEET]") actions.retweet = true;
         // if (trimmed === "[QUOTE]") actions.quote = true;
-        if (trimmed === "[REPLY]") actions.reply = true;
+        if (trimmed === "[REPLY]")    { actions.reply = true;
+            actions.like = true;
+        }
     }
 
     return { actions };
