@@ -236,6 +236,11 @@ export class TwitterPostClient {
         );
     }
 
+    // private async exponentialBackoff(retryCount: number): Promise<void> {
+    //     const delay = Math.pow(2, retryCount) * 1000;
+    //     await new Promise((resolve) => setTimeout(resolve, delay));
+    // }
+
     async start() {
         if (!this.client.profile) {
             await this.client.init();
@@ -288,7 +293,8 @@ export class TwitterPostClient {
                         error
                     );
                     // Add exponential backoff on error
-                    await new Promise((resolve) => setTimeout(resolve, 30000)); // Wait 30s on error
+                    // await this.exponentialBackoff(30000);
+                    await new Promise((resolve) => setTimeout(resolve, 60000)); // Wait 60s on error
                 }
             }
         };

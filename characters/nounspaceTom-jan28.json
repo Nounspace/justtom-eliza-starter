@@ -10,19 +10,14 @@
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
         "ACTION_INTERVAL": "7",
-
-        "secrets": {
-        },
-
+        "secrets": {},
         "voice": {
             "model": "en_US-ryan-low"
         }
     },
     "clientConfig": {
         "twitterConfig": {
-            "ACTION_INTERVAL": "15",
-            "MAX_ACTIONS_PROCESSING": "10",
-            "TWITTER_POLL_INTERVAL": "420"
+            "MAX_ACTIONS_PROCESSING": "10"
         },
         "discord":{
             "autoPost": {
