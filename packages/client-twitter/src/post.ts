@@ -544,7 +544,7 @@ export class TwitterPostClient {
             const response = await generateText({
                 runtime: this.runtime,
                 context,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
             });
 
             const rawTweetContent = cleanJsonResponse(response);
