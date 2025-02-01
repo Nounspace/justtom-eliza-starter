@@ -13,7 +13,7 @@ import { TelegramClientInterface } from "@elizaos/client-telegram";
 import { TelegramAccountClientInterface } from "@elizaos/client-telegram-account";
 import { TwitterClientInterface } from "@elizaos/client-twitter";
 import { AlexaClientInterface } from "@elizaos/client-alexa";
-import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
+// import { MongoDBDatabaseAdapter } from "@elizaos/adapter-mongodb";
 import { DevaClientInterface } from "@elizaos/client-deva";
 
 import { FarcasterClientInterface } from "@elizaos/client-farcaster";
@@ -21,9 +21,9 @@ import { OmniflixPlugin } from "@elizaos/plugin-omniflix";
 import { JeeterClientInterface } from "@elizaos/client-simsai";
 import { XmtpClientInterface } from "@elizaos/client-xmtp";
 import { DirectClient } from "@elizaos/client-direct";
-import { agentKitPlugin } from "@elizaos/plugin-agentkit";
+// import { agentKitPlugin } from "@elizaos/plugin-agentkit";
 import { gelatoPlugin } from "@elizaos/plugin-gelato";
-import { PrimusAdapter } from "@elizaos/plugin-primus";
+// import { PrimusAdapter } from "@elizaos/plugin-primus";
 import { lightningPlugin } from "@elizaos/plugin-lightning";
 import { elizaCodeinPlugin, onchainJson } from "@elizaos/plugin-iq6900";
 import { dcapPlugin } from "@elizaos/plugin-dcap";
@@ -1035,11 +1035,11 @@ export async function createAgent(
                 ? elizaCodeinPlugin
                 : null,
             bootstrapPlugin,
-            getSecret(character, "CDP_API_KEY_NAME") &&
-            getSecret(character, "CDP_API_KEY_PRIVATE_KEY") &&
-            getSecret(character, "CDP_AGENT_KIT_NETWORK")
-                ? agentKitPlugin
-                : null,
+            // getSecret(character, "CDP_API_KEY_NAME") &&
+            // getSecret(character, "CDP_API_KEY_PRIVATE_KEY") &&
+            // getSecret(character, "CDP_AGENT_KIT_NETWORK")
+            //     ? agentKitPlugin
+            //     : null,
             // getSecret(character, "DEXSCREENER_API_KEY")
             //     ? dexScreenerPlugin
             //     : null,
