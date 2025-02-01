@@ -92,7 +92,7 @@ import { gitcoinPassportPlugin } from "@elizaos/plugin-gitcoin-passport";
 import { initiaPlugin } from "@elizaos/plugin-initia";
 import { imageGenerationPlugin } from "@elizaos/plugin-image-generation";
 import { lensPlugin } from "@elizaos/plugin-lens-network";
-import { litPlugin } from "@elizaos/plugin-lit";
+// import { litPlugin } from "@elizaos/plugin-lit";
 import { mindNetworkPlugin } from "@elizaos/plugin-mind-network";
 import { multiversxPlugin } from "@elizaos/plugin-multiversx";
 import { nearPlugin } from "@elizaos/plugin-near";
@@ -167,6 +167,11 @@ export const wait = (minTime = 1000, maxTime = 3000) => {
         Math.floor(Math.random() * (maxTime - minTime + 1)) + minTime;
     return new Promise((resolve) => setTimeout(resolve, waitTime));
 };
+
+const hasValidRemoteUrls = () =>
+    process.env.REMOTE_CHARACTER_URLS &&
+    process.env.REMOTE_CHARACTER_URLS !== "" &&
+    process.env.REMOTE_CHARACTER_URLS.startsWith("http");
 
 const logFetch = async (url: string, options: any) => {
     elizaLogger.debug(`Fetching ${url}`);
@@ -1006,16 +1011,6 @@ export async function createAgent(
         //     token,
         // });
         // elizaLogger.log("Verifiable inference primus adapter initialized");
-        process.env.VERIFIABLE_INFERENCE_ENABLED === "true"
-    ) {
-        verifiableInferenceAdapter = new PrimusAdapter({
-            appId: process.env.PRIMUS_APP_ID,
-            appSecret: process.env.PRIMUS_APP_SECRET,
-            attMode: "proxytls",
-            modelProvider: character.modelProvider,
-            token,
-        });
-        elizaLogger.log("Verifiable inference primus adapter initialized");
     }
 
     return new AgentRuntime({
@@ -1469,10 +1464,7 @@ const checkPortAvailable = (port: number): Promise<boolean> => {
     });
 };
 
-const hasValidRemoteUrls = () =>
-    process.env.REMOTE_CHARACTER_URLS &&
-    process.env.REMOTE_CHARACTER_URLS !== "" &&
-    process.env.REMOTE_CHARACTER_URLS.startsWith("http");
+
 
 const startAgents = async () => {
     const directClient = new DirectClient();
