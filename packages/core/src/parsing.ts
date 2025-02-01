@@ -27,12 +27,12 @@ export const parseShouldRespondFromText = (
     return match
         ? (match[0].toUpperCase() as "RESPOND" | "IGNORE" | "STOP")
         : text.includes("RESPOND")
-        ? "RESPOND"
-        : text.includes("IGNORE")
-        ? "IGNORE"
-        : text.includes("STOP")
-        ? "STOP"
-        : null;
+            ? "RESPOND"
+            : text.includes("IGNORE")
+                ? "IGNORE"
+                : text.includes("STOP")
+                    ? "STOP"
+                    : null;
 };
 
 export const booleanFooter = `Respond with only a YES or a NO.`;
@@ -238,14 +238,14 @@ export const normalizeJsonString = (str: string) => {
 
     // "key": unquotedValue → "key": "unquotedValue"
     str = str.replace(
-      /("[\w\d_-]+")\s*: \s*(?!")([\s\S]+?)(?=(,\s*"|\}$))/g,
-      '$1: "$2"',
+        /("[\w\d_-]+")\s*: \s*(?!")([\s\S]+?)(?=(,\s*"|\}$))/g,
+        '$1: "$2"',
     );
 
     // "key": 'value' → "key": "value"
     str = str.replace(
-      /"([^"]+)"\s*:\s*'([^']*)'/g,
-      (_, key, value) => `"${key}": "${value}"`,
+        /"([^"]+)"\s*:\s*'([^']*)'/g,
+        (_, key, value) => `"${key}": "${value}"`,
     );
 
     // "key": someWord → "key": "someWord"
@@ -330,14 +330,14 @@ export const normalizeJsonString = (str: string) => {
 
     // "key": unquotedValue → "key": "unquotedValue"
     str = str.replace(
-      /("[\w\d_-]+")\s*: \s*(?!")([\s\S]+?)(?=(,\s*"|\}$))/g,
-      '$1: "$2"',
+        /("[\w\d_-]+")\s*: \s*(?!")([\s\S]+?)(?=(,\s*"|\}$))/g,
+        '$1: "$2"',
     );
 
     // "key": 'value' → "key": "value"
     str = str.replace(
-      /"([^"]+)"\s*:\s*'([^']*)'/g,
-      (_, key, value) => `"${key}": "${value}"`,
+        /"([^"]+)"\s*:\s*'([^']*)'/g,
+        (_, key, value) => `"${key}": "${value}"`,
     );
 
     // "key": someWord → "key": "someWord"
@@ -387,21 +387,23 @@ export const parseActionResponseFromText = (
 
     // Check with regex
     actions.like = likePattern.test(text);
-    
-    // actions.retweet = retweetPattern.test(text);
-    // actions.quote = quotePattern.test(text);
+    actions.retweet = retweetPattern.test(text);
+    actions.quote = quotePattern.test(text);
     actions.reply = replyPattern.test(text);
-if(actions.reply)
-    actions.like = replyPattern.test(text);
+
+    // always like if reply to it.
+    if (actions.reply)
+        actions.like = replyPattern.test(text);
 
     // Also do line by line parsing as backup
     const lines = text.split("\n");
     for (const line of lines) {
         const trimmed = line.trim();
         if (trimmed === "[LIKE]") actions.like = true;
-        // if (trimmed === "[RETWEET]") actions.retweet = true;
-        // if (trimmed === "[QUOTE]") actions.quote = true;
-        if (trimmed === "[REPLY]")    { actions.reply = true;
+        if (trimmed === "[RETWEET]") actions.retweet = true;
+        if (trimmed === "[QUOTE]") actions.quote = true;
+        if (trimmed === "[REPLY]") {
+            actions.reply = true;
             actions.like = true;
         }
     }
