@@ -1,20 +1,22 @@
 -- Enable pgvector extension
 
 -- -- Drop existing tables and extensions
--- DROP EXTENSION IF EXISTS vector CASCADE;
--- DROP TABLE IF EXISTS relationships CASCADE;
--- DROP TABLE IF EXISTS participants CASCADE;
--- DROP TABLE IF EXISTS logs CASCADE;
--- DROP TABLE IF EXISTS goals CASCADE;
--- DROP TABLE IF EXISTS memories CASCADE;
--- DROP TABLE IF EXISTS rooms CASCADE;
--- DROP TABLE IF EXISTS accounts CASCADE;
--- DROP TABLE IF EXISTS knowledge CASCADE;
+ DROP EXTENSION IF EXISTS vector CASCADE;
+ DROP TABLE IF EXISTS relationships CASCADE;
+ DROP TABLE IF EXISTS participants CASCADE;
+ DROP TABLE IF EXISTS logs CASCADE;
+ DROP TABLE IF EXISTS goals CASCADE;
+ DROP TABLE IF EXISTS memories CASCADE;
+ DROP TABLE IF EXISTS rooms CASCADE;
+ DROP TABLE IF EXISTS accounts CASCADE;
+ DROP TABLE IF EXISTS knowledge CASCADE;
 
 
 CREATE EXTENSION IF NOT EXISTS vector;
 
 BEGIN;
+
+SET datestyle = 'ISO, MDY';
 
 CREATE TABLE accounts (
     "id" UUID PRIMARY KEY,
@@ -191,5 +193,85 @@ CREATE INDEX idx_knowledge_original ON knowledge("originalId");
 CREATE INDEX idx_knowledge_created ON knowledge("agentId", "createdAt");
 CREATE INDEX idx_knowledge_shared ON knowledge("isShared");
 CREATE INDEX idx_knowledge_embedding ON knowledge USING ivfflat (embedding vector_cosine_ops);
+
+COMMIT;
+
+CREATE OR REPLACE FUNCTION public.create_room("roomId" UUID DEFAULT NULL)
+RETURNS UUID
+LANGUAGE plpgsql
+AS $function$
+DECLARE
+    new_room_id UUID;
+BEGIN
+    IF "roomId" IS NULL THEN
+        new_room_id := gen_random_uuid();  -- Generate a new UUID if roomId is not provided
+    ELSE
+        new_room_id := "roomId";  -- Use the provided roomId
+    END IF;
+
+    INSERT INTO rooms (id) VALUES (new_room_id);  -- Insert the new room into the rooms table
+    RETURN new_room_id;  -- Return the new room ID
+END;
+$function$;
+
+CREATE OR REPLACE FUNCTION insert_into_memories()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Check the size of the embedding vector
+    IF array_length(NEW.embedding, 1) = 1536 THEN
+        INSERT INTO memories_1536 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
+    ELSIF array_length(NEW.embedding, 1) = 1024 THEN
+        INSERT INTO memories_1024 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
+    ELSIF array_length(NEW.embedding, 1) = 768 THEN
+        INSERT INTO memories_768 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
+    ELSIF array_length(NEW.embedding, 1) = 384 THEN
+        INSERT INTO memories_384 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
+    ELSE
+        RAISE EXCEPTION 'Invalid embedding size: %', array_length(NEW.embedding, 1);
+    END IF;
+
+    RETURN NEW;  -- Return the new row
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER memories_insert_trigger
+INSTEAD OF INSERT ON memories
+FOR EACH ROW
+EXECUTE FUNCTION insert_into_memories();
+
+CREATE OR REPLACE FUNCTION convert_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Convert milliseconds to seconds and set the createdAt field
+    NEW."createdAt" := to_timestamp(NEW."createdAt" / 1000.0);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER convert_timestamp_1536
+BEFORE INSERT ON memories_1536
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_1024
+BEFORE INSERT ON memories_1024
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_768
+BEFORE INSERT ON memories_768
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_384
+BEFORE INSERT ON memories_384
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+
 
 COMMIT;
