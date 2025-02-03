@@ -1164,7 +1164,7 @@ export async function generateText({
 
                 // console.warn("veniceResponse:")
                 // console.warn(veniceResponse)
-                //rferrari remove all text from <think> to </think>\n\n
+                //rferrari: remove all text from <think> to </think>\n\n
                 response = veniceResponse
                     .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, '');
                 // console.warn(response)

@@ -33,7 +33,7 @@
             "isPartOfTeam": false,
             "teamAgentIds": [],
             "shouldRespondOnlyToMentions": true,
-            "shouldIgnoreBotMessages": false,
+            "shouldIgnoreBotMessages": true,
             "shouldIgnoreDirectMessages": true,
             "shouldOnlyJoinInAllowedGroups": true,
             "allowedGroupIds": ["-4708699169"],
