@@ -355,18 +355,28 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async getMemoryById(memoryId: UUID): Promise<Memory | null> {
-        const { data, error } = await this.supabase
-            .from("memories")
-            .select("*")
-            .eq("id", memoryId)
-            .single();
-
-        if (error) {
-            elizaLogger.error("Error retrieving memory by ID:", error);
+        try {
+            const { data, error } = await this.supabase
+                .from("memories")
+                .select("*")
+                .eq("id", memoryId)
+                .maybeSingle(); // Use maybeSingle() instead of single()
+    
+            if (error && error.code !== 'PGRST116') {
+                elizaLogger.error(`Database error retrieving memory ${memoryId}:`, error);
+                throw new Error(`Database error: ${error.message}`);
+            }
+    
+            if (!data) {
+                elizaLogger.debug(`Memory ${memoryId} not found`);
+                return null;
+            }
+    
+            return data as Memory;
+        } catch (e) {
+            elizaLogger.error(`Unexpected error retrieving memory ${memoryId}:`, e);
             return null;
         }
-
-        return data as Memory;
     }
 
     async getMemoriesByIds(
