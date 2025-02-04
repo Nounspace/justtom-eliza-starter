@@ -811,7 +811,7 @@ export class TwitterPostClient {
                     });
                 } catch (error) {
                     elizaLogger.error(
-                        `Error processing tweet ${tweet.id}:`,
+                        `timelines Error processing tweet ${tweet.id}:`,
                         error
                     );
                     continue;
@@ -1126,7 +1126,7 @@ export class TwitterPostClient {
                     executedActions,
                 });
             } catch (error) {
-                elizaLogger.error(`Error processing tweet ${tweet.id}:`, error);
+                elizaLogger.error(`processTimelineActions Error processing tweet ${tweet.id}:`, error);
                 continue;
             }
         }
