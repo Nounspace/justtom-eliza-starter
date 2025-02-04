@@ -361,17 +361,17 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
                 .select("*")
                 .eq("id", memoryId)
                 .maybeSingle(); // Use maybeSingle() instead of single()
-    
-            if (error && error.code !== 'PGRST116') {
-                elizaLogger.error(`Database error retrieving memory ${memoryId}:`, error);
-                throw new Error(`Database error: ${error.message}`);
-            }
-    
+
             if (!data) {
                 elizaLogger.debug(`Memory ${memoryId} not found`);
                 return null;
             }
-    
+
+            // if (error && error.code !== 'PGRST116') {
+            //     elizaLogger.error(`Database error retrieving memory ${memoryId}:`, error);
+            //     throw new Error(`Database error: ${error.message}`);
+            // }
+
             return data as Memory;
         } catch (e) {
             elizaLogger.error(`Unexpected error retrieving memory ${memoryId}:`, e);
@@ -414,7 +414,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         const createdAt = memory.createdAt ?
             new Date(memory.createdAt).toISOString() :
             new Date().toISOString();
-            
+
         if (unique) {
             const opts = {
                 // TODO: Add ID option, optionally
