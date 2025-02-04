@@ -399,7 +399,12 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         tableName: string,
         unique = false
     ): Promise<void> {
-        const createdAt = memory.createdAt ?? Date.now();
+        // const createdAt = memory.createdAt ?? Date.now();
+        // Convert milliseconds timestamp to ISO string
+        const createdAt = memory.createdAt ?
+            new Date(memory.createdAt).toISOString() :
+            new Date().toISOString();
+            
         if (unique) {
             const opts = {
                 // TODO: Add ID option, optionally

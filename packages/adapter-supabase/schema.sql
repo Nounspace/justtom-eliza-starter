@@ -243,7 +243,47 @@ FOR EACH ROW
 EXECUTE FUNCTION insert_into_memories();
 
 
+CREATE OR REPLACE FUNCTION convert_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Check if createdAt is a BIGINT (milliseconds) and convert it to TIMESTAMPTZ
+    IF NEW."createdAt" IS NOT NULL THEN
+        -- Convert milliseconds to seconds and set the createdAt field
+        NEW."createdAt" := to_timestamp(NEW."createdAt" / 1000.0);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
+-- Create triggers for the rooms and participants tables
+CREATE TRIGGER convert_timestamp_rooms
+BEFORE INSERT ON public.rooms
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
 
+CREATE TRIGGER convert_timestamp_participants
+BEFORE INSERT ON public.participants
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_memories_1536
+BEFORE INSERT ON memories_1536
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_memories_1024
+BEFORE INSERT ON memories_1024
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_memories_768
+BEFORE INSERT ON memories_768
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_memories_384
+BEFORE INSERT ON memories_384
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
 
 COMMIT;
