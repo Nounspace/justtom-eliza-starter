@@ -42,7 +42,7 @@ tweetcache/
 twitter_cookies.json
 timeline_cache.json
 
-*.sqlite
+# *.sqlite
 
 # Character configurations
 characters/**/secrets.json

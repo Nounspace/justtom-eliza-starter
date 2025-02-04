@@ -41,7 +41,6 @@ const twitterPostTemplate = `
 # About {{agentName}} (@{{twitterUserName}}):
 {{bio}}
 {{lore}}
-{{topics}}
 
 {{providers}}
 
@@ -50,9 +49,13 @@ const twitterPostTemplate = `
 {{postDirections}}
 
 # Task: Generate a post in the voice and style and perspective of {{agentName}} @{{twitterUserName}}.
-Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}. Do not add commentary or acknowledge this request, just write the post.
-Your response should be 1, 2, or 3 sentences (choose the length at random).
-Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}. No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
+Write a post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}.
+
+REMEMBER:
+Do not add commentary or acknowledge this request, just write the post.
+Your response should be 1 sentence.
+Your response should not contain any questions. Brief, concise statements only. The total character count MUST be less than {{maxTweetLength}}.
+No emojis. Use \\n\\n (double spaces) between statements if there are multiple statements in your response.`;
 
 export const twitterActionTemplate =
     `
@@ -60,8 +63,11 @@ export const twitterActionTemplate =
 {{bio}}
 {{postDirections}}
 
+# Core Interests:
+{{topics}}
+
 Guidelines:
-- ONLY engage with content that DIRECTLY relates to character's core interests
+- ONLY engage with content that DIRECTLY relates to character's Core Interests
 - Direct mentions are priority IF they are on-topic
 - Skip ALL content that is:
   - Off-topic or tangentially related
@@ -71,16 +77,19 @@ Guidelines:
   - Promotional/marketing unless directly relevant
 
 Actions (respond only with tags):
-[LIKE] - Perfect topic match AND aligns with character (9.8/10)
-[RETWEET] - Exceptional content that embodies character's expertise (9.5/10)
-[QUOTE] - Can add substantial domain expertise (9.5/10)
+[LIKE] - Perfect topic match AND aligns with character (9/10)
 [REPLY] - Can contribute meaningful, expert-level insight (9.5/10)
 
 Tweet:
 {{currentTweet}}
 
 # Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` +
-    postActionResponseFooter;
+postActionResponseFooter;
+
+/* Removed Action from twitterActionTemplate:
+[RETWEET] - Exceptional content that embodies character's expertise (9.5/10)
+[QUOTE] - Can add substantial domain expertise (9.5/10)
+*/
 
 interface PendingTweet {
     tweetTextForPosting: string;
@@ -283,7 +292,7 @@ export class TwitterPostClient {
                         error
                     );
                     // Add exponential backoff on error
-                    await new Promise((resolve) => setTimeout(resolve, 30000)); // Wait 30s on error
+                    await new Promise((resolve) => setTimeout(resolve, 60000)); // Wait 60s on error
                 }
             }
         };
@@ -541,7 +550,7 @@ export class TwitterPostClient {
             const response = await generateText({
                 runtime: this.runtime,
                 context,
-                modelClass: ModelClass.SMALL,
+                modelClass: ModelClass.LARGE,
             });
 
             const rawTweetContent = cleanJsonResponse(response);
@@ -778,6 +787,9 @@ export class TwitterPostClient {
                                 ?.twitterActionTemplate ||
                             twitterActionTemplate,
                     });
+
+                    // console.warn("actionContext DEBUG");
+                    // console.log(actionContext);
 
                     const actionResponse = await generateTweetActions({
                         runtime: this.runtime,
@@ -1279,7 +1291,7 @@ export class TwitterPostClient {
                     },
                 ],
                 footer: {
-                    text: "Reply with '👍' to post or '❌' to discard, This will automatically expire and remove after 24 hours if no response received",
+                    text: "React with '👍' to post or '❌' to discard, This will automatically expire and remove after 24 hours if no response received",
                 },
                 timestamp: new Date().toISOString(),
             };

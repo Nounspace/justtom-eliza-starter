@@ -27,12 +27,12 @@ export const parseShouldRespondFromText = (
     return match
         ? (match[0].toUpperCase() as "RESPOND" | "IGNORE" | "STOP")
         : text.includes("RESPOND")
-        ? "RESPOND"
-        : text.includes("IGNORE")
-        ? "IGNORE"
-        : text.includes("STOP")
-        ? "STOP"
-        : null;
+            ? "RESPOND"
+            : text.includes("IGNORE")
+                ? "IGNORE"
+                : text.includes("STOP")
+                    ? "STOP"
+                    : null;
 };
 
 export const booleanFooter = `Respond with only a YES or a NO.`;
@@ -237,14 +237,14 @@ export const normalizeJsonString = (str: string) => {
 
     // "key": unquotedValue → "key": "unquotedValue"
     str = str.replace(
-      /("[\w\d_-]+")\s*: \s*(?!"|\[)([\s\S]+?)(?=(,\s*"|\}$))/g,
-      '$1: "$2"',
+        /("[\w\d_-]+")\s*: \s*(?!")([\s\S]+?)(?=(,\s*"|\}$))/g,
+        '$1: "$2"',
     );
 
     // "key": 'value' → "key": "value"
     str = str.replace(
-      /"([^"]+)"\s*:\s*'([^']*)'/g,
-      (_, key, value) => `"${key}": "${value}"`,
+        /"([^"]+)"\s*:\s*'([^']*)'/g,
+        (_, key, value) => `"${key}": "${value}"`,
     );
 
     // "key": someWord → "key": "someWord"
@@ -271,7 +271,7 @@ export function cleanJsonResponse(response: string): string {
         .trim();
 }
 
-export const postActionResponseFooter = `Choose any combination of [LIKE], [RETWEET], [QUOTE], and [REPLY] that are appropriate. Each action must be on its own line. Your response must only include the chosen actions.`;
+export const postActionResponseFooter = `Choose any combination of [LIKE] and/or [REPLY] that are appropriate. Each action must be on its own line. Your response must only include the chosen actions.`;
 
 export const parseActionResponseFromText = (
     text: string
@@ -295,6 +295,10 @@ export const parseActionResponseFromText = (
     actions.quote = quotePattern.test(text);
     actions.reply = replyPattern.test(text);
 
+    // always like if reply to it.
+    if (actions.reply)
+        actions.like = replyPattern.test(text);
+
     // Also do line by line parsing as backup
     const lines = text.split("\n");
     for (const line of lines) {
@@ -302,7 +306,10 @@ export const parseActionResponseFromText = (
         if (trimmed === "[LIKE]") actions.like = true;
         if (trimmed === "[RETWEET]") actions.retweet = true;
         if (trimmed === "[QUOTE]") actions.quote = true;
-        if (trimmed === "[REPLY]") actions.reply = true;
+        if (trimmed === "[REPLY]") {
+            actions.reply = true;
+            actions.like = true;
+        }
     }
 
     return { actions };

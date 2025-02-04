@@ -75,6 +75,7 @@ For other users:
 - {{agentName}} should IGNORE very short messages unless directly addressed
 - {{agentName}} should STOP if asked to stop
 - {{agentName}} should STOP if conversation is concluded
+- {{agentName}} should STOP if conversation thread is more than 7 messages long
 - {{agentName}} is in a room with other users and wants to be conversational, but not annoying.
 
 IMPORTANT:
@@ -334,6 +335,7 @@ export class TwitterInteractionClient {
         };
         const currentPost = formatTweet(tweet);
 
+        elizaLogger.debug("Thread: ", thread);
         const formattedConversation = thread
             .map(
                 (tweet) => `@${tweet.username} (${new Date(
@@ -348,9 +350,13 @@ export class TwitterInteractionClient {
             )
             .join("\n\n");
 
+        elizaLogger.debug("formattedConversation: ", formattedConversation);
+
         const imageDescriptionsArray = [];
         try{
+            elizaLogger.debug('Getting images');
             for (const photo of tweet.photos) {
+                elizaLogger.debug(photo.url);
                 const description = await this.runtime
                     .getService<IImageDescriptionService>(
                         ServiceType.IMAGE_DESCRIPTION
@@ -424,7 +430,7 @@ export class TwitterInteractionClient {
         const shouldRespond = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
-            modelClass: ModelClass.MEDIUM,
+            modelClass: ModelClass.SMALL,
         });
 
         // Promise<"RESPOND" | "IGNORE" | "STOP" | null> {
@@ -459,6 +465,7 @@ export class TwitterInteractionClient {
                 this.runtime.character?.templates?.messageHandlerTemplate ||
                 twitterMessageHandlerTemplate,
         });
+        elizaLogger.debug("Interactions prompt:\n" + context);
 
         const response = await generateMessageResponse({
             runtime: this.runtime,
