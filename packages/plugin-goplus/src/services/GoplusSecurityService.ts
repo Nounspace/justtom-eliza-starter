@@ -58,7 +58,7 @@ export class GoplusSecurityService extends Service implements IGoplusSecuritySer
                 case GoPlusType.NFT_SECURITY_CHECK:
                     checkResult = await goPlusManage.nftSecurity(obj.network, obj.token);
                     break;
-                case GoPlusType.ADRESS_SECURITY_CHECK:
+                case GoPlusType.ADDRESS_SECURITY_CHECK:
                     checkResult = await goPlusManage.addressSecurity(obj.wallet);
                     break;
                 case GoPlusType.APPROVAL_SECURITY_CHECK:
