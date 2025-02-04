@@ -334,6 +334,7 @@ export class TwitterInteractionClient {
         };
         const currentPost = formatTweet(tweet);
 
+        elizaLogger.debug("Thread: ", thread);
         const formattedConversation = thread
             .map(
                 (tweet) => `@${tweet.username} (${new Date(
@@ -348,9 +349,13 @@ export class TwitterInteractionClient {
             )
             .join("\n\n");
 
+        elizaLogger.debug("formattedConversation: ", formattedConversation);
+
         const imageDescriptionsArray = [];
         try{
+            elizaLogger.debug('Getting images');
             for (const photo of tweet.photos) {
+                elizaLogger.debug(photo.url);
                 const description = await this.runtime
                     .getService<IImageDescriptionService>(
                         ServiceType.IMAGE_DESCRIPTION
@@ -459,6 +464,7 @@ export class TwitterInteractionClient {
                 this.runtime.character?.templates?.messageHandlerTemplate ||
                 twitterMessageHandlerTemplate,
         });
+        elizaLogger.debug("Interactions prompt:\n" + context);
 
         const response = await generateMessageResponse({
             runtime: this.runtime,

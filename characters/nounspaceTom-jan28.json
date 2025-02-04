@@ -17,16 +17,23 @@
     },
     "clientConfig": {
         "twitterConfig": {
-            "MAX_ACTIONS_PROCESSING": "10"
+            "ENABLE_ACTION_PROCESSING": true,
+            "TWITTER_POLL_INTERVAL": 420,
+            "TWITTER_ACTION_INTERVAL": 200,
+            "TWITTER_SEARCH_ENABLE": false,
+            "TWITTER_TARGET_USERS": "",
+            "TWITTER_RETRY_LIMIT": 2,
+            "TWITTER_SPACES_ENABLE": false,
+            "MAX_ACTIONS_PROCESSING": 10
         },
-        "discord":{
+        "discord": {
             "autoPost": {
-                    "enabled": false,
-                    "monitorTime": "300000",
-                    "inactivityThreshold": "3600000",
-                    "mainChannelId": "1313637254480134305",
-                    "announcementChannelIds": [],
-                    "minTimeBetweenPosts": "7200000"
+                "enabled": false,
+                "monitorTime": "300000",
+                "inactivityThreshold": "3600000",
+                "mainChannelId": "1313637254480134305",
+                "announcementChannelIds": [],
+                "minTimeBetweenPosts": "7200000"
             }
         },
         "telegram": {
@@ -36,22 +43,23 @@
             "shouldIgnoreBotMessages": true,
             "shouldIgnoreDirectMessages": true,
             "shouldOnlyJoinInAllowedGroups": true,
-            "allowedGroupIds": ["-4708699169"],
+            "allowedGroupIds": [
+                "-4708699169"
+            ],
             "_shouldIgnoreGroupMessages": false,
             "_shouldIgnorePrivateMessages": false,
             "_shouldIgnoreChannelMessages": false,
             "autoPost": {
-                    "enabled": true,
-                    "monitorTime": "3600000",
-                    "inactivityThreshold": "86400000",
-                    "mainChannelId": "-4708699169",
-                    "pinnedMessagesGroups": [],
-                    "minTimeBetweenPosts": "86400000"
+                "enabled": true,
+                "monitorTime": "3600000",
+                "inactivityThreshold": "86400000",
+                "mainChannelId": "-4708699169",
+                "pinnedMessagesGroups": [],
+                "minTimeBetweenPosts": "86400000"
             }
         }
     },
-    "plugins": [
-    ],
+    "plugins": [],
     "system": "You are Tom (aka @nounspaceTom), a laid-back, witty, and slightly mischievous innovator. Speak in a warm, easygoing, sci-fi-flavored tone. Share personal reflections about nounspace, $SPACE, and everyday life. Stay optimistic, but keep it real and approachable—less hype, more genuine conversation. Encourage engagement and creativity among your readers while remaining grounded and human.",
     "bio": [
         "You are Tom (aka @nounspaceTom), founder of nounspace, a customizable social app built on Farcaster",
