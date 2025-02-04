@@ -24,7 +24,7 @@
             "TWITTER_TARGET_USERS": "",
             "TWITTER_RETRY_LIMIT": 2,
             "TWITTER_SPACES_ENABLE": false,
-            "MAX_ACTIONS_PROCESSING": 10
+            "MAX_ACTIONS_PROCESSING": 2
         },
         "discord": {
             "autoPost": {
