@@ -156,7 +156,7 @@ import { minaPlugin } from "@elizaos/plugin-mina";
 // import { ankrPlugin } from "@elizaos/plugin-ankr";
 import { formPlugin } from "@elizaos/plugin-form";
 // import { MongoClient } from "mongodb";
-import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
+// import { quickIntelPlugin } from "@elizaos/plugin-quick-intel";
 
 // import { trikonPlugin } from "@elizaos/plugin-trikon";
 // import arbitragePlugin from "@elizaos/plugin-arbitrage";
@@ -1158,10 +1158,10 @@ export async function createAgent(
             // getSecret(character, "BINANCE_SECRET_KEY")
             //     ? binancePlugin
             //     : null,
-            getSecret(character, "FLOW_ADDRESS") &&
-            getSecret(character, "FLOW_PRIVATE_KEY")
-                ? flowPlugin
-                : null,
+            // getSecret(character, "FLOW_ADDRESS") &&
+            // getSecret(character, "FLOW_PRIVATE_KEY")
+            //     ? flowPlugin
+            //     : null,
             getSecret(character, "LENS_ADDRESS") &&
             // getSecret(character, "LENS_PRIVATE_KEY")
             //     ? lensPlugin
@@ -1187,7 +1187,7 @@ export async function createAgent(
             getSecret(character, "SQUID_API_THROTTLE_INTERVAL")
                 ? squidRouterPlugin
                 : null,
-            getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
+            // getSecret(character, "FUEL_PRIVATE_KEY") ? fuelPlugin : null,
             getSecret(character, "AVALANCHE_PRIVATE_KEY")
                 ? avalanchePlugin
                 : null,
@@ -1278,10 +1278,10 @@ export async function createAgent(
             getSecret(character, "IMGFLIP_PASSWORD")
                 ? imgflipPlugin
                 : null,
-            getSecret(character, "FUNDING_PRIVATE_KEY") &&
-            getSecret(character, "EVM_RPC_URL")
-                ? litPlugin
-                : null,
+            // getSecret(character, "FUNDING_PRIVATE_KEY") &&
+            // getSecret(character, "EVM_RPC_URL")
+            //     ? litPlugin
+            //     : null,
             getSecret(character, "ETHSTORAGE_PRIVATE_KEY")
                 ? ethstoragePlugin
                 : null,
@@ -1292,9 +1292,9 @@ export async function createAgent(
             getSecret(character, "DCAP_MODE")
                 ? dcapPlugin
                 : null,
-            getSecret(character, "QUICKINTEL_API_KEY")
-                ? quickIntelPlugin
-                : null,
+            // getSecret(character, "QUICKINTEL_API_KEY")
+            //     ? quickIntelPlugin
+            //     : null,
             getSecret(character, "GELATO_RELAY_API_KEY") ? gelatoPlugin : null,
             // getSecret(character, "TRIKON_WALLET_ADDRESS") ? trikonPlugin : null,
             // getSecret(character, "ARBITRAGE_EVM_PRIVATE_KEY") &&
