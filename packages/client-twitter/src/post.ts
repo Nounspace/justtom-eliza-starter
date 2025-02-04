@@ -814,6 +814,7 @@ export class TwitterPostClient {
                         `timelines Error processing tweet ${tweet.id}:`,
                         error
                     );
+                    console.dir(error);
                     continue;
                 }
             }
