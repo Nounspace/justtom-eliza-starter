@@ -1,19 +1,34 @@
+
 -- Enable pgvector extension
 
 -- -- Drop existing tables and extensions
-DROP EXTENSION IF EXISTS vector CASCADE;
-DROP TABLE IF EXISTS relationships CASCADE;
-DROP TABLE IF EXISTS participants CASCADE;
-DROP TABLE IF EXISTS logs CASCADE;
-DROP TABLE IF EXISTS goals CASCADE;
-DROP TABLE IF EXISTS memories CASCADE;
-DROP TABLE IF EXISTS rooms CASCADE;
-DROP TABLE IF EXISTS accounts CASCADE;
-DROP TABLE IF EXISTS knowledge CASCADE;
+  DROP EXTENSION IF EXISTS vector CASCADE;
+  DROP EXTENSION IF EXISTS fuzzystrmatch CASCADE;
+
+--  -- Drop the triggers 
+  DROP TRIGGER IF EXISTS convert_timestamp ON participants;
+  DROP TRIGGER IF EXISTS create_room ON rooms;
+  --DROP TRIGGER IF EXISTS insert_into_memories ON memories;
+
+  DROP TABLE IF EXISTS relationships CASCADE;
+  DROP TABLE IF EXISTS participants CASCADE;
+  DROP TABLE IF EXISTS logs CASCADE;
+  DROP TABLE IF EXISTS goals CASCADE;
+  --DROP TABLE IF EXISTS memories CASCADE;
+  DROP TABLE IF EXISTS memories_384 CASCADE;
+  DROP TABLE IF EXISTS memories_768 CASCADE;
+  DROP TABLE IF EXISTS memories_1024 CASCADE;
+  DROP TABLE IF EXISTS memories_1536 CASCADE;
+  DROP TABLE IF EXISTS rooms CASCADE;
+  DROP TABLE IF EXISTS cache CASCADE;
+  DROP TABLE IF EXISTS accounts CASCADE;
+  DROP TABLE IF EXISTS knowledge CASCADE;
 
 
+-- -- Create Extensions
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+
 
 BEGIN;
 
@@ -243,18 +258,18 @@ INSTEAD OF INSERT ON memories
 FOR EACH ROW
 EXECUTE FUNCTION insert_into_memories();
 
-
 CREATE OR REPLACE FUNCTION convert_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Check if createdAt is a BIGINT (milliseconds) and convert it to TIMESTAMPTZ
-    IF NEW."createdAt" IS NOT NULL THEN
+    IF NEW."createdAt" IS NOT NULL AND pg_typeof(NEW."createdAt") = 'bigint'::regtype THEN
         -- Convert milliseconds to seconds and set the createdAt field
         NEW."createdAt" := to_timestamp(NEW."createdAt" / 1000.0);
     END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 -- Create triggers for the rooms and participants tables
 CREATE TRIGGER convert_timestamp_rooms
@@ -337,14 +352,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Set the owner of the function to the appropriate user
-ALTER FUNCTION public.get_embedding_list(
-    query_table_name TEXT,
-    query_threshold INTEGER,
-    query_input TEXT,
-    query_field_name TEXT,
-    query_field_sub_name TEXT,
-    query_match_count INTEGER
-) OWNER TO postgres;  -- Adjust the owner as necessary
 
 COMMIT;
