@@ -1,22 +1,36 @@
+
 -- Enable pgvector extension
 
 -- -- Drop existing tables and extensions
- DROP EXTENSION IF EXISTS vector CASCADE;
- DROP TABLE IF EXISTS relationships CASCADE;
- DROP TABLE IF EXISTS participants CASCADE;
- DROP TABLE IF EXISTS logs CASCADE;
- DROP TABLE IF EXISTS goals CASCADE;
- DROP TABLE IF EXISTS memories CASCADE;
- DROP TABLE IF EXISTS rooms CASCADE;
- DROP TABLE IF EXISTS accounts CASCADE;
- DROP TABLE IF EXISTS knowledge CASCADE;
+  DROP EXTENSION IF EXISTS vector CASCADE;
+  DROP EXTENSION IF EXISTS fuzzystrmatch CASCADE;
+
+--  -- Drop the triggers 
+  DROP TRIGGER IF EXISTS convert_timestamp ON participants;
+  DROP TRIGGER IF EXISTS create_room ON rooms;
+  --DROP TRIGGER IF EXISTS insert_into_memories ON memories;
+
+  DROP TABLE IF EXISTS relationships CASCADE;
+  DROP TABLE IF EXISTS participants CASCADE;
+  DROP TABLE IF EXISTS logs CASCADE;
+  DROP TABLE IF EXISTS goals CASCADE;
+  --DROP TABLE IF EXISTS memories CASCADE;
+  DROP TABLE IF EXISTS memories_384 CASCADE;
+  DROP TABLE IF EXISTS memories_768 CASCADE;
+  DROP TABLE IF EXISTS memories_1024 CASCADE;
+  DROP TABLE IF EXISTS memories_1536 CASCADE;
+  DROP TABLE IF EXISTS rooms CASCADE;
+  DROP TABLE IF EXISTS cache CASCADE;
+  DROP TABLE IF EXISTS accounts CASCADE;
+  DROP TABLE IF EXISTS knowledge CASCADE;
 
 
+-- -- Create Extensions
 CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+
 
 BEGIN;
-
-SET datestyle = 'ISO, MDY';
 
 CREATE TABLE accounts (
     "id" UUID PRIMARY KEY,
@@ -130,7 +144,7 @@ CREATE TABLE logs (
 );
 
 CREATE TABLE participants (
-    "id" UUID PRIMARY KEY,
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     "userId" UUID REFERENCES accounts("id"),
     "roomId" UUID REFERENCES rooms("id"),
@@ -196,6 +210,7 @@ CREATE INDEX idx_knowledge_embedding ON knowledge USING ivfflat (embedding vecto
 
 COMMIT;
 
+
 CREATE OR REPLACE FUNCTION public.create_room("roomId" UUID DEFAULT NULL)
 RETURNS UUID
 LANGUAGE plpgsql
@@ -217,21 +232,21 @@ $function$;
 CREATE OR REPLACE FUNCTION insert_into_memories()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Check the size of the embedding vector
-    IF array_length(NEW.embedding, 1) = 1536 THEN
+    -- Check the size of the embedding vector using vector_dims
+    IF vector_dims(NEW.embedding) = 1536 THEN
         INSERT INTO memories_1536 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
-        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
-    ELSIF array_length(NEW.embedding, 1) = 1024 THEN
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", COALESCE(NEW."unique", true));  -- Set default to true if NULL
+    ELSIF vector_dims(NEW.embedding) = 1024 THEN
         INSERT INTO memories_1024 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
-        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
-    ELSIF array_length(NEW.embedding, 1) = 768 THEN
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", COALESCE(NEW."unique", true));  -- Set default to true if NULL
+    ELSIF vector_dims(NEW.embedding) = 768 THEN
         INSERT INTO memories_768 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
-        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
-    ELSIF array_length(NEW.embedding, 1) = 384 THEN
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", COALESCE(NEW."unique", true));  -- Set default to true if NULL
+    ELSIF vector_dims(NEW.embedding) = 384 THEN
         INSERT INTO memories_384 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
-        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", COALESCE(NEW."unique", true));  -- Set default to true if NULL
     ELSE
-        RAISE EXCEPTION 'Invalid embedding size: %', array_length(NEW.embedding, 1);
+        RAISE EXCEPTION 'Invalid embedding size: %', vector_dims(NEW.embedding);
     END IF;
 
     RETURN NEW;  -- Return the new row
@@ -246,32 +261,96 @@ EXECUTE FUNCTION insert_into_memories();
 CREATE OR REPLACE FUNCTION convert_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Convert milliseconds to seconds and set the createdAt field
-    NEW."createdAt" := to_timestamp(NEW."createdAt" / 1000.0);
+    -- Check if createdAt is a BIGINT (milliseconds) and convert it to TIMESTAMPTZ
+    IF NEW."createdAt" IS NOT NULL AND pg_typeof(NEW."createdAt") = 'bigint'::regtype THEN
+        -- Convert milliseconds to seconds and set the createdAt field
+        NEW."createdAt" := to_timestamp(NEW."createdAt" / 1000.0);
+    END IF;
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER convert_timestamp_1536
+
+-- Create triggers for the rooms and participants tables
+CREATE TRIGGER convert_timestamp_rooms
+BEFORE INSERT ON public.rooms
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_participants
+BEFORE INSERT ON public.participants
+FOR EACH ROW
+EXECUTE FUNCTION convert_timestamp();
+
+CREATE TRIGGER convert_timestamp_memories_1536
 BEFORE INSERT ON memories_1536
 FOR EACH ROW
 EXECUTE FUNCTION convert_timestamp();
 
-CREATE TRIGGER convert_timestamp_1024
+CREATE TRIGGER convert_timestamp_memories_1024
 BEFORE INSERT ON memories_1024
 FOR EACH ROW
 EXECUTE FUNCTION convert_timestamp();
 
-CREATE TRIGGER convert_timestamp_768
+CREATE TRIGGER convert_timestamp_memories_768
 BEFORE INSERT ON memories_768
 FOR EACH ROW
 EXECUTE FUNCTION convert_timestamp();
 
-CREATE TRIGGER convert_timestamp_384
+CREATE TRIGGER convert_timestamp_memories_384
 BEFORE INSERT ON memories_384
 FOR EACH ROW
 EXECUTE FUNCTION convert_timestamp();
 
+CREATE OR REPLACE FUNCTION public.get_embedding_list(
+    query_table_name TEXT,
+    query_threshold INTEGER,
+    query_input TEXT,
+    query_field_name TEXT,
+    query_field_sub_name TEXT,
+    query_match_count INTEGER
+)
+RETURNS TABLE(embedding vector, levenshtein_score INTEGER) AS $$
+DECLARE
+    QUERY TEXT;
+BEGIN
+    -- Check the length of query_input
+    IF LENGTH(query_input) > 255 THEN
+        -- For inputs longer than 255 characters, use exact match only
+        QUERY := format('
+            SELECT
+                embedding
+            FROM
+                memories
+            WHERE
+                type = $1 AND
+                (content->>''%s'')::TEXT = $2
+            LIMIT
+                $3
+        ', query_field_name);
+        -- Execute the query with adjusted parameters for exact match
+        RETURN QUERY EXECUTE QUERY USING query_table_name, query_input, query_match_count;
+    ELSE
+        -- For inputs of 255 characters or less, use Levenshtein distance
+        QUERY := format('
+            SELECT
+                embedding,
+                levenshtein($2, (content->>''%s'')::TEXT) AS levenshtein_score
+            FROM
+                memories
+            WHERE
+                type = $1 AND
+                levenshtein($2, (content->>''%s'')::TEXT) <= $3
+            ORDER BY
+                levenshtein_score
+            LIMIT
+                $4
+        ', query_field_name, query_field_name);
+        -- Execute the query with original parameters for Levenshtein distance
+        RETURN QUERY EXECUTE QUERY USING query_table_name, query_input, query_threshold, query_match_count;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
 
 
 COMMIT;
