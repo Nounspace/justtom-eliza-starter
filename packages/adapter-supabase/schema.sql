@@ -13,6 +13,7 @@ DROP TABLE IF EXISTS knowledge CASCADE;
 
 
 CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
 
 BEGIN;
 
@@ -128,7 +129,7 @@ CREATE TABLE logs (
 );
 
 CREATE TABLE participants (
-    "id" UUID PRIMARY KEY,
+    "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     "createdAt" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     "userId" UUID REFERENCES accounts("id"),
     "roomId" UUID REFERENCES rooms("id"),
@@ -216,21 +217,21 @@ $function$;
 CREATE OR REPLACE FUNCTION insert_into_memories()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Check the size of the embedding vector
-    IF array_length(NEW.embedding, 1) = 1536 THEN
+    -- Check the size of the embedding vector using vector_dims
+    IF vector_dims(NEW.embedding) = 1536 THEN
         INSERT INTO memories_1536 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
-        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
-    ELSIF array_length(NEW.embedding, 1) = 1024 THEN
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", COALESCE(NEW."unique", true));  -- Set default to true if NULL
+    ELSIF vector_dims(NEW.embedding) = 1024 THEN
         INSERT INTO memories_1024 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
-        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
-    ELSIF array_length(NEW.embedding, 1) = 768 THEN
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", COALESCE(NEW."unique", true));  -- Set default to true if NULL
+    ELSIF vector_dims(NEW.embedding) = 768 THEN
         INSERT INTO memories_768 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
-        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
-    ELSIF array_length(NEW.embedding, 1) = 384 THEN
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", COALESCE(NEW."unique", true));  -- Set default to true if NULL
+    ELSIF vector_dims(NEW.embedding) = 384 THEN
         INSERT INTO memories_384 ("id", "type", "createdAt", "content", "embedding", "userId", "agentId", "roomId", "unique")
-        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", NEW."unique");
+        VALUES (NEW."id", NEW."type", NEW."createdAt", NEW."content", NEW."embedding", NEW."userId", NEW."agentId", NEW."roomId", COALESCE(NEW."unique", true));  -- Set default to true if NULL
     ELSE
-        RAISE EXCEPTION 'Invalid embedding size: %', array_length(NEW.embedding, 1);
+        RAISE EXCEPTION 'Invalid embedding size: %', vector_dims(NEW.embedding);
     END IF;
 
     RETURN NEW;  -- Return the new row
@@ -285,5 +286,65 @@ CREATE TRIGGER convert_timestamp_memories_384
 BEFORE INSERT ON memories_384
 FOR EACH ROW
 EXECUTE FUNCTION convert_timestamp();
+
+CREATE OR REPLACE FUNCTION public.get_embedding_list(
+    query_table_name TEXT,
+    query_threshold INTEGER,
+    query_input TEXT,
+    query_field_name TEXT,
+    query_field_sub_name TEXT,
+    query_match_count INTEGER
+)
+RETURNS TABLE(embedding vector, levenshtein_score INTEGER) AS $$
+DECLARE
+    QUERY TEXT;
+BEGIN
+    -- Check the length of query_input
+    IF LENGTH(query_input) > 255 THEN
+        -- For inputs longer than 255 characters, use exact match only
+        QUERY := format('
+            SELECT
+                embedding
+            FROM
+                memories
+            WHERE
+                type = $1 AND
+                (content->>''%s'')::TEXT = $2
+            LIMIT
+                $3
+        ', query_field_name);
+        -- Execute the query with adjusted parameters for exact match
+        RETURN QUERY EXECUTE QUERY USING query_table_name, query_input, query_match_count;
+    ELSE
+        -- For inputs of 255 characters or less, use Levenshtein distance
+        QUERY := format('
+            SELECT
+                embedding,
+                levenshtein($2, (content->>''%s'')::TEXT) AS levenshtein_score
+            FROM
+                memories
+            WHERE
+                type = $1 AND
+                levenshtein($2, (content->>''%s'')::TEXT) <= $3
+            ORDER BY
+                levenshtein_score
+            LIMIT
+                $4
+        ', query_field_name, query_field_name);
+        -- Execute the query with original parameters for Levenshtein distance
+        RETURN QUERY EXECUTE QUERY USING query_table_name, query_input, query_threshold, query_match_count;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Set the owner of the function to the appropriate user
+ALTER FUNCTION public.get_embedding_list(
+    query_table_name TEXT,
+    query_threshold INTEGER,
+    query_input TEXT,
+    query_field_name TEXT,
+    query_field_sub_name TEXT,
+    query_match_count INTEGER
+) OWNER TO postgres;  -- Adjust the owner as necessary
 
 COMMIT;
