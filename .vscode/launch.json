@@ -11,8 +11,9 @@
             "runtimeExecutable": "pnpm",
             "runtimeArgs": [
                 "start",
-                "characters=./characters/nounspaceTom-jan28.json"
+                "--characters=\"./characters/nounspaceTom-jan28.json\""
             ],
+            "console": "integratedTerminal",
             "skipFiles": [
                 "<node_internals>/**"
             ]

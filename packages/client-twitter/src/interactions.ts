@@ -303,7 +303,7 @@ export class TwitterInteractionClient {
 
             elizaLogger.log("Finished checking Twitter interactions");
         } catch (error) {
-            elizaLogger.error("Error handling Twitter interactions:", error);
+            elizaLogger.error("Error handling Twitter interactions:", error.message);
         }
     }
 

@@ -2,8 +2,7 @@
     "name": "Tom",
     "clients": [
         "twitter",
-        "telegram",
-        "discord"
+        "telegram"
     ],
     "modelProvider": "venice",
     "imageVisionModelProvider": "openai",
