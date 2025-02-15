@@ -73,7 +73,7 @@ export const FarcasterClientInterface: Client = {
 
         // Start all services
         await manager.start();
-        runtime.clients.farcaster = manager;
+        // runtime.clients.farcaster = manager;     //rferrari: bug clients.farcaster do not exist
         return manager;
     },
 

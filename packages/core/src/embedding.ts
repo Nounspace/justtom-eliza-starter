@@ -192,7 +192,7 @@ export async function embed(runtime: IAgentRuntime, input: string) {
 
     // Validate input
     if (!input || typeof input !== "string" || input.trim().length === 0) {
-        elizaLogger.warn("Invalid embedding input:", {
+        elizaLogger.log("Invalid embedding input:", {
             input,
             type: typeof input,
             length: input?.length,

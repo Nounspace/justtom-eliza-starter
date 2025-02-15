@@ -3,19 +3,34 @@
     "clients": [
         "twitter",
         "telegram",
-        "discord"
+        "discord",
+        "farcaster"
     ],
     "modelProvider": "venice",
     "imageVisionModelProvider": "openai",
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
         "ACTION_INTERVAL": "7",
+        "FARCASTER_DRY_RUN": "true",
+        "FARCASTER_FID": "527313",
+        "ENABLE_POST":"true",
+        "MAX_CAST_LENGTH": "1024",
+        "FARCASTER_POLL_INTERVAL": "120",
+        "POST_INTERVAL_MIN": "30",
+        "POST_INTERVAL_MAX": "50",
+        "ENABLE_ACTION_PROCESSING": "false",
+        "MAX_ACTIONS_PROCESSING": "1",
+        "POST_IMMEDIATELY": "false",
+        "ACTION_TIMELINE_TYPE": "following",
+        
         "secrets": {},
         "voice": {
             "model": "en_US-ryan-low"
         }
     },
     "clientConfig": {
+        "farcasterConfig": {
+        },
         "twitterConfig": {
             "ENABLE_ACTION_PROCESSING": true,
             "TWITTER_POLL_INTERVAL": 420,

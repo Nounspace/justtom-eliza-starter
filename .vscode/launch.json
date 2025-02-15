@@ -8,10 +8,11 @@
             "type": "node",
             "request": "launch",
             "name": "Launch via pnpm",
+            "runtimeVersion": "23.3.0",
             "runtimeExecutable": "pnpm",
             "runtimeArgs": [
                 "start",
-                "--characters=\"./characters/nounspaceTom-jan28.json\""
+                "--characters=\"./characters/nounspaceTom-feb15.json\""
             ],
             "console": "integratedTerminal",
             "skipFiles": [
