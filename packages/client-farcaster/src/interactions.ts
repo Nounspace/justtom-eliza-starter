@@ -208,6 +208,10 @@ export class FarcasterInteractionManager {
             modelClass: ModelClass.SMALL,
         });
 
+        elizaLogger.warn(
+            `Dry run: ${cast.profile.name} said: ${cast.text}`
+        );
+
         if (
             shouldRespondResponse === "IGNORE" ||
             shouldRespondResponse === "STOP"
@@ -239,7 +243,7 @@ export class FarcasterInteractionManager {
 
         if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
             elizaLogger.info(
-                `Dry run: would have responded to cast ${cast.hash} with ${responseContent.text}`
+                `Dry run: would have responded to cast ${cast.hash} from ${cast.profile.username} with ${responseContent.text}`
             );
             return;
         }
