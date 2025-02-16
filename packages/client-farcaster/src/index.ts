@@ -4,6 +4,7 @@ import { FarcasterPostManager } from "./post";
 import { FarcasterInteractionManager } from "./interactions";
 import { Configuration, NeynarAPIClient } from "@neynar/nodejs-sdk";
 import { validateFarcasterConfig, type FarcasterConfig } from "./environment";
+import { FarcasterHubClient } from "./farcasterHubClient"
 
 /**
  * A manager that orchestrates all Farcaster operations:
@@ -15,6 +16,7 @@ class FarcasterManager {
     client: FarcasterClient;
     posts: FarcasterPostManager;
     interactions: FarcasterInteractionManager;
+    hubClient: FarcasterHubClient;
     private signerUuid: string;
 
     constructor(runtime: IAgentRuntime, farcasterConfig: FarcasterConfig) {
@@ -52,13 +54,23 @@ class FarcasterManager {
             this.signerUuid,
             cache
         );
+
+        this.hubClient = new FarcasterHubClient(
+            this.client,
+            runtime,
+            this.signerUuid,
+            neynarConfig,
+            cache
+        );
     }
 
     async start() {
+        // this.hubClient.start();
         await Promise.all([this.posts.start(), this.interactions.start()]);
     }
 
     async stop() {
+        // this.hubClient.stop()
         await Promise.all([this.posts.stop(), this.interactions.stop()]);
     }
 }

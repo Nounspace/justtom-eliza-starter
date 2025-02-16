@@ -16,12 +16,13 @@
         "ENABLE_POST":"true",
         "MAX_CAST_LENGTH": "1024",
         "FARCASTER_POLL_INTERVAL": "120",
-        "POST_INTERVAL_MIN": "30",
-        "POST_INTERVAL_MAX": "50",
+        "POST_INTERVAL_MIN": "1440",
+        "POST_INTERVAL_MAX": "1440",
         "ENABLE_ACTION_PROCESSING": "false",
         "MAX_ACTIONS_PROCESSING": "1",
         "POST_IMMEDIATELY": "false",
         "ACTION_TIMELINE_TYPE": "following",
+        "HUB_RPC": "hub-grpc-api.neynar.com",
         
         "secrets": {},
         "voice": {
