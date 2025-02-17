@@ -65,13 +65,19 @@ class FarcasterManager {
     }
 
     async start() {
-        // this.hubClient.start();
-        await Promise.all([this.posts.start(), this.interactions.start()]);
+        this.hubClient.start();
+        await Promise.all([
+            this.posts.start(), 
+            this.interactions.start()
+        ]);
     }
 
     async stop() {
-        // this.hubClient.stop()
-        await Promise.all([this.posts.stop(), this.interactions.stop()]);
+        this.hubClient.stop()
+        await Promise.all([
+            this.posts.stop(), 
+            this.interactions.stop()
+        ]);
     }
 }
 

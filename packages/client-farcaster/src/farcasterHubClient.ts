@@ -1,8 +1,24 @@
 const FID_CLANKER = 874542;
+// const BOT_NAME = "";
+// const LAST_CONVERSATION_LIMIT = 5;
+// const TARGET_CHANNELS = [];
+
+import Groq from "groq-sdk";
+
+import {
+    formatCast,
+    formatTimeline,
+    messageHandlerTemplate,
+    shouldRespondTemplate,
+} from "./prompts";
+
+import { castUuid } from "./utils";
+import { sendCast } from "./actions";
 
 import {
     composeContext,
     generateMessageResponse,
+    generateText,
     generateShouldRespond,
     type Memory,
     ModelClass,
@@ -11,9 +27,9 @@ import {
     type HandlerCallback,
     type Content,
     type IAgentRuntime,
+    IImageDescriptionService,
+    ServiceType,
 } from "@elizaos/core";
-
-// import { randomInt } from 'crypto';
 
 import {
     HubEvent, HubEventType,
@@ -36,27 +52,17 @@ import {
     HubRpcClient,
 } from '@farcaster/hub-nodejs'
 
-// import type { FarcasterClient } from "./client";
-// import { NEYNAR_API_KEY, HUB_RPC, HUB_SSL } from "../config";
-
-
-
 // import { CastParamType, FeedType, FilterType, isApiErrorResponse } from "@neynar/nodejs-sdk";
 import { type NeynarAPIClient, isApiErrorResponse } from "@neynar/nodejs-sdk";
 import { UserResponse } from '@neynar/nodejs-sdk/build/api/models/user-response';
 import { CastParamType, CastWithInteractions, FeedType, FilterType } from '@neynar/nodejs-sdk/build/api/models';
 
-// import neynarClient from "./lib/neynarClient";
 import { err, ok, Result } from "neverthrow";
 import { FarcasterEventBusInterface } from './eventBus.interface'
 
 import { saveLatestEventId, getLatestEvent } from './event'
-// import * as botConfig from "./config";
 
 import GraphemeSplitter from 'grapheme-splitter';
-// import { console } from 'inspector';
-
-// import FileLogger from './lib/FileLogger'
 
 // import { VerificationProtocol, , BotCastObj, CastAddBodyJson, BotChatMessage } from './hub.types';
 import {
@@ -65,16 +71,18 @@ import {
     CastAddBodyJson,
     // BotCastObj
 } from './hub.types';
+
 import { FarcasterClient } from './client';
+import { Cast, Profile } from "./types";
+import { buildConversationThread, createCastMemory } from "./memory";
 
 // import { BulkUsersResponse, CastWithInteractions, Conversation, UserResponse } from '@neynar/nodejs-sdk/build/neynar-api/v2';
-// import { ragSystem } from './ragSystem';
-
-// const urlMatchesTargetChannel = (url: string): boolean => botConfig.TARGET_CHANNELS.some(target => url.endsWith(target));
 
 export class FarcasterHubClient {
     // public MEM_USED: NodeJS.MemoryUsage;
     // private eventBus: FarcasterEventBusInterface;
+
+    private chatBotGroq: Groq;
 
     private USERS_DATA_INFO: Map<string, UserResponse>;
     private USERS_FNAME_MAP: Map<number, any>;  // TODO: need to replace to user new USERS_DATA_INFO
@@ -103,9 +111,14 @@ export class FarcasterHubClient {
         // TARGETS? HUB_RPC? HUB_SSL?
         console.warn(this.client.farcasterConfig.FARCASTER_FID);
 
-        this.TARGETS = [
-            FID_CLANKER,            //  clanker
-        ]
+        this.chatBotGroq = new Groq({
+            apiKey: process.env.GROQ_API_KEY,
+        });
+
+        this.TARGETS = this.client.farcasterConfig.FARCASTER_TARGETS_USERS;
+        // this.TARGETS = [
+        //     FID_CLANKER,            //  clanker
+        // ]
 
         // this.MEM_USED = process.memoryUsage();
         // this.eventBus = eventBus;
@@ -118,9 +131,7 @@ export class FarcasterHubClient {
         this.isStopped = false;
 
         // TODO: update farcaster settings as array of hubs[]
-        this.HUB_RPC = this.runtime.getSetting("HUB_RPC");
-        // this.HUB_RPC = 'hub-grpc-api.neynar.com';
-        // this.HUB_SSL = true; 'true'//process.env.HUB_SSL || 'true';
+        this.HUB_RPC = this.runtime.getSetting("FARCASTER_HUB_RPC");
 
         if (this.HUB_RPC === null) {
             throw new Error('Farcaster HUB_RPC setting is missing')
@@ -128,18 +139,17 @@ export class FarcasterHubClient {
 
         var hubClientOptions: Partial<ClientOptions> = {};
 
-        // if (HUB_RPC == 'hub-grpc-api.neynar.com') {
+
         hubClientOptions = {
             interceptors: [
                 createDefaultMetadataKeyInterceptor(
                     'x-api-key', this.neynarConfig.apiKey),
             ],
         }
-        // }
 
         this.hubClient = getSSLHubRpcClient(this.HUB_RPC, hubClientOptions)
-        // HUB_SSL === 'true'
-        // ? getSSLHubRpcClient(HUB_RPC, hubClientOptions)
+        // FARCASTER_HUB_SSL 
+        // ?? getSSLHubRpcClient(HUB_RPC, hubClientOptions)
         // : getInsecureHubRpcClient(HUB_RPC)
     }
 
@@ -149,8 +159,8 @@ export class FarcasterHubClient {
 
     private hubProtocolToVerificationProtocol(protocol: Protocol): VerificationProtocol {
         switch (protocol) {
-            case Protocol.ETHEREUM:
-                return "ethereum";
+            // case Protocol.ETHEREUM:
+            //     return "ethereum";
             default:
                 return "ethereum";
         }
@@ -201,7 +211,7 @@ export class FarcasterHubClient {
         switch (message.data?.type) {
             case MessageType.CAST_ADD: {
                 if (!message.data.castAddBody) {
-                    console.error("Missing castAddBody");
+                    elizaLogger.warn("Missing castAddBody");
                     return
                 }
                 const {
@@ -350,7 +360,7 @@ export class FarcasterHubClient {
 
 
         if (result.isErr()) {
-            console.error(result.error + '\nError starting stream');
+            elizaLogger.error(`Farcaster: Error starting stream: ${result.error}`);
             if (!this.isStopped)
                 this.reconnect();
             return
@@ -361,11 +371,10 @@ export class FarcasterHubClient {
 
         result.match(
             (stream) => {
-                elizaLogger.log(`Subscribed to Farcaster Stream from: ${fromEventId ? `event ${fromEventId}` : 'HEAD'}`);
+                elizaLogger.warn(`Subscribed to Farcaster Stream from: ${fromEventId ? `event ${fromEventId}` : 'HEAD'}`);
+
                 // console.info(`Subscribed to Farcaster Stream: HEAD`)         //current event
-
-                // Manually trigger the 'close' event for testing // Simulate close after 3 seconds
-
+                //TEST: Manually trigger the 'close' event for testing // Simulate close after 3 seconds
                 // setTimeout(() => { console.log("Simulating stream end..."); stream.emit('end'); }, 10000);
                 // setTimeout(() => { console.log("Simulating stream close..."); stream.emit('close'); stream.emit('close'); }, 10000);
 
@@ -374,13 +383,11 @@ export class FarcasterHubClient {
                     saveLatestEventId(e.id)
                     // elizaLogger.debug('Farcaster Hub: Processing Event ' + e.id)
 
-
                     // Manually trigger the 'close' event from command
                     if (this.isStopped) {
                         this.isConnected = false;
                         stream.destroy();
                     }
-                    // this.eventBus.publish("LAST_EVENT_ID", e.id);
                 })
 
                 stream.on('end', async () => {
@@ -448,7 +455,7 @@ export class FarcasterHubClient {
             setTimeout(async () => {
                 if ((!this.isConnected) && (!this.isStopped))
                     this.subscriberStream(await getLatestEvent());
-            }, 2777); // 1-second delay
+            }, 3000); // seconds delay
         }
     }
 
@@ -583,20 +590,20 @@ export class FarcasterHubClient {
         // await job.updateProgress(100)
     }
 
-    public async getTrendingFeed(filter = FilterType.GlobalTrending) {
-        let trendingFeed = "";
-        try {
-            const feed = await this.client.neynar.fetchFeed({
-                feedType: FeedType.Filter,
-                filterType: filter,
-            });
-            for (const cast of Object.values(feed.casts))
-                trendingFeed += `${cast.author.display_name}: ${cast.text}`;
-        } catch (err) {
-            console.error("Error fetching Farcaster Feed", err);
-        }
-        return trendingFeed;
-    }
+    // public async getTrendingFeed(filter = FilterType.GlobalTrending) {
+    //     let trendingFeed = "";
+    //     try {
+    //         const feed = await this.client.neynar.fetchFeed({
+    //             feedType: FeedType.Filter,
+    //             filterType: filter,
+    //         });
+    //         for (const cast of Object.values(feed.casts))
+    //             trendingFeed += `${cast.author.display_name}: ${cast.text}`;
+    //     } catch (err) {
+    //         console.error("Error fetching Farcaster Feed", err);
+    //     }
+    //     return trendingFeed;
+    // }
 
 
 
@@ -628,22 +635,12 @@ export class FarcasterHubClient {
     private async publishToFarcaster(msg: string, options: any) {
         if (this.isStopped) return
 
-        // if (botConfig.LOG_MESSAGES) {
-        //     let logid = "publishToFarcaster";
-        //     if (!botConfig.PUBLISH_TO_FARCASTER)
-        //         this.farcasterLog.log("PUBLISH_TO_FARCASTER OFF", logid)
-        //     this.farcasterLog.info(`Message to Farcaster:\n${msg}`, logid);
-        //     // this.farcasterLog.log(`options:`, logid);
-        //     // this.farcasterLog.log(options, logid);
-        // }
-
-        // if (!botConfig.PUBLISH_TO_FARCASTER) {
-        //     this.farcasterLog.log("PUBLISH_TO_FARCASTER OFF", "INFO")
-        //     return
-        // }
-
-        // if (DRY_RUN == false) 
-        // return
+        if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
+            elizaLogger.warn(
+                `Dry run: Farcaster Cast: ${msg}`
+            );
+            return;
+        }
 
         this.client.neynar
             .publishCast({
@@ -654,7 +651,7 @@ export class FarcasterHubClient {
                 parent: options.replyTo,
             })
             .then(response_data => {
-                // this.farcasterLog.info(`Cast published successfully:\n  https://warpcast.com/${botConfig.BotName}/${response_data.cast.hash}`, "INFO")
+                elizaLogger.warn(`Clanker: Cast published successfully:\n  ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`, "INFO")
             })
             .catch(error => {
                 if (isApiErrorResponse(error)) {
@@ -664,10 +661,6 @@ export class FarcasterHubClient {
                         options
                     }
                     // this.eventBus.publish("ERROR_FC_PUBLISH", errorCastObj);
-
-                    // this.farcasterLog.error("Failed to publish cast: " + error.response.data, "ERROR")
-                    // this.farcasterLog.error(msg, "ERROR")
-                    // this.farcasterLog.error(options, "ERROR")
                 } else {
                     const errorCastObj = {
                         error: JSON.stringify(error),
@@ -675,23 +668,19 @@ export class FarcasterHubClient {
                         options
                     }
                     // this.eventBus.publish("ERROR_FC_PUBLISH", errorCastObj);
-
-                    // this.farcasterLog.error("Failed to publish cast: " + JSON.stringify(error), "ERROR")
-                    // this.farcasterLog.error(msg, "ERROR")
-                    // this.farcasterLog.error(options, "ERROR")
                 }
             });
 
         this.likeCast(options);
     }
 
-    public async delayedLikeCast(options: any) {
-        const delayInMinutes = Math.floor(Math.random() * 2);
-        // const delayInMinutes = randomInt(1, 2);
-        setTimeout(() => {
-            this.likeCast(options);
-        }, delayInMinutes * 60 * 1000); // convert minutes to milliseconds
-    }
+    // public async delayedLikeCast(options: any) {
+    //     const delayInMinutes = Math.floor(Math.random() * 2);
+    //     // const delayInMinutes = randomInt(1, 2);
+    //     setTimeout(() => {
+    //         this.likeCast(options);
+    //     }, delayInMinutes * 60 * 1000); // convert minutes to milliseconds
+    // }
 
     public async likeCast(options: any) {
         if ((options.replyTo) && (options.parent_author_fid)) {
@@ -701,13 +690,18 @@ export class FarcasterHubClient {
                 target: options.replyTo,
                 targetAuthorFid: options.parent_author_fid
             }).then(response => {
+                elizaLogger.warn("Clanker: Reaction published successfully");
                 // this.farcasterLog.info("Reaction published successfully ", "INFO")
                 // console.log('Publish Reaction Operation Status:', response); // Outputs the status of the reaction post
             }).catch(error => {
                 if (isApiErrorResponse(error)) {
+                    elizaLogger.error("Clanker: Failed to publish reaction");
+                    elizaLogger.debug(error.response.data)
                     // console.error(Red + error.response.data + Reset);
                     // this.farcasterLog.log("Failed to publish reaction: " + error.response.data, "ERROR")
                 } else {
+                    elizaLogger.error("Clanker: Failed to publish reaction");
+                    elizaLogger.debug(error)
                     // this.farcasterLog.log("Failed to publish reaction: " + JSON.stringify(error), "ERROR")
                     // console.error(Red + "Failed to publish Reaction: " + error + + Reset);
                 }
@@ -727,25 +721,21 @@ export class FarcasterHubClient {
         setTimeout(() => {
             this.publishToFarcaster(msg, options);
         }, delayInMinutes * 60 * 1000); // convert minutes to milliseconds
-
-        // const fName = (await this.handleUserFid(parentAuthorFid));
-        // if (botConfig.PUBLISH_TO_FARCASTER)
-        // this.farcasterLog.info(`Scheduling reply to FID ${parentAuthorFid} '${fName}' in ${delayInMinutes} minutes`);
     }
 
-    public async publishUserReply(msg: string, parentHash: string, parentAuthorFid: number) {
-        // Using the neynarClient to publish the cast.
-        const options = {
-            replyTo: parentHash,
-            parent_author_fid: parentAuthorFid,
-        }
+    // public async publishUserReply(msg: string, parentHash: string, parentAuthorFid: number) {
+    //     // Using the neynarClient to publish the cast.
+    //     const options = {
+    //         replyTo: parentHash,
+    //         parent_author_fid: parentAuthorFid,
+    //     }
 
-        this.publishToFarcaster(msg, options);
+    //     this.publishToFarcaster(msg, options);
 
-        const fName = (await this.handleUserFid(parentAuthorFid));
-        // if (botConfig.PUBLISH_TO_FARCASTER)
-        //     this.farcasterLog.info(`Published Reply to:\n  https://warpcast.com/${fName}/${parentHash}`);
-    }
+    //     const fName = (await this.handleUserFid(parentAuthorFid));
+    //     // if (botConfig.PUBLISH_TO_FARCASTER)
+    //     //     this.farcasterLog.info(`Published Reply to:\n  https://warpcast.com/${fName}/${parentHash}`);
+    // }
 
     // public async publishNewChannelCast(msg: string) {
     //     // Using the neynarClient to publish the cast.
@@ -756,17 +746,46 @@ export class FarcasterHubClient {
     //     this.publishToFarcaster(msg, options);
     // };
 
+    private urlMatchesTargetChannel(url: string): boolean {
+        // Early return if no URL provided
+        if (!url) return false;
+
+        // Get target channels from config, default to empty array if undefined
+        const targetChannels = this.runtime.character.clientConfig?.farcaster?.targetsChannels ?? [];
+
+        // Return false if no target channels configured
+        if (!targetChannels.length) {
+            // elizaLogger.debug('No target channels configured');
+            return false;
+        }
+
+        // Check if URL matches any target channel
+        const matches = targetChannels.some(target => {
+            try {
+                return url.toLowerCase().endsWith(target.toLowerCase());
+            } catch (error) {
+                elizaLogger.error(`Error matching URL ${url} with target ${target}: ${error}`);
+                return false;
+            }
+        });
+
+        if (matches) {
+            elizaLogger.warn(`URL ${url} matches target channel`);
+        }
+
+        return matches;
+    }
+
     private async handleAddCasts(msgs: Message[]): Promise<void> {
         for (let m = 0; m < msgs.length; m++) {
             const data = msgs[m].data;
             if (data && data.castAddBody) {
 
+                //DEBUG
                 // console.dir(msgs[m]);
                 // elizaLogger.debug(`${msgs[m].data?.fid} cast: ${msgs[m].data?.castAddBody?.text}`)
                 // elizaLogger.warn(`${msgs[m].data?.fid} cast: ${msgs[m].data?.castAddBody?.text}`)
 
-
-                // TODO
                 // Handle Targets Add Cast
                 if (this.TARGETS.includes(data.fid)) {
                     // Target Add New Cast
@@ -774,7 +793,14 @@ export class FarcasterHubClient {
                     return;
                 }
 
-                // Replies
+                // Handle Channel Messages
+                if (data.castAddBody.parentUrl && this.urlMatchesTargetChannel(data.castAddBody.parentUrl)) {
+                    // Handle channel message
+                    this.handleTargetChannelCast(msgs[m]);
+                    return;
+                }
+
+                // Handle Replies
                 // if (data.castAddBody.parentCastId && botConfig.TARGETS.includes(data.castAddBody.parentCastId.fid)) {
                 // if ((data.castAddBody.parentCastId)
                 //     && (botConfig.BotFID == data.castAddBody.parentCastId.fid)) {
@@ -783,7 +809,7 @@ export class FarcasterHubClient {
                 //     return;
                 // }
 
-                // Mentions
+                // Handle Mentions
                 // const foundMention = data.castAddBody.mentions.find(mention => botConfig.TARGETS.includes(mention));
                 // const foundMention = data.castAddBody.mentions.find(mention => botConfig.BotFID == mention);
                 // if (foundMention) {
@@ -792,71 +818,23 @@ export class FarcasterHubClient {
                 //     return;
                 // }
 
-                // Channel Messages
-                // if (data.castAddBody.parentUrl && urlMatchesTargetChannel(data.castAddBody.parentUrl)) {
-                //     // parentUrl Matches Channel
-                //     this.handleTargetChannelCast(msgs[m]);
-                //     return;
-                // }
-
                 // Quote Casts
                 // if (data.castAddBody.embeds && data.castAddBody.embeds.find(embeds => botConfig.BotFID == embeds.castId?.fid)) {
                 //     this.handleQuoteCasts(msgs[m])
                 //     return;
                 // }
-
-                // this.debugMessage(msgs[m]);
             }
         }
     }
 
 
-    // private async debugMessage(message: Message) {
-    //     if (botConfig.ENV !== "development")
-    //         return;
-
-    //     // DEBUG (optional logging block)
-    //     // console.dir(message)
-    //     // this.isStopped = true;
-    //     // this.handleMentioned(message, botConfig.BotFID);
-    //     return;
-
-    //     // ragSystem.waitForDocumentsToLoad().then(() => {
-    //     //     if (DEBUG_START == "wait_docs") {
-    //     //         DEBUG_COUNTER = DEGUG_MESSAGES_COUNTER_LIMIT
-    //     //         DEBUG_START = "started"
-    //     //     }
-    //     // });
-
-    //     //     if (DEGUG_MESSAGES_COUNTER < DEBUG_COUNTER) {
-    //     //         if (msgs[m].data.castAddBody.parentCastId) {
-    //     //             if (msgs[m].data.castAddBody.parentCastId?.hash) {
-    //     //                 // if (msgs[m].data.castAddBody.embeds.length > 0) {
-    //     //                 // console.log(msgs[m].data.castAddBody.embeds[0].url);
-    //     //                 // if (msgs[m].data.castAddBody.embeds[0].url && msgs[m].data.castAddBody.embeds[0].url.includes("image")) {
-    //     //                 this.handleReceivedReply(msgs[m]);
-    //     //                 //    console.log("New Cast to " + data.castAddBody.parentUrl);
-    //     //                 //    console.log(formatCasts(msgs));
-    //     //                 DEGUG_MESSAGES_COUNTER++
-    //     //                 console.log("DEGUG_MESSAGES_COUNTER", DEGUG_MESSAGES_COUNTER)
-    //     //             }
-    //     //         }
-    //     //         //}
-    //     //         // }
-    //     //     }
-    //     // })
-    // }
-
-    // // working async with createCastObj to create cache for latter...
     // // ... fetch and save into cache. return fetched data
     public async handleUserInfo(fname: string): Promise<UserResponse | undefined> {
         // check if fid is on the users fname cache
         if (!this.USERS_DATA_INFO.has(fname)) {
-            this.getUserDataFromFname(fname).then((result) => {
-                if (result) {
-                    this.USERS_DATA_INFO.set(fname, result);
-                }
-            })
+            const result = await this.getUserDataFromFname(fname);
+            if (result)
+                this.USERS_DATA_INFO.set(fname, result);
         }
 
         // trim max user fname cache TODO:
@@ -864,16 +842,17 @@ export class FarcasterHubClient {
             this.USERS_DATA_INFO.delete(this.USERS_DATA_INFO.keys().next().value as string);
         }
 
-        return this.USERS_DATA_INFO.get(fname)//!;
+        return this.USERS_DATA_INFO.get(fname);
     }
 
     private async handleUserFid(fid: number): Promise<string> {
         // check if fid is on the users fname cache
         if (!this.USERS_FNAME_MAP.has(fid)) {
-            const result = await this.getFnameFromFid(fid);
-            if (result.isOk()) {
-                this.USERS_FNAME_MAP.set(fid, result.value);
-            }
+            const usernameResult = await this.getFnameFromFid(fid);
+            usernameResult.match(
+                (username) => this.USERS_FNAME_MAP.set(fid, username),
+                (error) => console.error(`Error: ${error.message}`)
+            );
         }
 
         // trim max user fname cache
@@ -885,22 +864,28 @@ export class FarcasterHubClient {
     }
 
     // // get fname from fid using FC hub results.... we can replace this for new USER DATA INFO map
-    private async getFnameFromFid(fid: number): HubAsyncResult<string> {
-        const result = await this.hubClient.getUserData({ fid: fid, userDataType: UserDataType.USERNAME });
-        // console.log(result, "UserData");
-        return ok(
-            result.match(
+    private async getFnameFromFid(fid: number): Promise<Result<string, Error>> {
+        try {
+            const result = await this.hubClient.getUserData({
+                fid: fid,
+                userDataType: UserDataType.USERNAME
+            });
+
+            const username = result.match(
                 (message) => {
                     if (isUserDataAddMessage(message)) {
                         return message.data.userDataBody.value;
-                    } else {
-                        return "";
                     }
+                    return `${fid}!`;
                 },
-                () => `${fid}!`, // fallback to FID if no username is set
-            ),
-        );
-    };
+                (error) => `${fid}!` // fallback to FID if error
+            );
+
+            return ok(username);
+        } catch (error) {
+            return err(error instanceof Error ? error : new Error('Unknown error'));
+        }
+    }
 
     // // get some information from user using neynar
     private async getUserDataFromFname(fname: string): Promise<UserResponse | undefined> {
@@ -982,27 +967,86 @@ export class FarcasterHubClient {
     // }
 
 
-    // private async handleTargetChannelCast(message: Message) {
-    //     if (message.data && message.data.castAddBody && message.data.castAddBody.parentUrl) {
-    //         // console.warn("New Message at Channel: " + message.data.castAddBody.parentUrl);
-    //         const castObj = await this.createCastObj(message);
-    //         // console.dir(castObj);
-    //         // generateTomReplyMemory(data.fid, data.castAddBody.text);
-    //         this.eventBus.publish("CHANNEL_NEW_MESSAGE", castObj);
-    //     }
-    // }
+    private async handleTargetChannelCast(message: Message) {
+        if (message.data && message.data.castAddBody && message.data.castAddBody.parentUrl) {
+            // console.warn("New Message at Channel: " + message.data.castAddBody.parentUrl);
+            const cast = await this.createCastObj(message);
+            if(!cast) return
+
+            // console.dir(cast);
+            // generateTomReplyMemory(data.fid, data.castAddBody.text);
+            // this.eventBus.publish("CHANNEL_NEW_MESSAGE", cast);
+            elizaLogger.warn(`Farcaster: New Channel Cast: ${message.data.castAddBody.text}`)
+
+            // return;
+
+            const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+            const agent = await this.client.getProfile(agentFid);
+
+            const messageHash = cast.hash;
+            const conversationId = `${messageHash}-${this.runtime.agentId}`;
+            const roomId = stringToUuid(conversationId);
+            const userId = stringToUuid(cast.authorFid.toString());
+
+            const pastMemoryId = castUuid({
+                agentId: this.runtime.agentId,
+                hash: messageHash,
+            });
+
+            const pastMemory =
+                await this.runtime.messageManager.getMemoryById(pastMemoryId);
+
+            if (pastMemory) {
+                return;
+            }
+
+            await this.runtime.ensureConnection(
+                userId,
+                roomId,
+                cast.profile.username,
+                cast.profile.name,
+                "farcaster"
+            );
+
+            const thread = await buildConversationThread({
+                client: this.client,
+                runtime: this.runtime,
+                cast,
+            });
+
+            const memory: Memory = {
+                content: { text: cast.text },
+                agentId: this.runtime.agentId,
+                userId,
+                roomId,
+            };
+
+            //
+            const castMessage: Cast = cast; // fix, check, todo
+            //
+            await this.handleCast({
+                agent,
+                cast: castMessage,
+                memory,
+                thread,
+            });
+
+            this.client.lastInteractionTimestamp = new Date();
+        }
+    }
 
 
-    private async createCastObj(message: Message): Promise<any> {
-        if(!message.data)return;
+    private async createCastObj(message: Message): Promise<Cast | undefined> {
+        if (!message.data) return;
 
         const body = this.convertProtobufMessageBodyToJson(message) as CastAddBodyJson;
-        const fName = await this.handleUserFid(message.data.fid);        // farcast (User)Name 
-
-        // get async user info so we can use latter if needed. maybe need to wait here if 
-        // is a must has the user info for replies... 
-        await this.handleUserInfo(fName);        // go fetch user info async
-
+        const fName = await this.handleUserFid(message.data.fid);    // farcast (User)Name 
+        const userProfile = await this.handleUserInfo(fName);        // go fetch user info async
+        if(!userProfile){
+            elizaLogger.error(`Farcaster: missing profile ${fName}`);
+            return;
+        } 
+    
         const hash = this.bytesToHex(message.hash);
 
         if ('text' in body && 'mentions' in body && 'mentionsPositions' in body) {
@@ -1015,14 +1059,35 @@ export class FarcasterHubClient {
             }
         }
 
+        // return {
+        //     fid: message.data.fid,
+        //     fName,
+        //     hash,
+        //     type: message.data.type,
+        //     timestamp: this.farcasterTimeToDate(message.data.timestamp),
+        //     body
+        // }
+
+        const profile: Profile = {
+            fid: userProfile.user.fid,
+            name: userProfile.user.display_name || '',
+            username: userProfile.user.username
+        };
+
+        const inReplyTo = {
+            hash: body.parent?.hash!,
+            fid: body.parent?.fid!,
+        };
+
         return {
-            fid: message.data.fid,
-            fName,
             hash,
-            type: message.data.type,
-            timestamp: this.farcasterTimeToDate(message.data.timestamp),
-            body
-        }
+            authorFid: message.data.fid,
+            text: body.textWithMentions!,
+            profile,
+            inReplyTo,
+            timestamp:this.farcasterTimeToDate(message.data.timestamp),
+        };
+
     }
 
     public stop() {
@@ -1035,6 +1100,12 @@ export class FarcasterHubClient {
     }
 
     public async start(from: number | undefined = undefined) {
+        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+        if (!agentFid) {
+            elizaLogger.info("No FID found, skipping interactions");
+            return;
+        }
+
         try {
             this.isStopped = false;
             const lastid = from || await getLatestEvent();
@@ -1131,113 +1202,117 @@ export class FarcasterHubClient {
     // }
 
     private async handleTargetAddCast(message: Message) {
-        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
-        if (!agentFid) {
-            elizaLogger.info("No FID found, skipping interactions");
-            return;
-        }
-
         switch (message.data?.fid) {
             case FID_CLANKER:
                 const cast = await this.createCastObj(message);
-                this.handleClankerMessage(cast);
+                if(cast)
+                    this.handleClankerMessage(cast);
                 break;
 
             default:
                 break;
         }
-        // const mentions = await this.client.getMentions({
-        //     fid: agentFid,
-        //     pageSize: 10,
-        // });
-
-        // const agent = await this.client.getProfile(agentFid);
-        // for (const mention of mentions) {
-        //     const messageHash = toHex(mention.hash);
-        //     const conversationId = `${messageHash}-${this.runtime.agentId}`;
-        //     const roomId = stringToUuid(conversationId);
-        //     const userId = stringToUuid(mention.authorFid.toString());
-
-        //     const pastMemoryId = castUuid({
-        //         agentId: this.runtime.agentId,
-        //         hash: mention.hash,
-        //     });
-
-        //     const pastMemory =
-        //         await this.runtime.messageManager.getMemoryById(pastMemoryId);
-
-        //     if (pastMemory) {
-        //         continue;
-        //     }
-
-        //     await this.runtime.ensureConnection(
-        //         userId,
-        //         roomId,
-        //         mention.profile.username,
-        //         mention.profile.name,
-        //         "farcaster"
-        //     );
-
-        //     const thread = await buildConversationThread({
-        //         client: this.client,
-        //         runtime: this.runtime,
-        //         cast: mention,
-        //     });
-
-        //     const memory: Memory = {
-        //         content: { text: mention.text },
-        //         agentId: this.runtime.agentId,
-        //         userId,
-        //         roomId,
-        //     };
-
-        //     await this.handleCast({
-        //         agent,
-        //         cast: mention,
-        //         memory,
-        //         thread,
-        //     });
-        // }
-
-        // this.client.lastInteractionTimestamp = new Date();
     }
 
 
     // TODO: any
-    async handleClankerMessage(cast: any) {
+    async handleClankerMessage(cast: Cast) {
         // Ensure we have the required cast data
-        if (!cast.body.text) {
+        if (!cast.text) {
             elizaLogger.warn("Received invalid cast from Clanker");
             return;
         }
 
         // Get the cast text content
-        const castText = cast.body.text;
+        const castUsername = cast.profile.username;
+        const castText = cast.text;
         const castHash = cast.hash;
 
-        elizaLogger.info(`Processing Clanker cast: ${castText} (${castHash})`);
+        elizaLogger.debug(`Processing Clanker cast:`);
+        //  ${castText} (${castHash})`);
 
         // Log interaction with Clanker's message
-        elizaLogger.debug(`Clanker cast details:
-        FID: ${cast.fid}
-        Timestamp: ${cast.timestamp}
-        Text: ${castText}
-        Hash: ${castHash}
-    `);
+        // elizaLogger.debug(`Processing Clanker cast:
+        // FID: ${cast.fid}
+        // Timestamp: ${cast.timestamp}
+        // Text: ${castText}
+        // Hash: ${castHash}
+        // Link: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${castUsername}/${castHash}
+        // `);
 
-        // elizaLogger.warn(
-        //     `Dry run: ${cast.profile.name} said: ${cast.text}`
-        // );
+        if (!this.isDeployEvent(cast)) {
+            elizaLogger.warn("Clanker: Not a deploy event");
+            return undefined;
+        }
 
-        // if (
-        //     shouldRespondResponse === "IGNORE" ||
-        //     shouldRespondResponse === "STOP"
-        // ) {
-        //     elizaLogger.info(
-        //         `Not responding to cast because generated ShouldRespond was ${shouldRespondResponse}`
-        //     );
-        //     return;
-        // }
+        const contractAddress = this.extractContractAddress(cast.text);
+        if (!contractAddress) {
+            elizaLogger.warn("Clanker: Missing Contract Address");
+            return undefined;
+        }
+
+        const parentFid = cast.inReplyTo?.fid;
+        if (!parentFid) {
+            elizaLogger.warn("Clanker: Missing cast.inReplyTo.fid");
+            return undefined;
+        }
+
+        const deployerInfo = await this.fetchDeployerInfo(parentFid);
+        if (!deployerInfo) {
+            elizaLogger.warn("Clanker: Missing Deployer Info");
+            return undefined;
+        }
+
+        const CastConversation = await this.client.neynar.lookupCastConversation({
+            identifier: cast.hash,
+            type: 'hash',
+            replyDepth: 2,
+            includeChronologicalParentCasts: true,
+            viewerFid: this.client.farcasterConfig.FARCASTER_FID,
+            limit: this.client.farcasterConfig.LAST_CONVERSATION_LIMIT
+            // limit: 10,
+            // cursor: "nextPageCursor" // Omit this parameter for the initial request
+        })
+
+        const { historyConversation, imageUrls } = this.extractConversationDetails(CastConversation);
+        const image_description = await this.processImage(imageUrls[0])
+
+        const username = deployerInfo.username;
+        const bio = deployerInfo.profile.bio.text;
+        const nounspacePage = `https://nounspace.com/t/base/${contractAddress}`;
+        const thread_hash = CastConversation.conversation.cast.thread_hash;
+
+        const CLANKER_REPLY_PROMPT = `
+Roleplay as Tom and generate a personalized, engaging, and casual message that's snappy, concise, and a maximum of 3 sentences without any introduction, decision-making context or explanations, just responde with the message.
+
+# Message goals:
+Be witty, creative, and inspired by the provided context which includes:
+The token's name and symbol.
+The owners's bio, name, and other provided details like about_token and image_description.
+Use puns, clever references, or wordplay. 
+Encourage action: Prompt the user to log in to **nounspace** with Farcaster to customize their token's space with Themes, Fidgets (mini apps), and Tabs.
+
+# Tips for Better Output:
+Include dynamic personalization to create a strong sense of connection.
+Maintain clarity despite the creative tone.
+No preamble, no wrap-up: Just output the final message. No "Here's your message" intro or follow-up comments.
+
+# IMPORTANT
+"nounspace" brand is always lowercase.
+Do not include any hashtags.
+Do not mention @clanker. Only mention token owner's username
+
+<about_token>
+  username: @${username}
+  user bio: ${bio}
+
+  ${image_description?.description}
+
+  <token_creation_conversatioin>
+    ${historyConversation}
+  </token_creation_conversatioin>
+<about_token>
+`;
 
         // const context = composeContext({
         //     state,
@@ -1248,6 +1323,7 @@ export class FarcasterHubClient {
         //         messageHandlerTemplate,
         // });
 
+        // const response = await generateText;
         // const responseContent = await generateMessageResponse({
         //     runtime: this.runtime,
         //     context,
@@ -1258,12 +1334,317 @@ export class FarcasterHubClient {
 
         // if (!responseContent.text) return;
 
+        let reply: any;
+        let theTokenReply: any;
+
+        try {
+            try {
+                reply = await this.chatBotGroq.chat.completions.create({
+                    messages: [
+                        {
+                            role: "user",
+                            content: CLANKER_REPLY_PROMPT,
+                        },
+                    ],
+                    model: "llama3-70b-8192",
+                });
+            } catch (innerError) {
+                elizaLogger.error("Primary chatbot failed");
+                elizaLogger.error(innerError);
+                elizaLogger.warn("Going for Backup LLM");
+                reply = await this.chatBotGroq.chat.completions.create({
+                    messages: [
+                        {
+                            role: "user",
+                            content: CLANKER_REPLY_PROMPT,
+                        },
+                    ],
+                    model: "llama3-8b-8192",
+                });
+            }
+
+            theTokenReply = reply.choices[0].message.content
+                .replace(/^"|"$/g, '')
+                + `\n\nHere's your token space: ${nounspacePage}`;
+        } catch (error) {
+            elizaLogger.error(error);
+        }
+
         // if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
-        //     elizaLogger.info(
-        //         `Dry run: would have responded to cast ${cast.hash} from ${cast.profile.username} with ${responseContent.text}`
-        //     );
+        //     // elizaLogger.warn(CLANKER_REPLY_PROMPT);
+        //     elizaLogger.warn("\ntheTokenReply:");
+        //     elizaLogger.warn(theTokenReply)
         //     return;
         // }
+
+        const options = {
+            replyTo: thread_hash,
+            parent_author_fid: deployerInfo.fid,
+        }
+
+        this.publishToFarcaster(theTokenReply, options);
+
+    }
+
+    extractConversationDetails(data: any): any {
+        const conversation = data.conversation.cast;
+        const chronological_parent_casts = data.conversation.chronological_parent_casts;
+
+        // Extract conversation details
+        const conversationText = conversation.text.split('\n').slice(0, -3).join('\n');;
+        const conversationUsername = conversation.author.username;
+        const conversationParentFid = conversation.parent_author?.fid;
+
+        // Filter and map matching chronological parent casts
+        const parentCasts = chronological_parent_casts
+            .filter(cast => cast.author && cast.author?.fid === conversationParentFid)
+            .map(cast => `@${cast.author.username}: ${cast.text}`);
+
+        const imageUrls = chronological_parent_casts
+            .filter(cast => cast.author && cast.author?.fid === conversationParentFid)
+            .flatMap(cast =>
+                cast.embeds?.filter(embed => embed.metadata.content_type.includes("image")) || []
+            )
+            .map(embed => embed.url);
+
+
+        // console.log(imageUrls);
+
+        // Add the conversation details
+        const conversationDetail = `@${conversationUsername}: ${conversationText}`;
+
+        // Combine parent casts and the conversation detail
+        const formattedDetails = [...parentCasts, conversationDetail];
+
+        // Join the formatted details with a newline character
+        // return formattedDetails.join('\n');
+
+        return {
+            historyConversation: formattedDetails.join('\n'),
+            imageUrls
+        }
+    }
+
+    isDeployEvent(cast: any): boolean {
+        return (
+            cast.fName === "clanker" && cast.body.text.includes("clanker.world")
+        );
+    }
+
+    extractContractAddress(castText: string): string | null {
+        const contractAddressMatch = castText.match(/0x[a-fA-F0-9]{40}/);
+        return contractAddressMatch ? contractAddressMatch[0] : null;
+    }
+
+    async fetchDeployerInfo(fid: number) {
+        const userResponse = await this.client.neynar.fetchBulkUsers({ fids: [fid] });
+        return userResponse.users.length ? userResponse.users[0] : null;
+    }
+
+    // Process image messages and generate descriptions
+    private async processImage(
+        imageUrl: string
+    ): Promise<{ description: string } | null> {
+        try {
+            // let imageUrl: string | null = null;
+            elizaLogger.debug(`Farcaster Process Image: ${imageUrl}`);
+
+            if (imageUrl) {
+                const imageDescriptionService =
+                    this.runtime.getService<IImageDescriptionService>(
+                        ServiceType.IMAGE_DESCRIPTION
+                    );
+                if (!imageDescriptionService) {
+                    console.error("❌ Error processing image.");
+                    return null;
+                }
+                const { title, description } =
+                    await imageDescriptionService.describeImage(imageUrl);
+                return { description: `[Image: ${title}\n${description}]` };
+            } else {
+                elizaLogger.debug(`Farcaster Process Image: No Image to process`);
+            }
+        } catch (error) {
+            console.error("❌ Error processing image:", error);
+        }
+
+        return null;
+    }
+
+    private async handleCast({
+        agent,
+        cast,
+        memory,
+        thread,
+    }: {
+        agent: Profile;
+        cast: Cast;
+        memory: Memory;
+        thread: Cast[];
+    }) {
+        if (cast.profile.fid === agent.fid) {
+            elizaLogger.info("skipping cast from bot itself", cast.hash);
+            return;
+        }
+
+        if (!memory.content.text) {
+            elizaLogger.info("skipping cast with no text", cast.hash);
+            return { text: "", action: "IGNORE" };
+        }
+
+        const currentPost = formatCast(cast);
+
+        const senderId = stringToUuid(cast.authorFid.toString());
+
+        const { timeline } = await this.client.getTimeline({
+            fid: agent.fid,
+            pageSize: 10,
+        });
+
+        const formattedTimeline = formatTimeline(
+            this.runtime.character,
+            timeline
+        );
+
+        const formattedConversation = thread
+            .map(
+                (cast) => `@${cast.profile.username} (${new Date(
+                    cast.timestamp
+                ).toLocaleString("en-US", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    month: "short",
+                    day: "numeric",
+                })}):
+                ${cast.text}`
+            )
+            .join("\n\n");
+
+        const state = await this.runtime.composeState(memory, {
+            farcasterUsername: agent.username,
+            timeline: formattedTimeline,
+            currentPost,
+            formattedConversation,
+        });
+
+        const shouldRespondContext = composeContext({
+            state,
+            template:
+                this.runtime.character.templates
+                    ?.farcasterShouldRespondTemplate ||
+                this.runtime.character?.templates?.shouldRespondTemplate ||
+                shouldRespondTemplate,
+        });
+
+        const memoryId = castUuid({
+            agentId: this.runtime.agentId,
+            hash: cast.hash,
+        });
+
+        const castMemory =
+            await this.runtime.messageManager.getMemoryById(memoryId);
+
+        if (!castMemory) {
+            await this.runtime.messageManager.createMemory(
+                createCastMemory({
+                    roomId: memory.roomId,
+                    senderId,
+                    runtime: this.runtime,
+                    cast,
+                })
+            );
+        }
+
+        const shouldRespondResponse = await generateShouldRespond({
+            runtime: this.runtime,
+            context: shouldRespondContext,
+            modelClass: ModelClass.SMALL,
+        });
+
+        elizaLogger.warn(
+            `Dry run: ${cast.profile.name} said: ${cast.text}`
+        );
+
+        if (
+            shouldRespondResponse === "IGNORE" ||
+            shouldRespondResponse === "STOP"
+        ) {
+            elizaLogger.info(
+                `Not responding to cast because generated ShouldRespond was ${shouldRespondResponse}`
+            );
+            return;
+        }
+
+        const context = composeContext({
+            state,
+            template:
+                this.runtime.character.templates
+                    ?.farcasterMessageHandlerTemplate ??
+                this.runtime.character?.templates?.messageHandlerTemplate ??
+                messageHandlerTemplate,
+        });
+
+        const responseContent = await generateMessageResponse({
+            runtime: this.runtime,
+            context,
+            modelClass: ModelClass.LARGE,
+        });
+
+        responseContent.inReplyTo = memoryId;
+
+        if (!responseContent.text) return;
+
+        if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
+            elizaLogger.info(
+                `Dry run: would have responded to cast ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${cast.profile.username}/${cast.hash} with ${responseContent.text}`
+            );
+            return;
+        }
+
+        const callback: HandlerCallback = async (
+            content: Content,
+            _files: any[]
+        ) => {
+            try {
+                if (memoryId && !content.inReplyTo) {
+                    content.inReplyTo = memoryId;
+                }
+                const results = await sendCast({
+                    runtime: this.runtime,
+                    client: this.client,
+                    signerUuid: this.signerUuid,
+                    profile: cast.profile,
+                    content: content,
+                    roomId: memory.roomId,
+                    inReplyTo: {
+                        fid: cast.authorFid,
+                        hash: cast.hash,
+                    },
+                });
+                // sendCast lost response action, so we need to add it back here
+                results[0].memory.content.action = content.action;
+
+                for (const { memory } of results) {
+                    await this.runtime.messageManager.createMemory(memory);
+                }
+                return results.map((result) => result.memory);
+            } catch (error) {
+                elizaLogger.error("Error sending response cast:", error);
+                return [];
+            }
+        };
+
+        const responseMessages = await callback(responseContent);
+
+        const newState = await this.runtime.updateRecentMessageState(state);
+
+        await this.runtime.processActions(
+            { ...memory, content: { ...memory.content, cast } },
+            responseMessages,
+            newState,
+            callback
+        );
     }
 
 }
+

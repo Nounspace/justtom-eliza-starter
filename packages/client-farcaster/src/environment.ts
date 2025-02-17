@@ -27,6 +27,12 @@ export const farcasterEnvSchema = z.object({
     ACTION_TIMELINE_TYPE: z
         .nativeEnum(ActionTimelineType)
         .default(ActionTimelineType.ForYou),
+    FAVORITE_FRONTEND: z.string().default("https://warpcast.com"),
+    FARCASTER_USERNAME: z.string().min(1, "Farcaster username is required"),
+    FARCASTER_TARGETS_USERS: z.array(z.number()).default([]),
+    FARCASTER_TARGET_CHANNEL: z.string().min(1, "Farcaster channel is required"),
+    LAST_CONVERSATION_LIMIT: z.number().int().default(10),
+    FARCASTER_CAST_HOUR:  z.array(z.number()).default([16]),
 });
 
 export type FarcasterConfig = z.infer<typeof farcasterEnvSchema>;
@@ -123,6 +129,42 @@ export async function validateFarcasterConfig(
                 process.env.ACTION_TIMELINE_TYPE ||
                 ActionTimelineType.ForYou
             ) as ActionTimelineType,
+
+            FARCASTER_HUB_SSL:
+                parseBooleanFromText(
+                    runtime.getSetting("FARCASTER_HUB_SSL") ||
+                        "true"
+                ) ?? true,
+
+            FARCASTER_HUB_RPC: (
+                runtime.getSetting("FARCASTER_HUB_RPC") ||
+                "hub-grpc-api.neynar.com"
+            ) as String,
+
+            FARCASTER_FAVORITE_FRONTEND: (
+                runtime.getSetting("FARCASTER_FAVORITE_FRONTEND") ||
+                "https://warpcast.com"
+            ) as String,
+
+            FARCASTER_USERNAME: (
+                runtime.getSetting("FARCASTER_USERNAME")
+            ) as String,
+
+            FARCASTER_TARGETS_USERS: (
+                runtime.getSetting("FARCASTER_TARGETS_USERS") || []
+            ),
+
+            FARCASTER_TARGET_CHANNEL: (
+                runtime.getSetting("FARCASTER_TARGET_CHANNEL")
+            ),
+
+            FARCASTER_LAST_CONVERSATION_LIMIT: (
+                runtime.getSetting("FARCASTER_LAST_CONVERSATION_LIMIT")
+            ),
+
+            FARCASTER_CAST_HOUR: (
+                runtime.getSetting("FARCASTER_CAST_HOUR")
+            ),
         };
 
         return farcasterEnvSchema.parse(farcasterConfig);

@@ -1,9 +1,6 @@
 {
     "name": "Tom",
     "clients": [
-        "twitter",
-        "telegram",
-        "discord",
         "farcaster"
     ],
     "modelProvider": "venice",
@@ -16,13 +13,19 @@
         "ENABLE_POST":"true",
         "MAX_CAST_LENGTH": "1024",
         "FARCASTER_POLL_INTERVAL": "120",
-        "POST_INTERVAL_MIN": "1440",
-        "POST_INTERVAL_MAX": "1440",
+        "POST_INTERVAL_MIN": "5",
+        "POST_INTERVAL_MAX": "10",
         "ENABLE_ACTION_PROCESSING": "false",
         "MAX_ACTIONS_PROCESSING": "1",
         "POST_IMMEDIATELY": "false",
         "ACTION_TIMELINE_TYPE": "following",
-        "HUB_RPC": "hub-grpc-api.neynar.com",
+        "FARCASTER_HUB_RPC": "hub-grpc-api.neynar.com",
+        "FARCASTER_FAVORITE_FRONTEND": "",
+        "FARCASTER_USERNAME": "nounspacetom",
+        "FARCASTER_TARGETS_USERS": [874542],
+        "FARCASTER_TARGET_CHANNEL": "nounspace",
+        "FARCASTER_LAST_CONVERSATION_LIMIT": "10",
+        "FARCASTER_CAST_HOUR": [9, 16, 18],
         
         "secrets": {},
         "voice": {
@@ -30,7 +33,7 @@
         }
     },
     "clientConfig": {
-        "farcasterConfig": {
+        "farcaster": {
         },
         "twitterConfig": {
             "ENABLE_ACTION_PROCESSING": false,

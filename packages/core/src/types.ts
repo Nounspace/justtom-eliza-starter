@@ -902,6 +902,13 @@ export type Character = {
             };
             documentTriggers?: string[];
         };
+        farcaster?: {
+            favoriteFrontend: string;
+            username: string;
+            targetsUsers: string[];
+            targetsChannels: string[];
+            lastConversationLimit: number;
+        }
     };
 
     /** Writing style guides */

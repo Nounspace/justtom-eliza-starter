@@ -11,7 +11,7 @@ import type { FarcasterClient } from "./client";
 import { formatTimeline, postTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
-import { sendCast } from "./actions";
+import { sendChannelCast } from "./actions";
 
 export class FarcasterPostManager {
     client: FarcasterClient;
@@ -42,6 +42,11 @@ export class FarcasterPostManager {
             `- Enable Post: ${this.client.farcasterConfig.ENABLE_POST ? "enabled" : "disabled"}`
         );
         if (this.client.farcasterConfig.ENABLE_POST) {
+
+            elizaLogger.warn(
+                `- CAST HOUR: ${this.client.farcasterConfig.FARCASTER_CAST_HOUR}`
+            );
+
             elizaLogger.warn(
                 `- Post Interval: ${this.client.farcasterConfig.POST_INTERVAL_MIN}-${this.client.farcasterConfig.POST_INTERVAL_MAX} minutes`
             );
@@ -64,51 +69,39 @@ export class FarcasterPostManager {
     }
 
 
-    // Sempre agenda o post entre 8PM e 9PM CT.
+    // Sempre agenda o post em FARCASTER_CAST_HOUR com delay de randeom(minMinutes, maxmMinutes).
     // ✅ Garante que só posta uma vez por dia.
     // ✅ Evita que o post saia fora do horário esperado.
-    // Agora o post será publicado em um horário aleatório dentro da janela especificada! 🎯
+    // 🎯 Agora o post será publicado em um horário aleatório dentro da janela especificada!
     public async start() {
         const generateNewCastLoop = async () => {
             const timezone = "America/Chicago";
-            
-            // Get current time in UTC
+            const minMinutes = this.client.farcasterConfig.POST_INTERVAL_MIN;
+            const maxMinutes = this.client.farcasterConfig.POST_INTERVAL_MAX;
+
             const now = new Date();
-            const nowUtc = now.getTime() + now.getTimezoneOffset() * 60000;
-        
-            // Convert UTC to Chicago Time (CT)
-            const options: Intl.DateTimeFormatOptions = { timeZone: timezone, hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false };
-            const formatter = new Intl.DateTimeFormat('en-US', options);
-            const [hour, minute] = formatter.format(nowUtc).split(':').map(Number);
-        
-            // Set base time for today at 8PM Chicago Time
-            let targetTime = new Date(nowUtc);
-            targetTime.setUTCHours(20, 0, 0, 0); // 8PM UTC-adjusted
-        
-            if (hour >= 21) {
-                // If it's already past 9PM, schedule for tomorrow
-                targetTime.setUTCDate(targetTime.getUTCDate() + 1);
-            }
-        
-            // Generate random delay between 0 and 60 minutes
-            const randomMinutes = Math.floor(Math.random() * 60);
-            targetTime.setMinutes(targetTime.getMinutes() + randomMinutes);
-        
-            // Calculate delay in milliseconds
-            const delay = targetTime.getTime() - nowUtc;
-        
-            setTimeout(async () => {
+            const timezoneTime = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: 'numeric', hour12: false }).format(now);
+            const [hour] = timezoneTime.split(':').map(Number);
+
+            if (this.client.farcasterConfig.FARCASTER_CAST_HOUR.includes(hour)) {
                 try {
-                    await this.generateNewCast();
+                    const randomDelay = (Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes) * 60 * 1000;
+                    setTimeout(async () => {
+                        try {
+                            await this.generateNewCast();
+                        } catch (error) {
+                            elizaLogger.error(error);
+                        }
+                    }, randomDelay);
+                    elizaLogger.warn(`Next cast scheduled for ${randomDelay} minutes`);
                 } catch (error) {
                     elizaLogger.error(error);
                 }
-                generateNewCastLoop();
-            }, delay);
-        
-            elizaLogger.warn(`Next cast scheduled for ${targetTime.toLocaleString("en-US", { timeZone: timezone })}`);
+            }
+
+            setTimeout(generateNewCastLoop, 60 * 60 * 1000); // Re-executa a cada 1 hora
         };
-    
+
         if (this.client.farcasterConfig.ENABLE_POST) {
             if (this.client.farcasterConfig.POST_IMMEDIATELY) {
                 await this.generateNewCast();
@@ -117,6 +110,7 @@ export class FarcasterPostManager {
         }
     }
 
+    // ORIGINAL:
     // public async start() {
     //     const generateNewCastLoop = async () => {
 
@@ -237,7 +231,7 @@ export class FarcasterPostManager {
             }
 
             try {
-                const [{ cast }] = await sendCast({
+                const [{ cast }] = await sendChannelCast({
                     client: this.client,
                     runtime: this.runtime,
                     signerUuid: this.signerUuid,

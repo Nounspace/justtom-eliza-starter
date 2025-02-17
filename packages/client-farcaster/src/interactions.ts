@@ -209,7 +209,7 @@ export class FarcasterInteractionManager {
         });
 
         elizaLogger.warn(
-            `Dry run: ${cast.profile.name} said: ${cast.text}`
+            `Dry run Before Should Response: ${cast.profile.name} said: ${cast.text}`
         );
 
         if (
@@ -243,7 +243,7 @@ export class FarcasterInteractionManager {
 
         if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
             elizaLogger.info(
-                `Dry run: would have responded to cast ${cast.hash} from ${cast.profile.username} with ${responseContent.text}`
+                `Dry run: would have responded to cast ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${cast.profile.username}/${cast.hash} with ${responseContent.text}`
             );
             return;
         }

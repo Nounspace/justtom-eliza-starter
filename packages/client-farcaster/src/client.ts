@@ -77,6 +77,38 @@ export class FarcasterClient {
         }
     }
 
+    async publishChannelCast(
+        cast: string,
+        parentCastId: CastId | undefined,
+        channelId: string,
+        // eslint-disable-next-line
+        retryTimes?: number,
+    ): Promise<NeynarCastResponse | undefined> {
+        try {
+            const result = await this.neynar.publishCast({
+                signerUuid: this.signerUuid,
+                text: cast,
+                parent: parentCastId?.hash,
+                channelId
+            });
+            if (result.success) {
+                return {
+                    hash: result.cast.hash,
+                    authorFid: result.cast.author.fid,
+                    text: result.cast.text,
+                };
+            }
+        } catch (err) {
+            if (isApiErrorResponse(err)) {
+                elizaLogger.error("Neynar error: ", err.response.data);
+                throw err.response.data;
+            } else {
+                elizaLogger.error("Error: ", err);
+                throw err;
+            }
+        }
+    }
+
     async getCast(castHash: string): Promise<Cast> {
         if (this.cache.has(`farcaster/cast/${castHash}`)) {
             return this.cache.get(`farcaster/cast/${castHash}`);
