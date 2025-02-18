@@ -415,7 +415,7 @@ export class FarcasterHubClient {
                     console.error('Stream error:', error);
                     this.handleStreamError(error);
                 });
-            }, (e) => { console.error(e, 'Error streaming data.') })
+            }, (e) => { elizaLogger.error('Error streaming data.') })
     }
 
     private determineCloseReason(stream: any): string {
@@ -435,7 +435,7 @@ export class FarcasterHubClient {
     }
 
     private handleStreamError(error: Error): void {
-        console.error('Stream error details:', {
+        elizaLogger.debug('Stream error details:', {
             name: error.name,
             message: error.message,
             stack: error.stack,
@@ -651,7 +651,7 @@ export class FarcasterHubClient {
                 parent: options.replyTo,
             })
             .then(response_data => {
-                elizaLogger.warn(`Clanker: Cast published successfully:\n  ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`, "INFO")
+                elizaLogger.warn(`Farcaster: Cast published successfully:\n  ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`, "INFO")
             })
             .catch(error => {
                 if (isApiErrorResponse(error)) {
@@ -690,17 +690,17 @@ export class FarcasterHubClient {
                 target: options.replyTo,
                 targetAuthorFid: options.parent_author_fid
             }).then(response => {
-                elizaLogger.warn("Clanker: Reaction published successfully");
+                elizaLogger.warn("Farcaster: Reaction published successfully");
                 // this.farcasterLog.info("Reaction published successfully ", "INFO")
                 // console.log('Publish Reaction Operation Status:', response); // Outputs the status of the reaction post
             }).catch(error => {
                 if (isApiErrorResponse(error)) {
-                    elizaLogger.error("Clanker: Failed to publish reaction");
+                    elizaLogger.error("Farcaster: Failed to publish reaction");
                     elizaLogger.debug(error.response.data)
                     // console.error(Red + error.response.data + Reset);
                     // this.farcasterLog.log("Failed to publish reaction: " + error.response.data, "ERROR")
                 } else {
-                    elizaLogger.error("Clanker: Failed to publish reaction");
+                    elizaLogger.error("Farcaster: Failed to publish reaction");
                     elizaLogger.debug(error)
                     // this.farcasterLog.log("Failed to publish reaction: " + JSON.stringify(error), "ERROR")
                     // console.error(Red + "Failed to publish Reaction: " + error + + Reset);
@@ -751,7 +751,8 @@ export class FarcasterHubClient {
         if (!url) return false;
 
         // Get target channels from config, default to empty array if undefined
-        const targetChannels = this.runtime.character.clientConfig?.farcaster?.targetsChannels ?? [];
+        const targetChannels = this.client.farcasterConfig.FARCASTER_TARGET_CHANNEL ?? "";
+        // const targetChannels = "food";
 
         // Return false if no target channels configured
         if (!targetChannels.length) {
@@ -760,20 +761,13 @@ export class FarcasterHubClient {
         }
 
         // Check if URL matches any target channel
-        const matches = targetChannels.some(target => {
-            try {
-                return url.toLowerCase().endsWith(target.toLowerCase());
-            } catch (error) {
-                elizaLogger.error(`Error matching URL ${url} with target ${target}: ${error}`);
-                return false;
-            }
-        });
-
-        if (matches) {
-            elizaLogger.warn(`URL ${url} matches target channel`);
+        try {
+            // return true;
+            // return url.toLowerCase().includes('~/channel/');
+            return url.toLowerCase().endsWith('~/channel/' + targetChannels.toLowerCase());
+        } catch (error) {
+            return false;
         }
-
-        return matches;
     }
 
     private async handleAddCasts(msgs: Message[]): Promise<void> {
@@ -794,8 +788,8 @@ export class FarcasterHubClient {
                 }
 
                 // Handle Channel Messages
+                if (data.castAddBody.parentUrl) elizaLogger.debug(data.castAddBody.parentUrl);
                 if (data.castAddBody.parentUrl && this.urlMatchesTargetChannel(data.castAddBody.parentUrl)) {
-                    // Handle channel message
                     this.handleTargetChannelCast(msgs[m]);
                     return;
                 }
@@ -968,20 +962,31 @@ export class FarcasterHubClient {
 
 
     private async handleTargetChannelCast(message: Message) {
+        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+        const agent = await this.client.getProfile(agentFid);
+
+        // ignore agent casts
+        if (message.data?.fid == agentFid) {
+            return
+        }
+
+        // if bot was mentioned, ignore and let handle Mentions method process it...
+        const foundMention = message.data?.castAddBody?.mentions.find(mention => agentFid == mention);
+        if (foundMention) {
+            return;
+        }
+
         if (message.data && message.data.castAddBody && message.data.castAddBody.parentUrl) {
             // console.warn("New Message at Channel: " + message.data.castAddBody.parentUrl);
             const cast = await this.createCastObj(message);
-            if(!cast) return
+            if (!cast) return
 
             // console.dir(cast);
             // generateTomReplyMemory(data.fid, data.castAddBody.text);
             // this.eventBus.publish("CHANNEL_NEW_MESSAGE", cast);
-            elizaLogger.warn(`Farcaster: New Channel Cast: ${message.data.castAddBody.text}`)
+            elizaLogger.warn(`Farcaster: New Channel Cast: ${cast.text}`)
 
             // return;
-
-            const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
-            const agent = await this.client.getProfile(agentFid);
 
             const messageHash = cast.hash;
             const conversationId = `${messageHash}-${this.runtime.agentId}`;
@@ -1042,11 +1047,11 @@ export class FarcasterHubClient {
         const body = this.convertProtobufMessageBodyToJson(message) as CastAddBodyJson;
         const fName = await this.handleUserFid(message.data.fid);    // farcast (User)Name 
         const userProfile = await this.handleUserInfo(fName);        // go fetch user info async
-        if(!userProfile){
+        if (!userProfile) {
             elizaLogger.error(`Farcaster: missing profile ${fName}`);
             return;
-        } 
-    
+        }
+
         const hash = this.bytesToHex(message.hash);
 
         if ('text' in body && 'mentions' in body && 'mentionsPositions' in body) {
@@ -1074,10 +1079,10 @@ export class FarcasterHubClient {
             username: userProfile.user.username
         };
 
-        const inReplyTo = {
-            hash: body.parent?.hash!,
+        const inReplyTo = (body.parent?.hash && body.parent.hash !== "0x0") ? {
+            hash: body.parent.hash,
             fid: body.parent?.fid!,
-        };
+        } : undefined;
 
         return {
             hash,
@@ -1085,7 +1090,7 @@ export class FarcasterHubClient {
             text: body.textWithMentions!,
             profile,
             inReplyTo,
-            timestamp:this.farcasterTimeToDate(message.data.timestamp),
+            timestamp: this.farcasterTimeToDate(message.data.timestamp),
         };
 
     }
@@ -1205,7 +1210,7 @@ export class FarcasterHubClient {
         switch (message.data?.fid) {
             case FID_CLANKER:
                 const cast = await this.createCastObj(message);
-                if(cast)
+                if (cast)
                     this.handleClankerMessage(cast);
                 break;
 
@@ -1224,9 +1229,9 @@ export class FarcasterHubClient {
         }
 
         // Get the cast text content
-        const castUsername = cast.profile.username;
-        const castText = cast.text;
-        const castHash = cast.hash;
+        // const castUsername = cast.profile.username;
+        // const castText = cast.text;
+        // const castHash = cast.hash;
 
         elizaLogger.debug(`Processing Clanker cast:`);
         //  ${castText} (${castHash})`);
@@ -1283,14 +1288,17 @@ export class FarcasterHubClient {
         const thread_hash = CastConversation.conversation.cast.thread_hash;
 
         const CLANKER_REPLY_PROMPT = `
-Roleplay as Tom and generate a personalized, engaging, and casual message that's snappy, concise, and a maximum of 3 sentences without any introduction, decision-making context or explanations, just responde with the message.
+Roleplay as Tom from "nounspace" and generate a personalized, engaging, and casual message that's snappy, concise, and a maximum of 3 sentences without any introduction, decision-making context or explanations, just responde with the message.
+
+REMEMBER: 
+Strictly maintain branding: 'nounspace' must always be lowercase.
 
 # Message goals:
 Be witty, creative, and inspired by the provided context which includes:
 The token's name and symbol.
 The owners's bio, name, and other provided details like about_token and image_description.
 Use puns, clever references, or wordplay. 
-Encourage action: Prompt the user to log in to **nounspace** with Farcaster to customize their token's space with Themes, Fidgets (mini apps), and Tabs.
+Encourage action: Prompt the user to log in to "nounspace" with Farcaster to customize their token's space with Themes, Fidgets (mini apps), and Tabs.
 
 # Tips for Better Output:
 Include dynamic personalization to create a strong sense of connection.
@@ -1299,6 +1307,7 @@ No preamble, no wrap-up: Just output the final message. No "Here's your message"
 
 # IMPORTANT
 "nounspace" brand is always lowercase.
+Always output 'nounspace' in lowercase, never capitalized.
 Do not include any hashtags.
 Do not mention @clanker. Only mention token owner's username
 
@@ -1340,25 +1349,22 @@ Do not mention @clanker. Only mention token owner's username
         try {
             try {
                 reply = await this.chatBotGroq.chat.completions.create({
-                    messages: [
-                        {
-                            role: "user",
-                            content: CLANKER_REPLY_PROMPT,
-                        },
-                    ],
-                    model: "llama3-70b-8192",
+                    messages: [{
+                        role: "user",
+                        content: CLANKER_REPLY_PROMPT,
+                    },],
+                    // model: "llama3-70b-8192",
+                    model: "gemma2-9b-it",
                 });
             } catch (innerError) {
-                elizaLogger.error("Primary chatbot failed");
+                elizaLogger.error("Farcaster: Primary chatbot failed");
                 elizaLogger.error(innerError);
-                elizaLogger.warn("Going for Backup LLM");
+                elizaLogger.warn("Farcaster: Going for Backup LLM");
                 reply = await this.chatBotGroq.chat.completions.create({
-                    messages: [
-                        {
-                            role: "user",
-                            content: CLANKER_REPLY_PROMPT,
-                        },
-                    ],
+                    messages: [{
+                        role: "user",
+                        content: CLANKER_REPLY_PROMPT,
+                    },],
                     model: "llama3-8b-8192",
                 });
             }
@@ -1400,13 +1406,17 @@ Do not mention @clanker. Only mention token owner's username
             .filter(cast => cast.author && cast.author?.fid === conversationParentFid)
             .map(cast => `@${cast.author.username}: ${cast.text}`);
 
-        const imageUrls = chronological_parent_casts
-            .filter(cast => cast.author && cast.author?.fid === conversationParentFid)
-            .flatMap(cast =>
-                cast.embeds?.filter(embed => embed.metadata.content_type.includes("image")) || []
-            )
-            .map(embed => embed.url);
-
+        let imageUrls = [];
+        try {
+            imageUrls = chronological_parent_casts
+                .filter(cast => cast.author && cast.author?.fid === conversationParentFid)
+                .flatMap(cast =>
+                    cast.embeds?.filter(embed => embed.metadata.content_type.includes("image")) || []
+                )
+                .map(embed => embed.url);
+        } catch {
+            elizaLogger.error("Error extracting image URLs");
+        }
 
         // console.log(imageUrls);
 
@@ -1425,9 +1435,9 @@ Do not mention @clanker. Only mention token owner's username
         }
     }
 
-    isDeployEvent(cast: any): boolean {
+    isDeployEvent(cast: Cast): boolean {
         return (
-            cast.fName === "clanker" && cast.body.text.includes("clanker.world")
+            cast.profile.username === "clanker" && cast.text.includes("clanker.world")
         );
     }
 
