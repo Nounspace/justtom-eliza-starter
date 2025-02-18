@@ -11,7 +11,7 @@ async function get(
 ): Promise<KnowledgeItem[]> {
     // Add validation for message
     if (!message?.content?.text) {
-        elizaLogger.warn("Invalid message for knowledge query:", {
+        elizaLogger.debug("Invalid message for knowledge query:", {
             message,
             content: message?.content,
             text: message?.content?.text,
