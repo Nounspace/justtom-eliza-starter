@@ -44,7 +44,7 @@ export class FarcasterPostManager {
         if (this.client.farcasterConfig.ENABLE_POST) {
 
             elizaLogger.warn(
-                `- CAST HOUR: ${this.client.farcasterConfig.FARCASTER_CAST_HOUR}`
+                `- CAST HOUR: ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`
             );
 
             elizaLogger.warn(
@@ -69,7 +69,7 @@ export class FarcasterPostManager {
     }
 
 
-    // Sempre agenda o post em FARCASTER_CAST_HOUR com delay de randeom(minMinutes, maxmMinutes).
+    // Sempre agenda o post em FARCASTER_CAST_HOURS com delay de randeom(minMinutes, maxmMinutes).
     // ✅ Garante que só posta uma vez por dia.
     // ✅ Evita que o post saia fora do horário esperado.
     // 🎯 Agora o post será publicado em um horário aleatório dentro da janela especificada!
@@ -83,7 +83,7 @@ export class FarcasterPostManager {
             const timezoneTime = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: 'numeric', hour12: false }).format(now);
             const [hour] = timezoneTime.split(':').map(Number);
 
-            if (this.client.farcasterConfig.FARCASTER_CAST_HOUR.includes(hour)) {
+            if (this.client.farcasterConfig.FARCASTER_CAST_HOURS.includes(hour)) {
                 try {
                     const randomDelay = (Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes) * 60 * 1000;
                     setTimeout(async () => {
