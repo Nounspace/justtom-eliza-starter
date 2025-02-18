@@ -82,6 +82,8 @@ export class FarcasterHubClient {
     // public MEM_USED: NodeJS.MemoryUsage;
     // private eventBus: FarcasterEventBusInterface;
 
+    private readonly MAX_CACHE_SIZE = 100;
+
     private chatBotGroq: Groq;
 
     private USERS_DATA_INFO: Map<string, UserResponse>;
@@ -446,16 +448,31 @@ export class FarcasterHubClient {
         });
     }
 
-    private reconnect() {
-        elizaLogger.log(`Reconnect: ` + this.HUB_RPC + " : " + + getLatestEvent());
-        if (!this.isConnected && !this.isReconnecting) {
-            elizaLogger.warn(`Farcaster Hub: Reconnecting...`)
-            this.isReconnecting = true;
+    private async reconnect() {
+        // Guard against multiple concurrent reconnection attempts
+        if (this.isReconnecting || this.isConnected || this.isStopped) {
+            return;
+        }
 
-            setTimeout(async () => {
-                if ((!this.isConnected) && (!this.isStopped))
-                    this.subscriberStream(await getLatestEvent());
-            }, 3000); // seconds delay
+        try {
+            this.isReconnecting = true;
+            elizaLogger.warn(`Farcaster Hub: Reconnecting to ${this.HUB_RPC}`);
+
+            // Get latest event once before reconnection attempt
+            const latestEvent = await getLatestEvent();
+
+            await new Promise(resolve => setTimeout(resolve, 3000));
+
+            if (!this.isConnected && !this.isStopped) {
+                await this.subscriberStream(latestEvent);
+            }
+        } catch (error) {
+            elizaLogger.error('Reconnection failed:', error);
+        } finally {
+            // Reset reconnecting flag if connection wasn't established
+            if (!this.isConnected) {
+                this.isReconnecting = false;
+            }
         }
     }
 
@@ -829,7 +846,7 @@ export class FarcasterHubClient {
         }
 
         // trim max user fname cache TODO:
-        if (this.USERS_DATA_INFO.size >= 100) { //botConfig.MAX_USER_CACHE) {
+        if (this.USERS_DATA_INFO.size >= this.MAX_CACHE_SIZE) {
             this.USERS_DATA_INFO.delete(this.USERS_DATA_INFO.keys().next().value as string);
         }
 
@@ -1092,9 +1109,17 @@ export class FarcasterHubClient {
 
     }
 
+    private async cleanup() {
+        // Cleanup connections
+        // Clear caches
+        this.USERS_DATA_INFO.clear();
+        this.USERS_FNAME_MAP.clear();
+    }
+
     public stop() {
         try {
             this.isStopped = true;
+            this.cleanup();
             return true;
         } catch {
             return false;
@@ -1147,7 +1172,7 @@ export class FarcasterHubClient {
     //     catch (error) {
     //         console.error('Get Quote Cast Context Fail:');
     //         return lastMessages;
-    //     };
+    //     }
     // }
 
     // public async getConversationHistory(castHashOrUrl: string, castParamType: CastParamType = CastParamType.Hash): Promise<BotChatMessage[]> {

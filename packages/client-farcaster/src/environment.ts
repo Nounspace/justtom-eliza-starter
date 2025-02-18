@@ -32,7 +32,7 @@ export const farcasterEnvSchema = z.object({
     FARCASTER_TARGETS_USERS: z.array(z.number()).default([]),
     FARCASTER_TARGET_CHANNEL: z.string().min(1, "Farcaster channel is required"),
     LAST_CONVERSATION_LIMIT: z.number().int().default(10),
-    FARCASTER_CAST_HOUR:  z.array(z.number()).default([16]),
+    FARCASTER_CAST_HOURS:  z.array(z.number()).default([16]),
 });
 
 export type FarcasterConfig = z.infer<typeof farcasterEnvSchema>;
@@ -162,8 +162,8 @@ export async function validateFarcasterConfig(
                 runtime.getSetting("FARCASTER_LAST_CONVERSATION_LIMIT")
             ),
 
-            FARCASTER_CAST_HOUR: (
-                runtime.getSetting("FARCASTER_CAST_HOUR")
+            FARCASTER_CAST_HOURS: (
+                runtime.getSetting("FARCASTER_CAST_HOURS")
             ),
         };
 

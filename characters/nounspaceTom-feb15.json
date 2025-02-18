@@ -11,24 +11,26 @@
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
         "ACTION_INTERVAL": "7",
+        "POST_INTERVAL_MIN": "5",
+        "POST_INTERVAL_MAX": "10",
+        "MAX_ACTIONS_PROCESSING": "1",
+        "ACTION_TIMELINE_TYPE": "following",
+
         "FARCASTER_DRY_RUN": "true",
         "FARCASTER_FID": "527313",
         "ENABLE_POST":"true",
         "MAX_CAST_LENGTH": "1024",
         "FARCASTER_POLL_INTERVAL": "120",
-        "POST_INTERVAL_MIN": "5",
-        "POST_INTERVAL_MAX": "10",
         "ENABLE_ACTION_PROCESSING": "true",
-        "MAX_ACTIONS_PROCESSING": "1",
         "POST_IMMEDIATELY": "false",
-        "ACTION_TIMELINE_TYPE": "following",
+        
         "FARCASTER_HUB_RPC": "hub-grpc-api.neynar.com",
         "FARCASTER_FAVORITE_FRONTEND": "",
         "FARCASTER_USERNAME": "nounspacetom",
         "FARCASTER_TARGETS_USERS": [874542],
         "FARCASTER_TARGET_CHANNEL": "nounspace",
         "FARCASTER_LAST_CONVERSATION_LIMIT": "10",
-        "FARCASTER_CAST_HOUR": [9],
+        "FARCASTER_CAST_HOURS": [9],
         
         "secrets": {},
         "voice": {
