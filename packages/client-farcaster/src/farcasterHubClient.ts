@@ -752,18 +752,15 @@ export class FarcasterHubClient {
 
         // Get target channels from config, default to empty array if undefined
         const targetChannels = this.client.farcasterConfig.FARCASTER_TARGET_CHANNEL ?? "";
-        // const targetChannels = "food";
 
         // Return false if no target channels configured
         if (!targetChannels.length) {
-            // elizaLogger.debug('No target channels configured');
+            elizaLogger.warn('No target channels configured');
             return false;
         }
 
         // Check if URL matches any target channel
         try {
-            // return true;
-            // return url.toLowerCase().includes('~/channel/');
             return url.toLowerCase().endsWith('~/channel/' + targetChannels.toLowerCase());
         } catch (error) {
             return false;
@@ -774,11 +771,6 @@ export class FarcasterHubClient {
         for (let m = 0; m < msgs.length; m++) {
             const data = msgs[m].data;
             if (data && data.castAddBody) {
-
-                //DEBUG
-                // console.dir(msgs[m]);
-                // elizaLogger.debug(`${msgs[m].data?.fid} cast: ${msgs[m].data?.castAddBody?.text}`)
-                // elizaLogger.warn(`${msgs[m].data?.fid} cast: ${msgs[m].data?.castAddBody?.text}`)
 
                 // Handle Targets Add Cast
                 if (this.TARGETS.includes(data.fid)) {
@@ -793,6 +785,11 @@ export class FarcasterHubClient {
                     this.handleTargetChannelCast(msgs[m]);
                     return;
                 }
+
+                //DEBUG
+                // console.dir(msgs[m]);
+                // elizaLogger.debug(`${msgs[m].data?.fid} cast: ${msgs[m].data?.castAddBody?.text}`)
+                // elizaLogger.warn(`${msgs[m].data?.fid} cast: ${msgs[m].data?.castAddBody?.text}`)
 
                 // Handle Replies
                 // if (data.castAddBody.parentCastId && botConfig.TARGETS.includes(data.castAddBody.parentCastId.fid)) {

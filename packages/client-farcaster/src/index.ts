@@ -68,7 +68,7 @@ class FarcasterManager {
         this.hubClient.start();
         await Promise.all([
             this.posts.start(), 
-            // this.interactions.start()
+            this.interactions.start()
         ]);
     }
 

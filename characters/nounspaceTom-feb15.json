@@ -1,7 +1,10 @@
 {
     "name": "Tom",
     "clients": [
-        "farcaster"
+        "farcaster",
+        "twitter",
+        "discord",
+        "telegram"
     ],
     "modelProvider": "venice",
     "imageVisionModelProvider": "openai",
@@ -15,7 +18,7 @@
         "FARCASTER_POLL_INTERVAL": "120",
         "POST_INTERVAL_MIN": "5",
         "POST_INTERVAL_MAX": "10",
-        "ENABLE_ACTION_PROCESSING": "false",
+        "ENABLE_ACTION_PROCESSING": "true",
         "MAX_ACTIONS_PROCESSING": "1",
         "POST_IMMEDIATELY": "false",
         "ACTION_TIMELINE_TYPE": "following",
@@ -25,7 +28,7 @@
         "FARCASTER_TARGETS_USERS": [874542],
         "FARCASTER_TARGET_CHANNEL": "nounspace",
         "FARCASTER_LAST_CONVERSATION_LIMIT": "10",
-        "FARCASTER_CAST_HOUR": [9, 16, 18],
+        "FARCASTER_CAST_HOUR": [9],
         
         "secrets": {},
         "voice": {
