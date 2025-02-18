@@ -211,7 +211,7 @@ export class FarcasterHubClient {
         switch (message.data?.type) {
             case MessageType.CAST_ADD: {
                 if (!message.data.castAddBody) {
-                    elizaLogger.warn("Missing castAddBody");
+                    elizaLogger.debug("Missing castAddBody");
                     return
                 }
                 const {
@@ -371,7 +371,7 @@ export class FarcasterHubClient {
 
         result.match(
             (stream) => {
-                elizaLogger.warn(`Subscribed to Farcaster Stream from: ${fromEventId ? `event ${fromEventId}` : 'HEAD'}`);
+                elizaLogger.log(`Subscribed to Farcaster Stream from: ${fromEventId ? `event ${fromEventId}` : 'HEAD'}`);
 
                 // console.info(`Subscribed to Farcaster Stream: HEAD`)         //current event
                 //TEST: Manually trigger the 'close' event for testing // Simulate close after 3 seconds
@@ -391,7 +391,7 @@ export class FarcasterHubClient {
                 })
 
                 stream.on('end', async () => {
-                    elizaLogger.warn(`Farcaster Hub: Hub stream ended`);
+                    elizaLogger.log(`Farcaster Hub: Hub stream ended`);
                     // console.log(`Stream object details on END:`);
                     // this.logRelevantStreamDetails(stream);
                     // this.isConnected = false;
@@ -399,7 +399,7 @@ export class FarcasterHubClient {
 
                 stream.on('close', async () => {
                     const closeReason = this.determineCloseReason(stream);
-                    elizaLogger.warn(`Farcaster Hub: Hub stream closed: ${closeReason}`);
+                    elizaLogger.log(`Farcaster Hub: Hub stream closed: ${closeReason}`);
 
                     // console.log(`Stream object details on CLOSE:`);
                     // this.logRelevantStreamDetails(stream);
@@ -447,7 +447,7 @@ export class FarcasterHubClient {
     }
 
     private reconnect() {
-        elizaLogger.warn(`Reconnect: ` + this.HUB_RPC + " : " + + getLatestEvent());
+        elizaLogger.log(`Reconnect: ` + this.HUB_RPC + " : " + + getLatestEvent());
         if (!this.isConnected && !this.isReconnecting) {
             elizaLogger.warn(`Farcaster Hub: Reconnecting...`)
             this.isReconnecting = true;
@@ -636,7 +636,7 @@ export class FarcasterHubClient {
         if (this.isStopped) return
 
         if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
-            elizaLogger.warn(
+            elizaLogger.info(
                 `Dry run: Farcaster Cast: ${msg}`
             );
             return;
@@ -651,7 +651,7 @@ export class FarcasterHubClient {
                 parent: options.replyTo,
             })
             .then(response_data => {
-                elizaLogger.warn(`Farcaster: Cast published successfully:\n  ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`, "INFO")
+                elizaLogger.info(`Farcaster: Cast published successfully:\n  ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`, "INFO")
             })
             .catch(error => {
                 if (isApiErrorResponse(error)) {
@@ -690,7 +690,7 @@ export class FarcasterHubClient {
                 target: options.replyTo,
                 targetAuthorFid: options.parent_author_fid
             }).then(response => {
-                elizaLogger.warn("Farcaster: Reaction published successfully");
+                elizaLogger.info("Farcaster: Reaction published successfully");
                 // this.farcasterLog.info("Reaction published successfully ", "INFO")
                 // console.log('Publish Reaction Operation Status:', response); // Outputs the status of the reaction post
             }).catch(error => {
@@ -788,7 +788,7 @@ export class FarcasterHubClient {
                 }
 
                 // Handle Channel Messages
-                if (data.castAddBody.parentUrl) elizaLogger.debug(data.castAddBody.parentUrl);
+                // if (data.castAddBody.parentUrl) elizaLogger.debug(data.castAddBody.parentUrl);
                 if (data.castAddBody.parentUrl && this.urlMatchesTargetChannel(data.castAddBody.parentUrl)) {
                     this.handleTargetChannelCast(msgs[m]);
                     return;
@@ -984,7 +984,7 @@ export class FarcasterHubClient {
             // console.dir(cast);
             // generateTomReplyMemory(data.fid, data.castAddBody.text);
             // this.eventBus.publish("CHANNEL_NEW_MESSAGE", cast);
-            elizaLogger.warn(`Farcaster: New Channel Cast: ${cast.text}`)
+            elizaLogger.info(`Farcaster: New Channel Cast: ${cast.text}`)
 
             // return;
 
@@ -1224,7 +1224,7 @@ export class FarcasterHubClient {
     async handleClankerMessage(cast: Cast) {
         // Ensure we have the required cast data
         if (!cast.text) {
-            elizaLogger.warn("Received invalid cast from Clanker");
+            elizaLogger.debug("Received invalid cast from Clanker");
             return;
         }
 
@@ -1246,25 +1246,25 @@ export class FarcasterHubClient {
         // `);
 
         if (!this.isDeployEvent(cast)) {
-            elizaLogger.warn("Clanker: Not a deploy event");
+            elizaLogger.debug("Clanker: Not a deploy event");
             return undefined;
         }
 
         const contractAddress = this.extractContractAddress(cast.text);
         if (!contractAddress) {
-            elizaLogger.warn("Clanker: Missing Contract Address");
+            elizaLogger.debug("Clanker: Missing Contract Address");
             return undefined;
         }
 
         const parentFid = cast.inReplyTo?.fid;
         if (!parentFid) {
-            elizaLogger.warn("Clanker: Missing cast.inReplyTo.fid");
+            elizaLogger.debug("Clanker: Missing cast.inReplyTo.fid");
             return undefined;
         }
 
         const deployerInfo = await this.fetchDeployerInfo(parentFid);
         if (!deployerInfo) {
-            elizaLogger.warn("Clanker: Missing Deployer Info");
+            elizaLogger.debug("Clanker: Missing Deployer Info");
             return undefined;
         }
 
@@ -1359,7 +1359,7 @@ Do not mention @clanker. Only mention token owner's username
             } catch (innerError) {
                 elizaLogger.error("Farcaster: Primary chatbot failed");
                 elizaLogger.error(innerError);
-                elizaLogger.warn("Farcaster: Going for Backup LLM");
+                elizaLogger.info("Farcaster: Going for Backup LLM");
                 reply = await this.chatBotGroq.chat.completions.create({
                     messages: [{
                         role: "user",
@@ -1493,12 +1493,12 @@ Do not mention @clanker. Only mention token owner's username
         thread: Cast[];
     }) {
         if (cast.profile.fid === agent.fid) {
-            elizaLogger.info("skipping cast from bot itself", cast.hash);
+            elizaLogger.debug("skipping cast from bot itself", cast.hash);
             return;
         }
 
         if (!memory.content.text) {
-            elizaLogger.info("skipping cast with no text", cast.hash);
+            elizaLogger.debug("skipping cast with no text", cast.hash);
             return { text: "", action: "IGNORE" };
         }
 
@@ -1571,7 +1571,7 @@ Do not mention @clanker. Only mention token owner's username
             modelClass: ModelClass.SMALL,
         });
 
-        elizaLogger.warn(
+        elizaLogger.info(
             `Dry run: ${cast.profile.name} said: ${cast.text}`
         );
 
