@@ -6,6 +6,7 @@
         "telegram",
         "farcaster"
     ],
+    
     "modelProvider": "venice",
     "imageVisionModelProvider": "openai",
     "settings": {
