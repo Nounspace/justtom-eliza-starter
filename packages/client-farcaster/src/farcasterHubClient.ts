@@ -1364,6 +1364,8 @@ Do not mention @clanker. Only mention token owner's username
         // responseContent.inReplyTo = memoryId;
 
         // if (!responseContent.text) return;
+        if (image_description)
+            elizaLogger.info("Image Desctiption: " + image_description.description);
 
         let reply: any;
         let theTokenReply: any;
