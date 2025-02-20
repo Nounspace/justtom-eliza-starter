@@ -144,6 +144,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             return [];
         }
 
+        // map createdAt to Date
         const memories = data.map((memory) => ({
             ...memory,
         }))
@@ -300,46 +301,46 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             .select("*")
             .eq("roomId", params.roomId);
 
-            if (params.start) {
-                // Convert milliseconds to seconds and create a Date object
-                const startDate = new Date(params.start);
-                query.gte("createdAt", startDate.toISOString());
-                // query.gte("createdAt", params.start);
-            }
-
-            if (params.end) {
-                // Convert milliseconds to seconds and create a Date object
-                const endDate = new Date(params.end);
-                query.lte("createdAt", endDate.toISOString());
-                // query.lte("createdAt", params.end);
-            }
-
-            if (params.unique) {
-                query.eq("unique", true);
-            }
-
-            if (params.agentId) {
-                query.eq("agentId", params.agentId);
-            }
-
-            query.order("createdAt", { ascending: false });
-
-            if (params.count) {
-                query.limit(params.count);
-            }
-
-            const { data, error } = await query;
-
-            if (error) {
-                throw new Error(`Error retrieving memories: ${error.message}`);
-            }
-
-            return data as Memory[];
+        if (params.start) {
+            // Convert milliseconds to seconds and create a Date object
+            const startDate = new Date(params.start);
+            query.gte("createdAt", startDate.toISOString());
+            // query.gte("createdAt", params.start);
         }
 
+        if (params.end) {
+            // Convert milliseconds to seconds and create a Date object
+            const endDate = new Date(params.end);
+            query.lte("createdAt", endDate.toISOString());
+            // query.lte("createdAt", params.end);
+        }
+
+        if (params.unique) {
+            query.eq("unique", true);
+        }
+
+        if (params.agentId) {
+            query.eq("agentId", params.agentId);
+        }
+
+        query.order("createdAt", { ascending: false });
+
+        if (params.count) {
+            query.limit(params.count);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            throw new Error(`Error retrieving memories: ${error.message}`);
+        }
+
+        return data as Memory[];
+    }
+
     async searchMemoriesByEmbedding(
-            embedding: number[],
-            params: {
+        embedding: number[],
+        params: {
             match_threshold?: number;
             count?: number;
             roomId?: UUID;
@@ -347,16 +348,16 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             unique?: boolean;
             tableName: string;
         }
-        ): Promise < Memory[] > {
-            const queryParams = {
-                query_table_name: params.tableName,
-                query_roomid: params.roomId,
-                query_embedding: embedding,
-                query_match_threshold: params.match_threshold,
-                query_match_count: params.count,
-                query_unique: !!params.unique,
-            };
-            if(params.agentId) {
+    ): Promise<Memory[]> {
+        const queryParams = {
+            query_table_name: params.tableName,
+            query_roomid: params.roomId,
+            query_embedding: embedding,
+            query_match_threshold: params.match_threshold,
+            query_match_count: params.count,
+            query_unique: !!params.unique,
+        };
+        if (params.agentId) {
             (queryParams as any).query_agentId = params.agentId;
         }
 
@@ -583,10 +584,13 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     }
 
     async getRoomsForParticipants(userIds: UUID[]): Promise<UUID[]> {
-        const { data, error } = await this.supabase
-            .from("participants")
-            .select("roomId")
-            .in("userId", userIds);
+        const { data, error } = await this.supabase.rpc(
+            'get_room_ids_by_user_ids', { user_ids: userIds });
+
+        // const { data, error } = await this.supabase
+        //     .from("participants")
+        //     .select("roomId",{distinct:true})
+        //     .in("userId", userIds)
 
         if (error) {
             throw new Error(
@@ -594,7 +598,7 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
             );
         }
 
-        return [...new Set(data.map((row) => row.roomId as UUID))] as UUID[];
+        return [...new Set(data.map((row) => row.roomid as UUID))] as UUID[];
     }
 
     async createRoom(roomId?: UUID): Promise<UUID> {
