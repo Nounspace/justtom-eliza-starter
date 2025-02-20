@@ -1436,8 +1436,9 @@ Do not mention @clanker. Only mention token owner's username
                     cast.embeds?.filter(embed => embed.metadata.content_type.includes("image")) || []
                 )
                 .map(embed => embed.url);
-        } catch {
+        } catch (error) {
             elizaLogger.error("Error extracting image URLs");
+            elizaLogger.error(error);
         }
 
         // console.log(imageUrls);
