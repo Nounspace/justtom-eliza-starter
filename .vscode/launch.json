@@ -12,7 +12,7 @@
             "runtimeExecutable": "pnpm",
             "runtimeArgs": [
                 "start",
-                "--characters=\"./characters/nounspaceTom-feb15.json\""
+                "--characters=\"./characters/nounspaceTom-feb20.json\""
             ],
             "console": "integratedTerminal",
             "skipFiles": [

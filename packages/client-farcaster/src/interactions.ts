@@ -209,14 +209,14 @@ export class FarcasterInteractionManager {
         });
 
         elizaLogger.warn(
-            `Dry run Before Should Response: ${cast.profile.name} said: ${cast.text}`
+            `Before Should Response: ${cast.profile.name} said: ${cast.text}`
         );
 
         if (
             shouldRespondResponse === "IGNORE" ||
             shouldRespondResponse === "STOP"
         ) {
-            elizaLogger.info(
+            elizaLogger.warn(
                 `Not responding to cast because generated ShouldRespond was ${shouldRespondResponse}`
             );
             return;

@@ -653,8 +653,8 @@ export class FarcasterHubClient {
         if (this.isStopped) return
 
         if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
-            elizaLogger.info(
-                `Dry run: Farcaster Cast: ${msg}`
+            elizaLogger.warn(
+                `Farcaster Cast: ${msg}`
             );
             return;
         }
@@ -668,7 +668,7 @@ export class FarcasterHubClient {
                 parent: options.replyTo,
             })
             .then(response_data => {
-                elizaLogger.info(`Farcaster: Cast published successfully:\n  ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`, "INFO")
+                elizaLogger.warn(`Farcaster: Cast published successfully:\n  ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
             })
             .catch(error => {
                 if (isApiErrorResponse(error)) {
@@ -707,7 +707,7 @@ export class FarcasterHubClient {
                 target: options.replyTo,
                 targetAuthorFid: options.parent_author_fid
             }).then(response => {
-                elizaLogger.info("Farcaster: Reaction published successfully");
+                elizaLogger.warn("Farcaster: Reaction published successfully");
                 // this.farcasterLog.info("Reaction published successfully ", "INFO")
                 // console.log('Publish Reaction Operation Status:', response); // Outputs the status of the reaction post
             }).catch(error => {
@@ -1365,7 +1365,7 @@ Do not mention @clanker. Only mention token owner's username
 
         // if (!responseContent.text) return;
         if (image_description)
-            elizaLogger.info("Image Desctiption: " + image_description.description);
+            elizaLogger.warn("Image Desctiption: " + image_description.description);
 
         let reply: any;
         let theTokenReply: any;
