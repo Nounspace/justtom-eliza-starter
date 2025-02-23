@@ -1,7 +1,8 @@
 {
     "name": "Tom",
     "clients": [
-        "farcaster"
+        "farcaster",
+        "twitter"
     ],
     
     "modelProvider": "groq",

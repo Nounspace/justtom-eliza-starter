@@ -8,7 +8,7 @@
     ],
     
     "modelProvider": "venice",
-    "imageVisionModelProvider": "openai",
+    "imageVisionModelProvider": "groq",
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
 
