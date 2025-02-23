@@ -1,5 +1,6 @@
 const FID_CLANKER = 874542;
 
+const USE_GROQ_VISION = true;
 const VISION_MODEL = "llama-3.2-90b-vision-preview";
 const VISION_TEMPERATURE = 0.5;
 const VISION_MAX_TOKENS = 300;
@@ -7,7 +8,6 @@ const VISION_MAX_TOKENS = 300;
 const CLANKER_MODEL = "gemma2-9b-it";
 const CLANKER_TEMPERATURE = 0.5;
 const CLANKER_MAX_TOKENS = 1024;
-
 
 const CLANKER_PROMPT = `Roleplay as Tom from "nounspace" and generate a personalized, engaging, and casual message that's snappy, concise, and a maximum of 3 sentences without any introduction, decision-making context or explanations, just responde with the message.
 
@@ -1343,7 +1343,12 @@ export class FarcasterHubClient {
         })
 
         const { historyConversation, imageUrls } = this.extractConversationDetails(CastConversation);
-        const image_description = await this.visionTool(imageUrls[0])
+        
+        const image_description = await (
+            USE_GROQ_VISION 
+                ? this.visionTool(imageUrls[0])
+                : this.processImage(imageUrls[0])
+        )
 
         const username = deployerInfo.username;
         const bio = deployerInfo.profile.bio.text;
