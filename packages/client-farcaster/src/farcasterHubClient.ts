@@ -648,48 +648,11 @@ export class FarcasterHubClient {
         // await job.updateProgress(100)
     }
 
-    // public async getTrendingFeed(filter = FilterType.GlobalTrending) {
-    //     let trendingFeed = "";
-    //     try {
-    //         const feed = await this.client.neynar.fetchFeed({
-    //             feedType: FeedType.Filter,
-    //             filterType: filter,
-    //         });
-    //         for (const cast of Object.values(feed.casts))
-    //             trendingFeed += `${cast.author.display_name}: ${cast.text}`;
-    //     } catch (err) {
-    //         console.error("Error fetching Farcaster Feed", err);
-    //     }
-    //     return trendingFeed;
-    // }
-
-
-
     /**
      * Function to publish a message (cast) using neynarClient.
      * @param msg - The message to be published.
      * @returns A promise that resolves when the operation completes.
-     * Example of `response_data`:
-        {
-            hash: '0xbb89163dc43e88f05ff2e1fb0dbb8b781ddf547c',
-            author: {
-                object: 'user',
-                fid: 527313,
-                username: 'nounspacetom',
-                display_name: 'nounspaceTom.eth',
-                pfp_url: 'https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/46134281-9cbd-431e-01cc-d128c7695700/original',
-                custody_address: '0xaa3ea790b0d714dcab0bdb7a02a336393dd2e2d9',
-                profile: { bio: [Object] },
-                follower_count: 8377,
-                following_count: 1258,
-                verifications: [ '0x06ae622bf2029db79bdebd38f723f1f33f95f6c5' ],
-                verified_addresses: { eth_addresses: [Array], sol_addresses: [] },
-                verified_accounts: null,
-                power_badge: true
-            },
-            text: "Here's to new beginnings! I'm thrilled to join this vibrant community, eager to learn..."
-        }
-     */
+    */
     private async publishToFarcaster(msg: string, options: any) {
         if (this.isStopped) return
 
@@ -781,28 +744,6 @@ export class FarcasterHubClient {
         }, delayInMinutes * 60 * 1000); // convert minutes to milliseconds
     }
 
-    // public async publishUserReply(msg: string, parentHash: string, parentAuthorFid: number) {
-    //     // Using the neynarClient to publish the cast.
-    //     const options = {
-    //         replyTo: parentHash,
-    //         parent_author_fid: parentAuthorFid,
-    //     }
-
-    //     this.publishToFarcaster(msg, options);
-
-    //     const fName = (await this.handleUserFid(parentAuthorFid));
-    //     // if (botConfig.PUBLISH_TO_FARCASTER)
-    //     //     this.farcasterLog.info(`Published Reply to:\n  https://warpcast.com/${fName}/${parentHash}`);
-    // }
-
-    // public async publishNewChannelCast(msg: string) {
-    //     // Using the neynarClient to publish the cast.
-    //     const options = {
-    //         channelId: botConfig.CAST_TO_CHANNEL
-    //     }
-
-    //     this.publishToFarcaster(msg, options);
-    // };
 
     private urlMatchesTargetChannel(url: string): boolean {
         // Early return if no URL provided
@@ -944,46 +885,12 @@ export class FarcasterHubClient {
                     username: fname,
                     viewerFid: this.client.farcasterConfig?.FARCASTER_FID
                 })
-            // .fetchBulkUsers([fid], { viewerFid: botConfig.BotFID });
-            // const userData = result; //select first result
-            // this.farcasterLog.log(userData, "UserData");
             return userData;
-            // return userData;
-            // return {
-            //     fid,
-            //     fName: userData?.username,
-            //     display_name: userData?.display_name,
-            //     bio: userData?.profile?.bio?.text,
-            //     city: userData?.profile?.location?.address?.city ?? 'Unknown',
-            //     state: userData?.profile?.location?.address?.state ?? null,
-            //     country_code: userData?.profile?.location?.address?.country_code ?? '',
-            //     follower_count: userData?.follower_count ?? 0,
-            //     following_count: userData?.following_count ?? 0,
-            //     verifications: (userData?.verifications ?? []).length,
-            //     power_badge: userData?.power_badge ?? false,
-            //     viewer_context: {
-            //       following: userData?.viewer_context?.following ?? false,
-            //       followed_by: userData?.viewer_context?.followed_by ?? false,
-            //     },
-            // };
         }
         catch (err) {
             // console.error(err)
         };
     }
-
-    // // return bot targets from fid and store it on cache
-    // private async handleTargetFid(fid: number): Promise<string> {
-    //     if (!this.TARGET_FNAME_MAP.has(fid)) {
-    //         const result = await this.getFnameFromFid(fid);
-    //         if (result.isOk()) {
-    //             this.TARGET_FNAME_MAP.set(fid, result.value);
-    //         }
-    //     }
-
-    //     return this.TARGET_FNAME_MAP.get(fid)!;
-    // }
-
 
     // // handle when bot targest posst new message
     // private async handleTargetAddCast(message: Message) {
@@ -1036,12 +943,7 @@ export class FarcasterHubClient {
             const cast = await this.createCastObj(message);
             if (!cast) return
 
-            // console.dir(cast);
-            // generateTomReplyMemory(data.fid, data.castAddBody.text);
-            // this.eventBus.publish("CHANNEL_NEW_MESSAGE", cast);
             elizaLogger.info(`Farcaster: New Channel Cast: ${cast.text}`)
-
-            // return;
 
             const messageHash = cast.hash;
             const conversationId = `${messageHash}-${this.runtime.agentId}`;
@@ -1118,15 +1020,6 @@ export class FarcasterHubClient {
                 body.textWithMentions = textContent;
             }
         }
-
-        // return {
-        //     fid: message.data.fid,
-        //     fName,
-        //     hash,
-        //     type: message.data.type,
-        //     timestamp: this.farcasterTimeToDate(message.data.timestamp),
-        //     body
-        // }
 
         const profile: Profile = {
             fid: userProfile.user.fid,
