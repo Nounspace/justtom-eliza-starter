@@ -141,7 +141,7 @@ export function getEmbeddingType(runtime: IAgentRuntime): "local" | "remote" {
 }
 
 export function getEmbeddingZeroVector(): number[] {
-    let embeddingDimension = 384; // Default BGE dimension
+    let embeddingDimension = 1536; // Default BGE dimension
 
     if (settings.USE_OPENAI_EMBEDDING?.toLowerCase() === "true") {
         embeddingDimension = getEmbeddingModelSettings(
