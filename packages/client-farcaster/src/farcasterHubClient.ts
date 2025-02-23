@@ -1,4 +1,40 @@
 const FID_CLANKER = 874542;
+
+const VISION_MODEL = "llama-3.2-90b-vision-preview";
+const VISION_TEMPERATURE = 0.5;
+const VISION_MAX_TOKENS = 300;
+
+const CLANKER_MODEL = "gemma2-9b-it";
+const CLANKER_TEMPERATURE = 0.5;
+const CLANKER_MAX_TOKENS = 1024;
+
+
+const CLANKER_PROMPT = `Roleplay as Tom from "nounspace" and generate a personalized, engaging, and casual message that's snappy, concise, and a maximum of 3 sentences without any introduction, decision-making context or explanations, just responde with the message.
+
+REMEMBER: 
+Strictly maintain branding: 'nounspace' must always be lowercase.
+
+# Message goals:
+Be witty, creative, and inspired by the provided context which includes:
+The token's name and symbol.
+The owners's bio, name, and other provided details like about_token and image_description.
+Use puns, clever references, or wordplay. 
+Encourage action: Prompt the user to log in to "nounspace" with Farcaster to customize their token's space with Themes, Fidgets (mini apps), and Tabs.
+
+# Tips for Better Output:
+Include dynamic personalization to create a strong sense of connection.
+Maintain clarity despite the creative tone.
+No preamble, no wrap-up: Just output the final message. No "Here's your message" intro or follow-up comments.
+
+# IMPORTANT
+"nounspace" brand is always lowercase.
+Always output 'nounspace' in lowercase, never capitalized.
+Do not include any hashtags.
+Do not mention @clanker. Only mention token owner's username
+`;
+
+// model: "llama3-70b-8192",
+
 // const BOT_NAME = "";
 // const LAST_CONVERSATION_LIMIT = 5;
 // const TARGET_CHANNELS = [];
@@ -85,6 +121,7 @@ export class FarcasterHubClient {
     private readonly MAX_CACHE_SIZE = 100;
 
     private chatBotGroq: Groq;
+    private botVision: Groq;
 
     private USERS_DATA_INFO: Map<string, UserResponse>;
     private USERS_FNAME_MAP: Map<number, any>;  // TODO: need to replace to user new USERS_DATA_INFO
@@ -114,6 +151,10 @@ export class FarcasterHubClient {
         console.warn(this.client.farcasterConfig.FARCASTER_FID);
 
         this.chatBotGroq = new Groq({
+            apiKey: process.env.GROQ_API_KEY,
+        });
+
+        this.botVision = new Groq({
             apiKey: process.env.GROQ_API_KEY,
         });
 
@@ -1302,42 +1343,21 @@ export class FarcasterHubClient {
         })
 
         const { historyConversation, imageUrls } = this.extractConversationDetails(CastConversation);
-        const image_description = await this.processImage(imageUrls[0])
+        const image_description = await this.visionTool(imageUrls[0])
 
         const username = deployerInfo.username;
         const bio = deployerInfo.profile.bio.text;
         const nounspacePage = `https://nounspace.com/t/base/${contractAddress}`;
         const thread_hash = CastConversation.conversation.cast.thread_hash;
 
-        const CLANKER_REPLY_PROMPT = `
-Roleplay as Tom from "nounspace" and generate a personalized, engaging, and casual message that's snappy, concise, and a maximum of 3 sentences without any introduction, decision-making context or explanations, just responde with the message.
-
-REMEMBER: 
-Strictly maintain branding: 'nounspace' must always be lowercase.
-
-# Message goals:
-Be witty, creative, and inspired by the provided context which includes:
-The token's name and symbol.
-The owners's bio, name, and other provided details like about_token and image_description.
-Use puns, clever references, or wordplay. 
-Encourage action: Prompt the user to log in to "nounspace" with Farcaster to customize their token's space with Themes, Fidgets (mini apps), and Tabs.
-
-# Tips for Better Output:
-Include dynamic personalization to create a strong sense of connection.
-Maintain clarity despite the creative tone.
-No preamble, no wrap-up: Just output the final message. No "Here's your message" intro or follow-up comments.
-
-# IMPORTANT
-"nounspace" brand is always lowercase.
-Always output 'nounspace' in lowercase, never capitalized.
-Do not include any hashtags.
-Do not mention @clanker. Only mention token owner's username
-
+        const CLANKER_REPLY_PROMPT = CLANKER_PROMPT + `
 <about_token>
   username: @${username}
   user bio: ${bio}
 
-  ${image_description?.description}
+  <image_description>
+    ${image_description?.description}
+  </image_description>
 
   <token_creation_conversatioin>
     ${historyConversation}
@@ -1345,31 +1365,11 @@ Do not mention @clanker. Only mention token owner's username
 <about_token>
 `;
 
-        // const context = composeContext({
-        //     state,
-        //     template:
-        //         this.runtime.character.templates
-        //             ?.farcasterMessageHandlerTemplate ??
-        //         this.runtime.character?.templates?.messageHandlerTemplate ??
-        //         messageHandlerTemplate,
-        // });
-
-        // const response = await generateText;
-        // const responseContent = await generateMessageResponse({
-        //     runtime: this.runtime,
-        //     context,
-        //     modelClass: ModelClass.LARGE,
-        // });
-
-        // responseContent.inReplyTo = memoryId;
-
-        // if (!responseContent.text) return;
         if (image_description)
             elizaLogger.warn("Image Desctiption: " + image_description.description);
 
         let reply: any;
         let theTokenReply: any;
-
         try {
             try {
                 reply = await this.chatBotGroq.chat.completions.create({
@@ -1377,8 +1377,11 @@ Do not mention @clanker. Only mention token owner's username
                         role: "user",
                         content: CLANKER_REPLY_PROMPT,
                     },],
-                    // model: "llama3-70b-8192",
-                    model: "gemma2-9b-it",
+                    model: CLANKER_MODEL,
+                    "temperature": CLANKER_TEMPERATURE,
+                    "max_tokens": CLANKER_MAX_TOKENS,
+                    "top_p": 1,
+                    "stream": false,
                 });
             } catch (innerError) {
                 elizaLogger.error("Farcaster: Primary chatbot failed");
@@ -1679,6 +1682,52 @@ Do not mention @clanker. Only mention token owner's username
             newState,
             callback
         );
+    }
+
+    async visionTool(imageUrl: string): Promise<{ description: string } | null> {
+        if (!imageUrl) return null;
+        elizaLogger.debug(`Farcaster Process Image: ${imageUrl}`);
+
+        let imageDescription: string | null = null;
+
+        const BOT_VISION_PROMPT = `Describe this image in one sentence maximum of ${VISION_MAX_TOKENS} characters.`
+        try {
+            const chatCompletion = await this.botVision.chat.completions.create({
+                "messages": [
+                    {
+                        "role": "user", "content": [
+                            {
+                                "type": "text",
+                                "text": BOT_VISION_PROMPT,
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": imageUrl
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "model": VISION_MODEL,
+                "temperature": VISION_TEMPERATURE,
+                "max_tokens": VISION_MAX_TOKENS,
+                "top_p": 1,
+                "stream": false,
+            });
+
+            imageDescription = chatCompletion.choices[0].message.content;
+        } catch (error) {
+            elizaLogger.error(error);
+            return null
+        }
+
+        if (imageDescription === "Unfortunately, I cannot identify people based on their photographs.")
+            imageDescription = "A picture of a beautiful person";
+
+        return {
+            description: imageDescription ?? "No image description available"
+        }
     }
 
 }
