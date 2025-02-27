@@ -81,7 +81,7 @@
                 "inactivityThreshold": "86400000",
                 "mainChannelId": "-4708699169",
                 "pinnedMessagesGroups": [],
-                "minTimeBetweenPosts": "86400000"
+                "minTimeBetweenPosts": "3600000"
             }
         }
     },
