@@ -1295,7 +1295,8 @@ export class FarcasterHubClient {
             }
 
             theTokenReply = reply.choices[0].message.content
-                .replace(/^"|"$/g, '')
+                .replace(/^"|"$/g, '')          // Remove starting/ending quotes
+                .replace(/\n+/g, '\n')          // Replace multiple newlines with single newline
                 + `\n\nHere's your token space: ${nounspacePage}`;
         } catch (error) {
             elizaLogger.error(error);
