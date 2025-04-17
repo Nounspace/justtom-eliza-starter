@@ -215,7 +215,7 @@ export const models: Models = {
             },
             [ModelClass.LARGE]: {
                 name:
-                    settings.LARGE_GROQ_MODEL || "llama-3.2-90b-vision-preview",
+                    settings.LARGE_GROQ_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct",
                 stop: [],
                 maxInputTokens: 128000,
                 maxOutputTokens: 8000,

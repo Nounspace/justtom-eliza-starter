@@ -1,7 +1,7 @@
 const FID_CLANKER = 874542;
 
 const USE_GROQ_VISION = true;
-const VISION_MODEL = "llama-3.2-90b-vision-preview";
+const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 const VISION_TEMPERATURE = 0.5;
 const VISION_MAX_TOKENS = 300;
 

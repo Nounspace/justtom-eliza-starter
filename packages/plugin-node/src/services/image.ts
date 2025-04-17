@@ -266,7 +266,7 @@ class GroqImageProvider implements ImageProvider {
                 Authorization: `Bearer ${this.runtime.getSetting("GROQ_API_KEY")}`,
             },
             body: JSON.stringify({
-                model: /*this.runtime.imageVisionModelName ||*/ "llama-3.2-90b-vision-preview",
+                model: /*this.runtime.imageVisionModelName ||*/ "meta-llama/llama-4-scout-17b-16e-instruct",
                 messages: [{ role: "user", content }],
                 max_tokens: 1024,
             }),
