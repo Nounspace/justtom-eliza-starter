@@ -1264,10 +1264,10 @@ export class FarcasterHubClient {
 `;
 
         if (image_description)
-            elizaLogger.warn("Image Desctiption: " + image_description.description);
+            elizaLogger.warn("Image Description: " + image_description.description);
 
         let reply: any;
-        let theTokenReply: any;
+        let theTokenReply: string = `Hey ${username}! Log into nounspace with Farcaster and customize your space with Themes, Fidgets, and Tabs to make your token pump.\n\nHere's your token space: ${nounspacePage}`;
         try {
             try {
                 reply = await this.chatBotGroq.chat.completions.create({
@@ -1284,7 +1284,7 @@ export class FarcasterHubClient {
             } catch (innerError) {
                 elizaLogger.error("Farcaster: Primary chatbot failed");
                 elizaLogger.error(innerError);
-                elizaLogger.info("Farcaster: Going for Backup LLM");
+                elizaLogger.warn("Farcaster: Going for Backup LLM");
                 reply = await this.chatBotGroq.chat.completions.create({
                     messages: [{
                         role: "user",
@@ -1299,7 +1299,7 @@ export class FarcasterHubClient {
                 .replace(/\n+/g, '')            // Remove multiple newlines
                 + `\n\nHere's your token space: ${nounspacePage}`;
         } catch (error) {
-            elizaLogger.error(error);
+            elizaLogger.warn(error);
         }
 
         // if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
@@ -1315,7 +1315,6 @@ export class FarcasterHubClient {
         }
 
         this.publishToFarcaster(theTokenReply, options);
-
     }
 
     extractConversationDetails(data: any): any {
