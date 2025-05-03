@@ -455,7 +455,6 @@ export class FarcasterHubClient {
 
                 // Handle stream errors
                 stream.on('error', (error) => {
-                    console.error('Stream error:', error);
                     this.handleStreamError(error);
                 });
             }, (e) => { elizaLogger.error('Error streaming data.') })
@@ -672,7 +671,7 @@ export class FarcasterHubClient {
                 parent: options.replyTo,
             })
             .then(response_data => {
-                elizaLogger.warn(`Farcaster: Cast published successfully:\n  ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
+                elizaLogger.warn(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
             })
             .catch(error => {
                 if (isApiErrorResponse(error)) {
