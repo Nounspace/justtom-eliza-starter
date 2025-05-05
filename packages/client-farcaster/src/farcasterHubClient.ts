@@ -6,6 +6,7 @@ const VISION_TEMPERATURE = 0.5;
 const VISION_MAX_TOKENS = 300;
 
 const CLANKER_MODEL = "gemma2-9b-it";
+const CLANKER_BACKUP_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 const CLANKER_TEMPERATURE = 0.5;
 const CLANKER_MAX_TOKENS = 1024;
 
@@ -422,8 +423,8 @@ export class FarcasterHubClient {
                 // setTimeout(() => { console.log("Simulating stream close..."); stream.emit('close'); stream.emit('close'); }, 10000);
 
                 stream.on('data', async (e: HubEvent) => {
-                    this.handleEvent(e)
                     saveLatestEventId(e.id)
+                    this.handleEvent(e)
                     // elizaLogger.debug('Farcaster Hub: Processing Event ' + e.id)
 
                     // Manually trigger the 'close' event from command
@@ -434,7 +435,7 @@ export class FarcasterHubClient {
                 })
 
                 stream.on('end', async () => {
-                    elizaLogger.log(`Farcaster Hub: Hub stream ended`);
+                    elizaLogger.error(`Farcaster Hub: Stream ended`);
                     // console.log(`Stream object details on END:`);
                     // this.logRelevantStreamDetails(stream);
                     // this.isConnected = false;
@@ -442,7 +443,7 @@ export class FarcasterHubClient {
 
                 stream.on('close', async () => {
                     const closeReason = this.determineCloseReason(stream);
-                    elizaLogger.log(`Farcaster Hub: Hub stream closed: ${closeReason}`);
+                    elizaLogger.error(`Farcaster Hub: Stream closed: ${closeReason}`);
 
                     // console.log(`Stream object details on CLOSE:`);
                     // this.logRelevantStreamDetails(stream);
@@ -457,7 +458,7 @@ export class FarcasterHubClient {
                 stream.on('error', (error) => {
                     this.handleStreamError(error);
                 });
-            }, (e) => { elizaLogger.error('Error streaming data.') })
+            }, (e) => { elizaLogger.error('Error streaming data. ID: '+ getLatestEvent()) })
     }
 
     private determineCloseReason(stream: any): string {
@@ -477,7 +478,8 @@ export class FarcasterHubClient {
     }
 
     private handleStreamError(error: Error): void {
-        elizaLogger.debug('Stream error details:', {
+        elizaLogger.error('Stream error details:', {
+            eventId: getLatestEvent(),
             name: error.name,
             message: error.message,
             stack: error.stack,
@@ -672,6 +674,7 @@ export class FarcasterHubClient {
             })
             .then(response_data => {
                 elizaLogger.warn(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
+                elizaLogger.info(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
             })
             .catch(error => {
                 if (isApiErrorResponse(error)) {
@@ -1266,7 +1269,7 @@ export class FarcasterHubClient {
             elizaLogger.warn("Image Description: " + image_description.description);
 
         let reply: any;
-        let theTokenReply: string = `Hey ${username}! Log into nounspace with Farcaster and customize your space with Themes, Fidgets, and Tabs to make your token pump.\n\nHere's your token space: ${nounspacePage}`;
+        let theTokenReply: string = `Hey @${username}! Log into nounspace with Farcaster and customize your token space with Themes, Fidgets, and Tabs.\n\nHere's your token space: ${nounspacePage}`;
         try {
             try {
                 reply = await this.chatBotGroq.chat.completions.create({
@@ -1283,13 +1286,12 @@ export class FarcasterHubClient {
             } catch (innerError) {
                 elizaLogger.error("Farcaster: Primary chatbot failed");
                 elizaLogger.error(innerError);
-                elizaLogger.warn("Farcaster: Going for Backup LLM");
                 reply = await this.chatBotGroq.chat.completions.create({
                     messages: [{
                         role: "user",
                         content: CLANKER_REPLY_PROMPT,
                     },],
-                    model: "llama3-8b-8192",
+                    model: CLANKER_BACKUP_MODEL,
                 });
             }
 
@@ -1298,13 +1300,14 @@ export class FarcasterHubClient {
                 .replace(/\n+/g, '')            // Remove multiple newlines
                 + `\n\nHere's your token space: ${nounspacePage}`;
         } catch (error) {
-            elizaLogger.warn(error);
+            elizaLogger.error("Farcaster: Backup LLM");
+            elizaLogger.error(error);
         }
 
         // if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
         //     // elizaLogger.warn(CLANKER_REPLY_PROMPT);
-        //     elizaLogger.warn("\ntheTokenReply:");
-        //     elizaLogger.warn(theTokenReply)
+            elizaLogger.info("\ntheTokenReply:");
+            elizaLogger.info(theTokenReply)
         //     return;
         // }
 
