@@ -417,16 +417,9 @@ export class FarcasterHubClient {
             (stream) => {
                 elizaLogger.log(`Subscribed to Farcaster Stream from: ${fromEventId ? `event ${fromEventId}` : 'HEAD'}`);
 
-                // console.info(`Subscribed to Farcaster Stream: HEAD`)         //current event
-                //TEST: Manually trigger the 'close' event for testing // Simulate close after 3 seconds
-                // setTimeout(() => { console.log("Simulating stream end..."); stream.emit('end'); }, 10000);
-                // setTimeout(() => { console.log("Simulating stream close..."); stream.emit('close'); stream.emit('close'); }, 10000);
-
                 stream.on('data', async (e: HubEvent) => {
                     saveLatestEventId(e.id)
                     this.handleEvent(e)
-                    // elizaLogger.debug('Farcaster Hub: Processing Event ' + e.id)
-
                     // Manually trigger the 'close' event from command
                     if (this.isStopped) {
                         this.isConnected = false;
@@ -477,9 +470,9 @@ export class FarcasterHubClient {
         return 'Unknown reason';
     }
 
-    private handleStreamError(error: Error): void {
+    private async handleStreamError(error: Error): Promise<void> {
         elizaLogger.error('Stream error details:', {
-            eventId: getLatestEvent(),
+            eventId: await getLatestEvent(),
             name: error.name,
             message: error.message,
             stack: error.stack,
@@ -528,11 +521,6 @@ export class FarcasterHubClient {
                 filteredDetails[key] = stream[key];
             }
         });
-
-        // console.log(
-        //     `Filtered stream details:`,
-        //     inspect(filteredDetails, { depth: 2, colors: true })
-        // );
     }
 
     private async handleEvent(event: HubEvent) {
@@ -696,14 +684,6 @@ export class FarcasterHubClient {
 
         this.likeCast(options);
     }
-
-    // public async delayedLikeCast(options: any) {
-    //     const delayInMinutes = Math.floor(Math.random() * 2);
-    //     // const delayInMinutes = randomInt(1, 2);
-    //     setTimeout(() => {
-    //         this.likeCast(options);
-    //     }, delayInMinutes * 60 * 1000); // convert minutes to milliseconds
-    // }
 
     public async likeCast(options: any) {
         if ((options.replyTo) && (options.parent_author_fid)) {
@@ -1226,6 +1206,9 @@ export class FarcasterHubClient {
             return undefined;
         }
 
+        if(deployerInfo.experimental?.neynar_user_score)
+            console.warn(`experimental neynar_user_score ${deployerInfo.username} : ${deployerInfo.experimental.neynar_user_score}`)
+
         const CastConversation = await this.client.neynar.lookupCastConversation({
             identifier: cast.hash,
             type: 'hash',
@@ -1306,8 +1289,8 @@ export class FarcasterHubClient {
 
         // if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
         //     // elizaLogger.warn(CLANKER_REPLY_PROMPT);
-            elizaLogger.info("\ntheTokenReply:");
-            elizaLogger.info(theTokenReply)
+            // elizaLogger.info("\ntheTokenReply:");
+            // elizaLogger.info(theTokenReply)
         //     return;
         // }
 
