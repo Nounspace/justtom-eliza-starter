@@ -133,6 +133,8 @@ export class FarcasterHubClient {
     private isStopped: boolean; // set by external discord command
     private hubClient: HubRpcClient;
     private HUB_RPC: string | null;
+
+    private MIN_NEYNAR_SCORE: number;
     // private HUB_SSL: boolean;
 
     private TARGETS: number[];
@@ -150,6 +152,8 @@ export class FarcasterHubClient {
 
         // TARGETS? HUB_RPC? HUB_SSL?
         console.warn(this.client.farcasterConfig.FARCASTER_FID);
+
+        this.MIN_NEYNAR_SCORE = parseFloat(process.env.MIN_NEYNAR_SCORE || "0.5");
 
         this.chatBotGroq = new Groq({
             apiKey: process.env.GROQ_API_KEY,
@@ -451,7 +455,7 @@ export class FarcasterHubClient {
                 stream.on('error', (error) => {
                     this.handleStreamError(error);
                 });
-            }, (e) => { elizaLogger.error('Error streaming data. ID: '+ getLatestEvent()) })
+            }, (e) => { elizaLogger.error('Error streaming data. ID: ' + getLatestEvent()) })
     }
 
     private determineCloseReason(stream: any): string {
@@ -1206,8 +1210,13 @@ export class FarcasterHubClient {
             return undefined;
         }
 
-        if(deployerInfo.experimental?.neynar_user_score)
-            console.warn(`experimental neynar_user_score ${deployerInfo.username} : ${deployerInfo.experimental.neynar_user_score}`)
+        const score = deployerInfo.experimental?.neynar_user_score;
+        if (typeof score !== 'number' || score < this.MIN_NEYNAR_SCORE) {
+            if (typeof score === 'number') {
+                console.debug(`Farcaster: Low neynar_user_score ${deployerInfo.username} : ${score}`);
+            }
+            return undefined;
+        }
 
         const CastConversation = await this.client.neynar.lookupCastConversation({
             identifier: cast.hash,
@@ -1220,13 +1229,17 @@ export class FarcasterHubClient {
             // cursor: "nextPageCursor" // Omit this parameter for the initial request
         })
 
-        const { historyConversation, imageUrls } = this.extractConversationDetails(CastConversation);
-        
-        const image_description = await (
-            USE_GROQ_VISION 
-                ? this.visionTool(imageUrls[0])
-                : this.processImage(imageUrls[0])
-        )
+        const { historyConversation, imageUrls } = await this.extractConversationDetails(CastConversation);
+
+        let image_description: { description: string } = { description: "" };
+        if (imageUrls.length > 0) {
+            const result = await (
+                USE_GROQ_VISION
+                    ? this.visionTool(imageUrls[0])
+                    : this.processImage(imageUrls[0])
+            );
+            image_description.description = result?.description || "";
+        }
 
         const username = deployerInfo.username;
         const bio = deployerInfo.profile.bio.text;
@@ -1289,8 +1302,8 @@ export class FarcasterHubClient {
 
         // if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
         //     // elizaLogger.warn(CLANKER_REPLY_PROMPT);
-            // elizaLogger.info("\ntheTokenReply:");
-            // elizaLogger.info(theTokenReply)
+        // elizaLogger.info("\ntheTokenReply:");
+        // elizaLogger.info(theTokenReply)
         //     return;
         // }
 
@@ -1302,7 +1315,25 @@ export class FarcasterHubClient {
         this.publishToFarcaster(theTokenReply, options);
     }
 
-    extractConversationDetails(data: any): any {
+    async filterImageUrls(urls: string[]): Promise<string[]> {
+        const checks = urls.map(async (url) => {
+            try {
+                const response = await fetch(url, { method: "HEAD" });
+                const contentType = response.headers.get("content-type");
+                if (contentType?.startsWith("image/") && contentType !== "image/gif") {
+                    return url;
+                }
+            } catch {
+                // Ignore error
+            }
+            return null;
+        });
+
+        const results = await Promise.all(checks);
+        return results.filter((url): url is string => url !== null);
+    }
+
+    async extractConversationDetails(data: any): Promise<any> {
         const conversation = data.conversation.cast;
         const chronological_parent_casts = data.conversation.chronological_parent_casts;
 
@@ -1316,14 +1347,16 @@ export class FarcasterHubClient {
             .filter(cast => cast.author && cast.author?.fid === conversationParentFid)
             .map(cast => `@${cast.author.username}: ${cast.text}`);
 
-        let imageUrls = [];
+        let imageUrls: string[] = [];
         try {
-            imageUrls = chronological_parent_casts
+            const allImageUrls = chronological_parent_casts
                 .filter(cast => cast.author && cast.author?.fid === conversationParentFid)
                 .flatMap(cast =>
                     cast.embeds?.filter(embed => embed.metadata.content_type.includes("image")) || []
                 )
                 .map(embed => embed.url);
+
+            imageUrls = await this.filterImageUrls(allImageUrls);
         } catch (error) {
             elizaLogger.error("Error extracting image URLs");
             elizaLogger.error(error);
