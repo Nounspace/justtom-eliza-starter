@@ -131,6 +131,10 @@ export class FarcasterHubClient {
     private isConnected: boolean;
     private isReconnecting: boolean;
     private isStopped: boolean; // set by external discord command
+
+    private currentStream: any = null;
+    private reconnectTimeout: NodeJS.Timeout | null = null;
+
     private hubClient: HubRpcClient;
     private HUB_RPC: string | null;
 
@@ -420,15 +424,17 @@ export class FarcasterHubClient {
         result.match(
             (stream) => {
                 elizaLogger.log(`Subscribed to Farcaster Stream from: ${fromEventId ? `event ${fromEventId}` : 'HEAD'}`);
+                this.currentStream = stream;
 
                 stream.on('data', async (e: HubEvent) => {
-                    saveLatestEventId(e.id)
-                    this.handleEvent(e)
                     // Manually trigger the 'close' event from command
                     if (this.isStopped) {
                         this.isConnected = false;
                         stream.destroy();
+                        return; // <---- You forgot this
                     }
+                    saveLatestEventId(e.id)
+                    this.handleEvent(e)
                 })
 
                 stream.on('end', async () => {
@@ -445,8 +451,7 @@ export class FarcasterHubClient {
                     // console.log(`Stream object details on CLOSE:`);
                     // this.logRelevantStreamDetails(stream);
                     if (!this.isStopped) {
-                        //if we did not received external command to stop, try to reconect
-                        this.isConnected = false;
+                        this.cleanupStream(); // <--- ensure listeners are off before reconnecting
                         this.reconnect();
                     }
                 })
@@ -488,31 +493,43 @@ export class FarcasterHubClient {
     }
 
     private async reconnect() {
-        // Guard against multiple concurrent reconnection attempts
-        if (this.isReconnecting || this.isConnected || this.isStopped) {
-            return;
+        if (this.isReconnecting || this.isConnected || this.isStopped) return;
+    
+        // Debounce logic: cancel previous pending reconnect
+        if (this.reconnectTimeout) {
+            clearTimeout(this.reconnectTimeout);
         }
-
-        try {
-            this.isReconnecting = true;
-            elizaLogger.warn(`Farcaster Hub: Reconnecting to ${this.HUB_RPC}`);
-
-            // Get latest event once before reconnection attempt
-            const latestEvent = await getLatestEvent();
-
-            await new Promise(resolve => setTimeout(resolve, 3000));
-
-            if (!this.isConnected && !this.isStopped) {
-                await this.subscriberStream(latestEvent);
+    
+        this.reconnectTimeout = setTimeout(async () => {
+            try {
+                this.isReconnecting = true;
+                elizaLogger.warn(`Farcaster Hub: Reconnecting to ${this.HUB_RPC}`);
+    
+                this.cleanupStream();
+    
+                const latestEvent = await getLatestEvent();
+    
+                if (!this.isConnected && !this.isStopped) {
+                    await this.subscriberStream(latestEvent);
+                }
+            } catch (error) {
+                elizaLogger.error('Reconnection failed:', error);
+            } finally {
+                this.reconnectTimeout = null;
+                if (!this.isConnected) {
+                    this.isReconnecting = false;
+                }
             }
-        } catch (error) {
-            elizaLogger.error('Reconnection failed:', error);
-        } finally {
-            // Reset reconnecting flag if connection wasn't established
-            if (!this.isConnected) {
-                this.isReconnecting = false;
-            }
+        }, 3000); // 3-second debounce window
+    }
+    
+    private cleanupStream() {
+        if (this.currentStream) {
+            this.currentStream.removeAllListeners();
+            this.currentStream.destroy?.();
+            this.currentStream = null;
         }
+        this.isConnected = false;
     }
 
 
