@@ -1192,7 +1192,6 @@ export class FarcasterHubClient {
         // const castText = cast.text;
         // const castHash = cast.hash;
 
-        elizaLogger.debug(`Processing Clanker cast:`);
         //  ${castText} (${castHash})`);
 
         // Log interaction with Clanker's message
@@ -1228,12 +1227,14 @@ export class FarcasterHubClient {
         }
 
         const score = deployerInfo.experimental?.neynar_user_score;
-        if (typeof score !== 'number' || score < this.MIN_NEYNAR_SCORE) {
-            if (typeof score === 'number') {
-                console.debug(`Farcaster: Low neynar_user_score ${deployerInfo.username} : ${score}`);
-            }
+        if (score === undefined || score < this.MIN_NEYNAR_SCORE) {
+            console.debug(`Farcaster: Score Low for "${deployerInfo.username}": ${score}`);
             return undefined;
+        } else {
+            console.debug(`Farcaster: Score Ok for "${deployerInfo.username}": ${score}`);
         }
+
+        elizaLogger.debug(`Processing Clanker cast for ${deployerInfo.username}`);
 
         const CastConversation = await this.client.neynar.lookupCastConversation({
             identifier: cast.hash,

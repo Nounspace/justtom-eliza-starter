@@ -196,7 +196,7 @@ export const models: Models = {
         endpoint: "https://api.groq.com/openai/v1",
         model: {
             [ModelClass.SMALL]: {
-                name: settings.SMALL_GROQ_MODEL || "llama-3.1-8b-instant",
+                name: settings.SMALL_GROQ_MODEL || "llama-3.3-70b-versatile",
                 stop: [],
                 maxInputTokens: 128000,
                 maxOutputTokens: 8000,
