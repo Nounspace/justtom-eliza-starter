@@ -669,7 +669,7 @@ export class FarcasterHubClient {
 
             if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
                 elizaLogger.warn(
-                    `Farcaster Cast: ${msg}`
+                    `Farcaster: Dry Run: ${msg}`
                 );
                 return;
             }
@@ -683,7 +683,7 @@ export class FarcasterHubClient {
                     parent: options.replyTo,
                 })
                 .then(response_data => {
-                    elizaLogger.warn(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
+                    elizaLogger.info(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
                 })
                 .catch(error => {
                     elizaLogger.error("Farcaster: Error publishing Cast");
@@ -718,7 +718,7 @@ export class FarcasterHubClient {
                 target: options.replyTo,
                 targetAuthorFid: options.parent_author_fid
             }).then(response => {
-                elizaLogger.warn("Farcaster: Reaction published successfully");
+                elizaLogger.info("Farcaster: Reaction published successfully");
                 // this.farcasterLog.info("Reaction published successfully ", "INFO")
                 // console.log('Publish Reaction Operation Status:', response); // Outputs the status of the reaction post
             }).catch(error => {
@@ -1284,7 +1284,7 @@ export class FarcasterHubClient {
 `;
 
         if (image_description)
-            elizaLogger.warn("Farcaster: Image Description: " + image_description.description);
+            elizaLogger.debug("Farcaster: Image Description: " + image_description.description);
 
         let reply: any;
         let theTokenReply: string = `Hey @${username}! Log into nounspace with Farcaster and customize your token space with Themes, Fidgets, and Tabs.\n\nHere's your token space: ${nounspacePage}`;
@@ -1334,8 +1334,8 @@ export class FarcasterHubClient {
             parent_author_fid: deployerInfo.fid,
         }
 
-        elizaLogger.info("FarcasteR: Reply: "+ theTokenReply);
-        elizaLogger.info(options)
+        elizaLogger.debug("Farcaster: Reply: "+ theTokenReply);
+        // elizaLogger.debug(options)
 
         this.publishToFarcaster(theTokenReply, options);
     }
