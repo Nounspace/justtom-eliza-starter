@@ -55,7 +55,7 @@ import { sendCast } from "./actions";
 import {
     composeContext,
     generateMessageResponse,
-    generateText,
+    // generateText,
     generateShouldRespond,
     type Memory,
     ModelClass,
@@ -73,16 +73,16 @@ import {
     OnChainEventType,
     Message,
     MessageType,
-    HubAsyncResult,
+    // HubAsyncResult,
     isUserDataAddMessage,
     UserDataType,
-    CastType,
-    ReactionType,
-    UserNameType,
-    Embed,
+    // CastType,
+    // ReactionType,
+    // UserNameType,
+    // Embed,
     fromFarcasterTime,
     Protocol,
-    getInsecureHubRpcClient,
+    // getInsecureHubRpcClient,
     getSSLHubRpcClient,
     createDefaultMetadataKeyInterceptor,
     ClientOptions,
@@ -92,10 +92,10 @@ import {
 // import { CastParamType, FeedType, FilterType, isApiErrorResponse } from "@neynar/nodejs-sdk";
 import { type NeynarAPIClient, isApiErrorResponse } from "@neynar/nodejs-sdk";
 import { UserResponse } from '@neynar/nodejs-sdk/build/api/models/user-response';
-import { CastParamType, CastWithInteractions, FeedType, FilterType } from '@neynar/nodejs-sdk/build/api/models';
+// import { CastParamType, CastWithInteractions, FeedType, FilterType } from '@neynar/nodejs-sdk/build/api/models';
 
 import { err, ok, Result } from "neverthrow";
-import { FarcasterEventBusInterface } from './eventBus.interface'
+// import { FarcasterEventBusInterface } from './eventBus.interface'
 
 import { saveLatestEventId, getLatestEvent } from './event'
 
@@ -126,7 +126,7 @@ export class FarcasterHubClient {
 
     private USERS_DATA_INFO: Map<string, UserResponse>;
     private USERS_FNAME_MAP: Map<number, any>;  // TODO: need to replace to user new USERS_DATA_INFO
-    private TARGET_FNAME_MAP: Map<number, any>;
+    // private TARGET_FNAME_MAP: Map<number, any>;
 
     private isConnected: boolean;
     private isReconnecting: boolean;
@@ -176,7 +176,7 @@ export class FarcasterHubClient {
         // this.eventBus = eventBus;
         this.USERS_DATA_INFO = new Map();
         this.USERS_FNAME_MAP = new Map();
-        this.TARGET_FNAME_MAP = new Map();
+        // this.TARGET_FNAME_MAP = new Map();
 
         this.isConnected = false;
         this.isReconnecting = false;
@@ -664,46 +664,50 @@ export class FarcasterHubClient {
      * @returns A promise that resolves when the operation completes.
     */
     private async publishToFarcaster(msg: string, options: any) {
-        if (this.isStopped) return
+        try {
+            if (this.isStopped) return
 
-        if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
-            elizaLogger.warn(
-                `Farcaster Cast: ${msg}`
-            );
-            return;
+            if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
+                elizaLogger.warn(
+                    `Farcaster Cast: ${msg}`
+                );
+                return;
+            }
+
+            this.client.neynar
+                .publishCast({
+                    signerUuid: String(process.env.FARCASTER_NEYNAR_SIGNER_UUID),
+                    text: msg,
+                    channelId: options.channelId,
+                    parentAuthorFid: options.parent_author_fid,
+                    parent: options.replyTo,
+                })
+                .then(response_data => {
+                    elizaLogger.warn(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
+                })
+                .catch(error => {
+                    elizaLogger.error("Farcaster: Error publishing Cast");
+                    if (isApiErrorResponse(error)) {
+                        const errorCastObj = {
+                            error: error.response.data,
+                            msg,
+                            options
+                        }
+                        elizaLogger.error("Farcaster: ", errorCastObj);
+                    } else {
+                        const errorCastObj = {
+                            error: JSON.stringify(error),
+                            msg,
+                            options
+                        }
+                        elizaLogger.error("Farcaster: ", errorCastObj);
+                    }
+                });
+
+            this.likeCast(options);
+        } catch (error) {
+            elizaLogger.error("Farcaster: " + JSON.stringify(error));
         }
-
-        this.client.neynar
-            .publishCast({
-                signerUuid: String(process.env.FARCASTER_NEYNAR_SIGNER_UUID),
-                text: msg,
-                channelId: options.channelId,
-                parentAuthorFid: options.parent_author_fid,
-                parent: options.replyTo,
-            })
-            .then(response_data => {
-                elizaLogger.warn(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
-                elizaLogger.info(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
-            })
-            .catch(error => {
-                if (isApiErrorResponse(error)) {
-                    const errorCastObj = {
-                        error: error.response.data,
-                        msg,
-                        options
-                    }
-                    elizaLogger.error("Farcaster: ", errorCastObj);
-                } else {
-                    const errorCastObj = {
-                        error: JSON.stringify(error),
-                        msg,
-                        options
-                    }
-                    elizaLogger.error("Farcaster: ", errorCastObj);
-                }
-            });
-
-        this.likeCast(options);
     }
 
     public async likeCast(options: any) {
@@ -1280,7 +1284,7 @@ export class FarcasterHubClient {
 `;
 
         if (image_description)
-            elizaLogger.warn("Image Description: " + image_description.description);
+            elizaLogger.warn("Farcaster: Image Description: " + image_description.description);
 
         let reply: any;
         let theTokenReply: string = `Hey @${username}! Log into nounspace with Farcaster and customize your token space with Themes, Fidgets, and Tabs.\n\nHere's your token space: ${nounspacePage}`;
@@ -1319,9 +1323,9 @@ export class FarcasterHubClient {
         }
 
         // if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
-        //     // elizaLogger.warn(CLANKER_REPLY_PROMPT);
-        // elizaLogger.info("\ntheTokenReply:");
-        // elizaLogger.info(theTokenReply)
+        //     elizaLogger.warn(CLANKER_REPLY_PROMPT);
+        //     elizaLogger.info("\ntheTokenReply:");
+        //     elizaLogger.info(theTokenReply)
         //     return;
         // }
 
@@ -1329,6 +1333,9 @@ export class FarcasterHubClient {
             replyTo: thread_hash,
             parent_author_fid: deployerInfo.fid,
         }
+
+        elizaLogger.info("FarcasteR: Reply: "+ theTokenReply);
+        elizaLogger.info(options)
 
         this.publishToFarcaster(theTokenReply, options);
     }
