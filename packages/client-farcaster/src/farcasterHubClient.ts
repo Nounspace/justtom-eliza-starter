@@ -494,21 +494,21 @@ export class FarcasterHubClient {
 
     private async reconnect() {
         if (this.isReconnecting || this.isConnected || this.isStopped) return;
-    
+
         // Debounce logic: cancel previous pending reconnect
         if (this.reconnectTimeout) {
             clearTimeout(this.reconnectTimeout);
         }
-    
+
         this.reconnectTimeout = setTimeout(async () => {
             try {
                 this.isReconnecting = true;
                 elizaLogger.warn(`Farcaster Hub: Reconnecting to ${this.HUB_RPC}`);
-    
+
                 this.cleanupStream();
-    
+
                 const latestEvent = await getLatestEvent();
-    
+
                 if (!this.isConnected && !this.isStopped) {
                     await this.subscriberStream(latestEvent);
                 }
@@ -522,7 +522,7 @@ export class FarcasterHubClient {
             }
         }, 3000); // 3-second debounce window
     }
-    
+
     private cleanupStream() {
         if (this.currentStream) {
             this.currentStream.removeAllListeners();
@@ -692,14 +692,14 @@ export class FarcasterHubClient {
                         msg,
                         options
                     }
-                    // this.eventBus.publish("ERROR_FC_PUBLISH", errorCastObj);
+                    elizaLogger.error("Farcaster: ", errorCastObj);
                 } else {
                     const errorCastObj = {
                         error: JSON.stringify(error),
                         msg,
                         options
                     }
-                    // this.eventBus.publish("ERROR_FC_PUBLISH", errorCastObj);
+                    elizaLogger.error("Farcaster: ", errorCastObj);
                 }
             });
 
@@ -1368,9 +1368,11 @@ export class FarcasterHubClient {
         let imageUrls: string[] = [];
         try {
             const allImageUrls = chronological_parent_casts
-                .filter(cast => cast.author && cast.author?.fid === conversationParentFid)
+                .filter(cast => cast.author?.fid === conversationParentFid)
                 .flatMap(cast =>
-                    cast.embeds?.filter(embed => embed.metadata.content_type.includes("image")) || []
+                    (cast.embeds || []).filter(embed =>
+                        embed.metadata?.content_type?.includes("image")
+                    )
                 )
                 .map(embed => embed.url);
 
