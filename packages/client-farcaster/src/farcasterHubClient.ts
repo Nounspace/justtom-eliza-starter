@@ -774,21 +774,20 @@ export class FarcasterHubClient {
     }
 
     private async handleAddCasts(msgs: Message[]): Promise<void> {
-        for (let m = 0; m < msgs.length; m++) {
-            const data = msgs[m].data;
+        // for (let m = 0; m < msgs.length; m++) {
+            const data = msgs[0].data;
             if (data && data.castAddBody) {
 
                 // Handle Targets Add Cast
                 if (this.TARGETS.includes(data.fid)) {
                     // Target Add New Cast
-                    this.handleTargetAddCast(msgs[m])
+                    this.handleTargetAddCast(msgs[0])
                     return;
                 }
 
                 // Handle Channel Messages
-                // if (data.castAddBody.parentUrl) elizaLogger.debug(data.castAddBody.parentUrl);
                 if (data.castAddBody.parentUrl && this.urlMatchesTargetChannel(data.castAddBody.parentUrl)) {
-                    this.handleTargetChannelCast(msgs[m]);
+                    this.handleTargetChannelCast(msgs[0]);
                     return;
                 }
 
@@ -821,7 +820,7 @@ export class FarcasterHubClient {
                 //     return;
                 // }
             }
-        }
+        // }
     }
 
 
