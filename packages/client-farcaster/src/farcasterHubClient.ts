@@ -143,6 +143,8 @@ export class FarcasterHubClient {
 
     private TARGETS: number[];
 
+    // private seenHashes = new Set();
+
     constructor(
         // eventBus: FarcasterEventBusInterface, 
         public client: FarcasterClient,
@@ -434,6 +436,7 @@ export class FarcasterHubClient {
                         return; // <---- You forgot this
                     }
                     saveLatestEventId(e.id)
+                    console.log(e.id)
                     this.handleEvent(e)
                 })
 
@@ -774,22 +777,44 @@ export class FarcasterHubClient {
     }
 
     private async handleAddCasts(msgs: Message[]): Promise<void> {
-        // for (let m = 0; m < msgs.length; m++) {
-            const data = msgs[0].data;
+        for (let m = 0; m < msgs.length; m++) {
+            const data = msgs[m].data;
             if (data && data.castAddBody) {
+
+                // const hash = msgs[m].hash;
+                // const maxHashes = 1000;
+
+                // if (this.seenHashes.has(hash)) {
+                //     console.warn(`[DUPLICATE] Duplicate hash detected in batch: ${hash}`);
+                // } else {
+                //     this.seenHashes.add(hash);
+
+                //     // Manually trim if size exceeds max
+                //     if (this.seenHashes.size > maxHashes) {
+                //         // This deletes an arbitrary value (likely oldest, but not guaranteed)
+                //         const iterator = this.seenHashes.values();
+                //         const oldest = iterator.next().value;
+                //         this.seenHashes.delete(oldest);
+                //     }
+                //     elizaLogger.info(`Received Cast FID: ${data.fid} | ${data.castAddBody.text}`);
+                // }
 
                 // Handle Targets Add Cast
                 if (this.TARGETS.includes(data.fid)) {
                     // Target Add New Cast
-                    this.handleTargetAddCast(msgs[0])
-                    return;
+                    elizaLogger.info(`Hanlde Cast FID: ${data.fid} | ${data.castAddBody.text}`);
+                    this.handleTargetAddCast(msgs[m])
+                    continue;
                 }
 
                 // Handle Channel Messages
                 if (data.castAddBody.parentUrl && this.urlMatchesTargetChannel(data.castAddBody.parentUrl)) {
-                    this.handleTargetChannelCast(msgs[0]);
-                    return;
+                    elizaLogger.info(`Hanlde Channel Cast FID: ${data.fid} | ${data.castAddBody.text}`);
+                    this.handleTargetChannelCast(msgs[m]);
+                    continue;
                 }
+
+                // elizaLogger.debug(msgs[m]);
 
                 //DEBUG
                 // console.dir(msgs[m]);
@@ -820,7 +845,7 @@ export class FarcasterHubClient {
                 //     return;
                 // }
             }
-        // }
+        }
     }
 
 
@@ -1333,7 +1358,7 @@ export class FarcasterHubClient {
             parent_author_fid: deployerInfo.fid,
         }
 
-        elizaLogger.debug("Farcaster: Reply: "+ theTokenReply);
+        elizaLogger.debug("Farcaster: Reply: " + theTokenReply);
         // elizaLogger.debug(options)
 
         this.publishToFarcaster(theTokenReply, options);
