@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 import LitJsSdk from '@lit-protocol/lit-node-client';
 import { LIT_NETWORK, LIT_ABILITY } from '@lit-protocol/constants';
-import { LitActionResource, createSiweMessage, generateAuthSig } from '@lit-protocol/auth-helpers';
+import { createSiweMessage, generateAuthSig, LitActionResource } from '@lit-protocol/auth-helpers';
 import { composeContext, generateObjectDeprecated, ModelClass } from '@elizaos/core';
 import { z } from 'zod';
 import { BaseEthereumAddressSchema, NETWORK_CONFIGS } from '@lit-protocol/aw-tool';

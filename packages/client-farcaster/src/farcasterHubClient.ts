@@ -157,9 +157,9 @@ export class FarcasterHubClient {
     ) {
 
         // TARGETS? HUB_RPC? HUB_SSL?
-        console.warn(this.client.farcasterConfig.FARCASTER_FID);
+        elizaLogger.warn(this.client.farcasterConfig.FARCASTER_FID);
 
-        this.MIN_NEYNAR_SCORE = parseFloat(process.env.MIN_NEYNAR_SCORE || "0.5");
+        this.MIN_NEYNAR_SCORE = parseFloat(process.env.MIN_NEYNAR_SCORE || "0.7");
 
         this.chatBotGroq = new Groq({
             apiKey: process.env.GROQ_API_KEY,
@@ -265,7 +265,7 @@ export class FarcasterHubClient {
         switch (message.data?.type) {
             case MessageType.CAST_ADD: {
                 if (!message.data.castAddBody) {
-                    elizaLogger.debug("Missing castAddBody");
+                    elizaLogger.debug("Farcaster: Missing castAddBody");
                     return
                 }
                 const {
@@ -440,7 +440,7 @@ export class FarcasterHubClient {
                 })
 
                 stream.on('end', async () => {
-                    elizaLogger.error(`Farcaster Hub: Stream ended`);
+                    elizaLogger.error(`Farcaster: Hub Stream ended`);
                     // console.log(`Stream object details on END:`);
                     // this.logRelevantStreamDetails(stream);
                     // this.isConnected = false;
@@ -448,7 +448,7 @@ export class FarcasterHubClient {
 
                 stream.on('close', async () => {
                     const closeReason = this.determineCloseReason(stream);
-                    elizaLogger.error(`Farcaster Hub: Stream closed: ${closeReason}`);
+                    elizaLogger.error(`Farcaster: Hub Stream closed: ${closeReason}`);
 
                     // console.log(`Stream object details on CLOSE:`);
                     // this.logRelevantStreamDetails(stream);
@@ -462,7 +462,7 @@ export class FarcasterHubClient {
                 stream.on('error', (error) => {
                     this.handleStreamError(error);
                 });
-            }, (e) => { elizaLogger.error('Error streaming data. ID: ' + getLatestEvent()) })
+            }, (e) => { elizaLogger.error('Farcaster: Error streaming data. ID: ' + getLatestEvent()) })
     }
 
     private determineCloseReason(stream: any): string {
@@ -505,7 +505,7 @@ export class FarcasterHubClient {
         this.reconnectTimeout = setTimeout(async () => {
             try {
                 this.isReconnecting = true;
-                elizaLogger.warn(`Farcaster Hub: Reconnecting to ${this.HUB_RPC}`);
+                elizaLogger.warn(`Farcaster: Reconnecting to ${this.HUB_RPC}`);
 
                 this.cleanupStream();
 
@@ -801,14 +801,14 @@ export class FarcasterHubClient {
                 // Handle Targets Add Cast
                 if (this.TARGETS.includes(data.fid)) {
                     // Target Add New Cast
-                    elizaLogger.info(`Hanlde Cast FID: ${data.fid} | ${data.castAddBody.text}`);
+                    // elizaLogger.info(`Farcaster: Hanlde Cast FID: ${data.fid} | ${data.castAddBody.text}`);
                     this.handleTargetAddCast(msgs[m])
                     continue;
                 }
 
                 // Handle Channel Messages
                 if (data.castAddBody.parentUrl && this.urlMatchesTargetChannel(data.castAddBody.parentUrl)) {
-                    elizaLogger.info(`Hanlde Channel Cast FID: ${data.fid} | ${data.castAddBody.text}`);
+                    // elizaLogger.info(`Farcaster: Hanlde Channel Cast FID: ${data.fid} | ${data.castAddBody.text}`);
                     this.handleTargetChannelCast(msgs[m]);
                     continue;
                 }
@@ -871,7 +871,7 @@ export class FarcasterHubClient {
             const usernameResult = await this.getFnameFromFid(fid);
             usernameResult.match(
                 (username) => this.USERS_FNAME_MAP.set(fid, username),
-                (error) => console.error(`Error: ${error.message}`)
+                (error) => elizaLogger.error(`Error: ${error.message}`)
             );
         }
 
@@ -1093,7 +1093,7 @@ export class FarcasterHubClient {
     public async start(from: number | undefined = undefined) {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         if (!agentFid) {
-            elizaLogger.info("No FID found, skipping interactions");
+            elizaLogger.info("Farcaster: No FID found, skipping interactions");
             return;
         }
 
@@ -1210,7 +1210,7 @@ export class FarcasterHubClient {
     async handleClankerMessage(cast: Cast) {
         // Ensure we have the required cast data
         if (!cast.text) {
-            elizaLogger.debug("Received invalid cast from Clanker");
+            elizaLogger.debug("Farcaster: Received invalid cast from Clanker");
             return;
         }
 
@@ -1231,37 +1231,37 @@ export class FarcasterHubClient {
         // `);
 
         if (!this.isDeployEvent(cast)) {
-            elizaLogger.debug("Clanker: Not a deploy event");
+            elizaLogger.debug("Farcaster: Clanker Not a deploy event");
             return undefined;
         }
 
         const contractAddress = this.extractContractAddress(cast.text);
         if (!contractAddress) {
-            elizaLogger.debug("Clanker: Missing Contract Address");
+            elizaLogger.debug("Farcaster: Clanker Missing Contract Address");
             return undefined;
         }
 
         const parentFid = cast.inReplyTo?.fid;
         if (!parentFid) {
-            elizaLogger.debug("Clanker: Missing cast.inReplyTo.fid");
+            elizaLogger.debug("Farcaster: Clanker Missing cast.inReplyTo.fid");
             return undefined;
         }
 
         const deployerInfo = await this.fetchDeployerInfo(parentFid);
         if (!deployerInfo) {
-            elizaLogger.debug("Clanker: Missing Deployer Info");
+            elizaLogger.debug("Farcaster: Clanker Missing Deployer Info");
             return undefined;
         }
 
-        const score = deployerInfo.experimental?.neynar_user_score;
+        const score = deployerInfo.score;
         if (score === undefined || score < this.MIN_NEYNAR_SCORE) {
-            console.debug(`Farcaster: Score Low for "${deployerInfo.username}": ${score}`);
+            elizaLogger.debug(`Farcaster: Score Low for "${deployerInfo.username}": ${score}`);
             return undefined;
         } else {
-            console.debug(`Farcaster: Score Ok for "${deployerInfo.username}": ${score}`);
+            elizaLogger.debug(`Farcaster: Score Ok for "${deployerInfo.username}": ${score}`);
         }
 
-        elizaLogger.debug(`Processing Clanker cast for ${deployerInfo.username}`);
+        elizaLogger.debug(`Farcaster: Processing Clanker cast for ${deployerInfo.username}`);
 
         const CastConversation = await this.client.neynar.lookupCastConversation({
             identifier: cast.hash,
@@ -1408,7 +1408,7 @@ export class FarcasterHubClient {
 
             imageUrls = await this.filterImageUrls(allImageUrls);
         } catch (error) {
-            elizaLogger.error("Error extracting image URLs");
+            elizaLogger.error("Farcaster: Error extracting image URLs");
             elizaLogger.error(error);
         }
 
@@ -1451,7 +1451,7 @@ export class FarcasterHubClient {
     ): Promise<{ description: string } | null> {
         try {
             // let imageUrl: string | null = null;
-            elizaLogger.debug(`Farcaster Process Image: ${imageUrl}`);
+            elizaLogger.debug(`Farcaster: Process Image: ${imageUrl}`);
 
             if (imageUrl) {
                 const imageDescriptionService =
@@ -1459,7 +1459,7 @@ export class FarcasterHubClient {
                         ServiceType.IMAGE_DESCRIPTION
                     );
                 if (!imageDescriptionService) {
-                    console.error("❌ Error processing image.");
+                    elizaLogger.error("❌ Error processing image.");
                     return null;
                 }
                 const { title, description } =
@@ -1469,7 +1469,7 @@ export class FarcasterHubClient {
                 elizaLogger.debug(`Farcaster Process Image: No Image to process`);
             }
         } catch (error) {
-            console.error("❌ Error processing image:", error);
+            elizaLogger.error("❌ Error processing image:", error);
         }
 
         return null;
@@ -1487,12 +1487,12 @@ export class FarcasterHubClient {
         thread: Cast[];
     }) {
         if (cast.profile.fid === agent.fid) {
-            elizaLogger.debug("skipping cast from bot itself", cast.hash);
+            elizaLogger.debug("Farcaster: skipping cast from bot itself", cast.hash);
             return;
         }
 
         if (!memory.content.text) {
-            elizaLogger.debug("skipping cast with no text", cast.hash);
+            elizaLogger.debug("Farcaster: skipping cast with no text", cast.hash);
             return { text: "", action: "IGNORE" };
         }
 
@@ -1574,7 +1574,7 @@ export class FarcasterHubClient {
             shouldRespondResponse === "STOP"
         ) {
             elizaLogger.info(
-                `Not responding to cast because generated ShouldRespond was ${shouldRespondResponse}`
+                `Farcaster: Not responding to cast because generated ShouldRespond was ${shouldRespondResponse}`
             );
             return;
         }
@@ -1633,7 +1633,7 @@ export class FarcasterHubClient {
                 }
                 return results.map((result) => result.memory);
             } catch (error) {
-                elizaLogger.error("Error sending response cast:", error);
+                elizaLogger.error("Farcaster: Error sending response cast:", error);
                 return [];
             }
         };
@@ -1652,7 +1652,7 @@ export class FarcasterHubClient {
 
     async visionTool(imageUrl: string): Promise<{ description: string } | null> {
         if (!imageUrl) return null;
-        elizaLogger.debug(`Farcaster Process Image: ${imageUrl}`);
+        elizaLogger.debug(`Farcaster: Process Image: ${imageUrl}`);
 
         let imageDescription: string | null = null;
 

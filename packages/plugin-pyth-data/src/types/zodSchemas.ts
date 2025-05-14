@@ -207,7 +207,10 @@ Given a collection of price feed ids, retrieve the latest Pyth price for each pr
     method: "get",
     path: "/v2/updates/price/stream",
     alias: "price_stream_sse_handler",
-    description: `SSE route handler for streaming price updates.`,
+    description: `SSE route handler for streaming price updates.
+
+The connection will automatically close after 24 hours to prevent resource leaks.
+Clients should implement reconnection logic to maintain continuous price updates.`,
     requestFormat: "json",
     parameters: [
       {
