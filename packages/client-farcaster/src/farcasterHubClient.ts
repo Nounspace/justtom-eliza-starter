@@ -436,7 +436,6 @@ export class FarcasterHubClient {
                         return; // <---- You forgot this
                     }
                     saveLatestEventId(e.id)
-                    console.log(e.id)
                     this.handleEvent(e)
                 })
 
