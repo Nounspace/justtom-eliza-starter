@@ -801,7 +801,7 @@ export class FarcasterHubClient {
                 // Handle Targets Add Cast
                 if (this.TARGETS.includes(data.fid)) {
                     // Target Add New Cast
-                    // elizaLogger.info(`Farcaster: Hanlde Cast FID: ${data.fid} | ${data.castAddBody.text}`);
+                    // elizaLogger.info(`Farcaster: Handle Cast FID: ${data.fid} | ${data.castAddBody.text}`);
                     this.handleTargetAddCast(msgs[m])
                     continue;
                 }
