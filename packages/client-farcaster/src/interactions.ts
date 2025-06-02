@@ -242,7 +242,7 @@ export class FarcasterInteractionManager {
             shouldRespondResponse === "STOP"
         ) {
             elizaLogger.warn(
-                `Not responding to cast because generated ShouldRespond was ${shouldRespondResponse}`
+                `Not responding to cast because shouldRespondContext was ${shouldRespondResponse}`
             );
             return;
         }
