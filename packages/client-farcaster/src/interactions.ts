@@ -19,6 +19,8 @@ import {
     formatTimeline,
     messageHandlerTemplate,
     shouldRespondTemplate,
+    shouldRespondSecurityTemplate,
+    shouldRespondEngagementTemplate,
 } from "./prompts";
 import { castUuid } from "./utils";
 import { sendCast } from "./actions";
@@ -174,13 +176,36 @@ export class FarcasterInteractionManager {
             formattedConversation,
         });
 
+        // Stage 1: Security/Spam Filter
+        // NOTE: Only local template is used for now; character-level overrides not yet supported for security/engagement templates.
+        const shouldRespondSecurityContext = composeContext({
+            state,
+            template: shouldRespondSecurityTemplate,
+        });
+
+        const securityResponse = String(
+            await generateShouldRespond({
+                runtime: this.runtime,
+                context: shouldRespondSecurityContext,
+                modelClass: ModelClass.SMALL,
+            })
+        ).toUpperCase();
+
+        elizaLogger.warn(
+            `Security/Spam Filter: ${cast.profile.name} said: ${cast.text} | Result: ${securityResponse}`
+        );
+
+        if (securityResponse === "BLOCK") {
+            elizaLogger.warn(
+                `Not responding to cast because Security/Spam filter returned BLOCK`
+            );
+            return;
+        }
+
+        // Stage 2: Engagement/Context Filter
         const shouldRespondContext = composeContext({
             state,
-            template:
-                this.runtime.character.templates
-                    ?.farcasterShouldRespondTemplate ||
-                this.runtime.character?.templates?.shouldRespondTemplate ||
-                shouldRespondTemplate,
+            template: shouldRespondEngagementTemplate,
         });
 
         const memoryId = castUuid({
@@ -209,7 +234,7 @@ export class FarcasterInteractionManager {
         });
 
         elizaLogger.warn(
-            `Before Should Response: ${cast.profile.name} said: ${cast.text}`
+            `Engagement/Context Filter: ${cast.profile.name} said: ${cast.text} | Result: ${shouldRespondResponse}`
         );
 
         if (
