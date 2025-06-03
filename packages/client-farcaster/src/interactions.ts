@@ -192,12 +192,12 @@ export class FarcasterInteractionManager {
         ).toUpperCase();
 
         elizaLogger.warn(
-            `Security/Spam Filter: ${cast.profile.name} said: ${cast.text} | Result: ${securityResponse}`
+            `Farcaster: Security/Spam Filter: ${cast.profile.name} said: ${cast.text} | Result: ${securityResponse}`
         );
 
         if (securityResponse === "BLOCK") {
             elizaLogger.warn(
-                `Not responding to cast because Security/Spam filter returned BLOCK`
+                `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK`
             );
             return;
         }
@@ -234,7 +234,7 @@ export class FarcasterInteractionManager {
         });
 
         elizaLogger.warn(
-            `Engagement/Context Filter: ${cast.profile.name} said: ${cast.text} | Result: ${shouldRespondResponse}`
+            `Farcaster: Engagement/Context Filter: ${cast.profile.name} said: ${cast.text} | Result: ${shouldRespondResponse}`
         );
 
         if (
@@ -242,7 +242,7 @@ export class FarcasterInteractionManager {
             shouldRespondResponse === "STOP"
         ) {
             elizaLogger.warn(
-                `Not responding to cast because shouldRespondContext was ${shouldRespondResponse}`
+                `Farcaster: Not responding to cast because shouldRespondContext was ${shouldRespondResponse}`
             );
             return;
         }
