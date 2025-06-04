@@ -1086,6 +1086,12 @@ export class FarcasterHubClient {
     }
 
     public stop() {
+        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+        if (agentFid !== 527313) {
+            elizaLogger.info("Farcaster: Not Tom, skipping interactions");
+            return;
+        }
+
         try {
             this.isStopped = true;
             this.cleanup();
@@ -1097,8 +1103,14 @@ export class FarcasterHubClient {
 
     public async start(from: number | undefined = undefined) {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+
         if (!agentFid) {
             elizaLogger.info("Farcaster: No FID found, skipping interactions");
+            return;
+        }
+
+        if (agentFid !== 527313) {
+            elizaLogger.info("Farcaster: Not Tom, skipping interactions");
             return;
         }
 

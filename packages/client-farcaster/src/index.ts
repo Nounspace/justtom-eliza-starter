@@ -55,21 +55,18 @@ class FarcasterManager {
             cache
         );
 
-        const agentFID = runtime.getSetting("FARCASTER_FID")
-        if (agentFID == "527313") {
-            this.hubClient = new FarcasterHubClient(
-                this.client,
-                runtime,
-                this.signerUuid,
-                neynarConfig,
-                cache
-            );
-        }
+
+        this.hubClient = new FarcasterHubClient(
+            this.client,
+            runtime,
+            this.signerUuid,
+            neynarConfig,
+            cache
+        );
     }
 
     async start() {
-        if(this.hubClient)
-            this.hubClient.start();
+        this.hubClient.start();
 
         await Promise.all([
             this.posts.start(),
@@ -78,8 +75,7 @@ class FarcasterManager {
     }
 
     async stop() {
-        if(this.hubClient)
-            this.hubClient.stop()
+        this.hubClient.stop()
 
         await Promise.all([
             this.posts.stop(),
