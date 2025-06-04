@@ -55,27 +55,34 @@ class FarcasterManager {
             cache
         );
 
-        this.hubClient = new FarcasterHubClient(
-            this.client,
-            runtime,
-            this.signerUuid,
-            neynarConfig,
-            cache
-        );
+        const agentFID = runtime.getSetting("FARCASTER_FID")
+        if (agentFID == "527313") {
+            this.hubClient = new FarcasterHubClient(
+                this.client,
+                runtime,
+                this.signerUuid,
+                neynarConfig,
+                cache
+            );
+        }
     }
 
     async start() {
-        this.hubClient.start();
+        if(this.hubClient)
+            this.hubClient.start();
+
         await Promise.all([
-            this.posts.start(), 
+            this.posts.start(),
             this.interactions.start()
         ]);
     }
 
     async stop() {
-        this.hubClient.stop()
+        if(this.hubClient)
+            this.hubClient.stop()
+
         await Promise.all([
-            this.posts.stop(), 
+            this.posts.stop(),
             this.interactions.stop()
         ]);
     }
