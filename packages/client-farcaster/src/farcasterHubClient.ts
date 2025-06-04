@@ -955,9 +955,14 @@ export class FarcasterHubClient {
 
     private async handleTargetChannelCast(message: Message) {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+
+        //not tom, get out
+        if(agentFid != 527313) 
+            return
+
         const agent = await this.client.getProfile(agentFid);
 
-        // ignore agent casts
+        // ignore agent casts (if manually cast, ignore it)
         if (message.data?.fid == agentFid) {
             return
         }
