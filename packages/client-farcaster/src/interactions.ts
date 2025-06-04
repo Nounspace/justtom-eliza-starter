@@ -195,7 +195,7 @@ export class FarcasterInteractionManager {
             `Farcaster: Security/Spam Filter: ${cast.profile.name} said: ${cast.text} | Result: ${securityResponse}`
         );
 
-        if (securityResponse === "BLOCK") {
+        if (securityResponse === "STOP") {
             elizaLogger.warn(
                 `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK`
             );
