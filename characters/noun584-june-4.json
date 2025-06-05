@@ -10,6 +10,8 @@
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
 
+        "IMAGE_GENERATE_STYLE": "Pixelized Children Art",
+
         "ACTION_INTERVAL": "11",
         "POST_INTERVAL_MIN": "5",
         "POST_INTERVAL_MAX": "10",

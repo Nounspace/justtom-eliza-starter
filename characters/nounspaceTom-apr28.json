@@ -12,6 +12,8 @@
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
 
+        "IMAGE_GENERATE_STYLE": "64-bit Retro Sci-fi Art",
+
         "ACTION_INTERVAL": "11",
         "POST_INTERVAL_MIN": "5",
         "POST_INTERVAL_MAX": "10",
