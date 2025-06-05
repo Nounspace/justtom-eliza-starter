@@ -131,7 +131,8 @@ const imageGeneration: Action = {
         const CONTENT = message.content.text;
         const IMAGE_SYSTEM_PROMPT = `You are an expert in writing prompts for AI art generation. You excel at creating detailed and creative visual descriptions. Incorporating specific elements naturally. Always aim for clear, descriptive language that generates a creative picture. Your output should only contain the description of the image contents, but NOT an instruction like "create an image that..."`;
         const STYLE = runtime.getSetting("IMAGE_GENERATE_STYLE") || "64-bit Retro Sci-fi Art";
-
+        elizaLogger.debug(`IMAGE_GENERATE_STYLE: "${STYLE}"`)
+        
         const IMAGE_PROMPT_INPUT = `You are tasked with generating an image prompt based on a content and a specified style.
             Your goal is to create a detailed and vivid image prompt that captures the essence of the content while incorporating an appropriate subject based on your analysis of the content.\n\nYou will be given the following inputs:\n<content>\n${CONTENT}\n</content>\n\n<style>\n${STYLE}\n</style>\n\nA good image prompt consists of the following elements:\n\n
 
