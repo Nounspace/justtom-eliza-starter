@@ -10,7 +10,7 @@
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
 
-        "IMAGE_GENERATE_STYLE": "Pixelized Children Art",
+        "IMAGE_GENERATE_STYLE": "8-bit Flat Pixel Character Art",
 
         "ACTION_INTERVAL": "11",
         "POST_INTERVAL_MIN": "5",
