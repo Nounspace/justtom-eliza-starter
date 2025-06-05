@@ -374,6 +374,7 @@ export class FarcasterInteractionManager {
 
             elizaLogger.warn(`Farcaster SPAM Filter report ${this.spamFilter.blockedUsersCount}: ${JSON.stringify(filteredReport)}`);
             this.spamFilter.lastReportedCount = this.spamFilter.blockedUsersCount; // Update last reported count
+            this.spamFilter.lastReportedTimestamp = now; // Update last reported timestamp
         }
     }
 
