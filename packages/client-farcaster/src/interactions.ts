@@ -27,12 +27,22 @@ import { sendCast } from "./actions";
 
 export class FarcasterInteractionManager {
     private timeout: NodeJS.Timeout | undefined;
+    private spamFilter: {
+        blockedUsers: { [key: string]: { username: string; count: number, lastBlockedTimestamp: number } };
+        blockedCount: number;
+        lastReportedCount: number;
+    } = {
+            blockedUsers: {}, // key: fid, value: { username, count }
+            blockedCount: 0,
+            lastReportedCount: 0,
+        };
+
     constructor(
         public client: FarcasterClient,
         public runtime: IAgentRuntime,
         private signerUuid: string,
         public cache: Map<string, any>
-    ) {}
+    ) { }
 
     public async start() {
         const handleInteractionsLoop = async () => {
@@ -86,6 +96,11 @@ export class FarcasterInteractionManager {
 
             if (pastMemory) {
                 continue;
+            }
+
+            // Check if the user is already blocked
+            if (this.spamFilter.blockedUsers[userId]) {
+                continue; // Skip processing for blocked users
             }
 
             await this.runtime.ensureConnection(
@@ -177,7 +192,6 @@ export class FarcasterInteractionManager {
         });
 
         // Stage 1: Security/Spam Filter
-        // NOTE: Only local template is used for now; character-level overrides not yet supported for security/engagement templates.
         const shouldRespondSecurityContext = composeContext({
             state,
             template: shouldRespondSecurityTemplate,
@@ -191,14 +205,33 @@ export class FarcasterInteractionManager {
             })
         ).toUpperCase();
 
-        elizaLogger.warn(
-            `Farcaster: Security/Spam Filter: ${cast.profile.name} said: ${cast.text} | Result: ${securityResponse}`
-        );
-
         if (securityResponse === "STOP") {
             elizaLogger.warn(
-                `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK`
+                `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${cast.profile.username}`
             );
+            elizaLogger.warn(
+                `Farcaster: Security/Spam Filter: ${securityResponse} ${cast.authorFid.toString()} ${cast.profile.username}: ${cast.text.slice(0, 15)}`
+            );
+
+            // If the user is blocked, update the spam filter
+            this.cleanupBlockedUsers(); // Call cleanup before updating the spam filter
+            if (!this.spamFilter.blockedUsers[senderId]) {
+                this.spamFilter.blockedUsers[senderId] = {
+                    username: cast.profile.name,
+                    count: 1, // Initialize count to 1 when first blocked
+                    lastBlockedTimestamp: Date.now(), // Track when the user was blocked
+                }
+            } else {
+                this.spamFilter.blockedUsers[senderId].count++; // Increment count if already blocked
+            }
+            this.spamFilter.blockedCount++;
+
+            // Check if we need to log a warning
+            if (this.spamFilter.blockedCount - this.spamFilter.lastReportedCount >= 10) {
+                elizaLogger.warn(`Blocked users report ${this.spamFilter.blockedCount}: ${JSON.stringify(this.spamFilter.blockedUsers)}`);
+                this.spamFilter.lastReportedCount = this.spamFilter.blockedCount; // Update last reported count
+            }
+
             return;
         }
 
@@ -317,4 +350,20 @@ export class FarcasterInteractionManager {
             callback
         );
     }
+
+
+    // Cleanup blocked users who have not been active for a specified duration
+    private cleanupBlockedUsers() {
+        const now = Date.now();
+        const cleanupThreshold = 48 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+        for (const userId in this.spamFilter.blockedUsers) {
+            const user = this.spamFilter.blockedUsers[userId];
+            // Remove users who have not been blocked for more than the threshold
+            if (now - user.lastBlockedTimestamp > cleanupThreshold) {
+                delete this.spamFilter.blockedUsers[userId];
+            }
+        }
+    }
+
 }
