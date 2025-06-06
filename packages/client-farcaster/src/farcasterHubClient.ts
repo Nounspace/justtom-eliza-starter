@@ -1113,7 +1113,7 @@ export class FarcasterHubClient {
         }
 
         if (agentFid !== 527313) {
-            elizaLogger.info("Farcaster: Clanker: ${agentFid} Not Tom, skipping start");
+            elizaLogger.info(`Farcaster: Clanker: ${agentFid} Not Tom, skipping start`);
             return;
         }
 

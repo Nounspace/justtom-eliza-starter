@@ -27,7 +27,7 @@ export const farcasterEnvSchema = z.object({
     ACTION_TIMELINE_TYPE: z
         .nativeEnum(ActionTimelineType)
         .default(ActionTimelineType.ForYou),
-    FAVORITE_FRONTEND: z.string().default("https://warpcast.com"),
+    FAVORITE_FRONTEND: z.string().default("farcaster.xyz"),
     FARCASTER_USERNAME: z.string().min(1, "Farcaster username is required"),
     FARCASTER_TARGETS_USERS: z.array(z.number()).default([]),
     FARCASTER_TARGET_CHANNEL: z.string().min(1, "Farcaster channel is required"),
@@ -143,7 +143,7 @@ export async function validateFarcasterConfig(
 
             FARCASTER_FAVORITE_FRONTEND: (
                 runtime.getSetting("FARCASTER_FAVORITE_FRONTEND") ||
-                "https://warpcast.com"
+                "https://farcaster.xyz"
             ) as String,
 
             FARCASTER_USERNAME: (
