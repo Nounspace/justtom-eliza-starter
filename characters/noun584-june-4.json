@@ -6,12 +6,11 @@
     ],
     
     "modelProvider": "venice",
-    "imageModelProvider": "openai",
     "imageVisionModelProvider": "groq",
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
 
-        "IMAGE_GENERATE_STYLE": "32-bit or 64-bit Flat Pixel Character Art",
+        "IMAGE_GENERATE_STYLE": "Flat Retro Pixel Character Art. IGNORE THE REST OF THE RULES.",
 
         "ACTION_INTERVAL": "11",
         "POST_INTERVAL_MIN": "5",

@@ -674,7 +674,7 @@ export class FarcasterHubClient {
 
             if (this.client.farcasterConfig?.FARCASTER_DRY_RUN) {
                 elizaLogger.warn(
-                    `Farcaster: Dry Run: ${msg}`
+                    `Farcaster: Clanker: Dry Run: ${msg}`
                 );
                 return;
             }
@@ -688,30 +688,30 @@ export class FarcasterHubClient {
                     parent: options.replyTo,
                 })
                 .then(response_data => {
-                    elizaLogger.info(`Farcaster: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
+                    elizaLogger.info(`Farcaster: Clanker: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
                 })
                 .catch(error => {
-                    elizaLogger.error("Farcaster: Error publishing Cast");
+                    elizaLogger.error("Farcaster: Clanker: Error publishing Cast");
                     if (isApiErrorResponse(error)) {
                         const errorCastObj = {
                             error: error.response.data,
                             msg,
                             options
                         }
-                        elizaLogger.error("Farcaster: ", errorCastObj);
+                        elizaLogger.error("Farcaster: Clanker: ", errorCastObj);
                     } else {
                         const errorCastObj = {
                             error: JSON.stringify(error),
                             msg,
                             options
                         }
-                        elizaLogger.error("Farcaster: ", errorCastObj);
+                        elizaLogger.error("Farcaster: Clanker: ", errorCastObj);
                     }
                 });
 
             this.likeCast(options);
         } catch (error) {
-            elizaLogger.error("Farcaster: " + JSON.stringify(error));
+            elizaLogger.error("Farcaster: Clanker: " + JSON.stringify(error));
         }
     }
 
@@ -723,17 +723,17 @@ export class FarcasterHubClient {
                 target: options.replyTo,
                 targetAuthorFid: options.parent_author_fid
             }).then(response => {
-                elizaLogger.info("Farcaster: Reaction published successfully");
+                elizaLogger.info("Farcaster: Clanker: Reaction published successfully");
                 // this.farcasterLog.info("Reaction published successfully ", "INFO")
                 // console.log('Publish Reaction Operation Status:', response); // Outputs the status of the reaction post
             }).catch(error => {
                 if (isApiErrorResponse(error)) {
-                    elizaLogger.error("Farcaster: Failed to publish reaction");
+                    elizaLogger.error("Farcaster: Clanker: Failed to publish reaction");
                     elizaLogger.debug(error.response.data)
                     // console.error(Red + error.response.data + Reset);
                     // this.farcasterLog.log("Failed to publish reaction: " + error.response.data, "ERROR")
                 } else {
-                    elizaLogger.error("Farcaster: Failed to publish reaction");
+                    elizaLogger.error("Farcaster: Clanker: Failed to publish reaction");
                     elizaLogger.debug(error)
                     // this.farcasterLog.log("Failed to publish reaction: " + JSON.stringify(error), "ERROR")
                     // console.error(Red + "Failed to publish Reaction: " + error + + Reset);
@@ -766,7 +766,7 @@ export class FarcasterHubClient {
 
         // Return false if no target channels configured
         if (!targetChannels.length) {
-            elizaLogger.warn('No target channels configured');
+            elizaLogger.warn('Farcaster: Clanker: No target channels configured');
             return false;
         }
 
@@ -981,7 +981,7 @@ export class FarcasterHubClient {
             const cast = await this.createCastObj(message);
             if (!cast) return
 
-            elizaLogger.info(`Farcaster: New Channel Cast: ${cast.text}`)
+            elizaLogger.info(`Farcaster: Clanker: New Channel Cast: ${cast.text}`)
 
             const messageHash = cast.hash;
             const conversationId = `${messageHash}-${this.runtime.agentId}`;
@@ -1043,7 +1043,7 @@ export class FarcasterHubClient {
         const fName = await this.handleUserFid(message.data.fid);    // farcast (User)Name 
         const userProfile = await this.handleUserInfo(fName);        // go fetch user info async
         if (!userProfile) {
-            elizaLogger.error(`Farcaster: missing profile ${fName}`);
+            elizaLogger.error(`Farcaster: Clanker: missing profile ${fName}`);
             return;
         }
 
@@ -1091,7 +1091,7 @@ export class FarcasterHubClient {
     public stop() {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         if (agentFid !== 527313) {
-            elizaLogger.info("Farcaster: Not Tom, skipping interactions");
+            elizaLogger.info(`Farcaster: Clanker: ${agentFid} Not Tom, skipping stop`);
             return;
         }
 
@@ -1108,12 +1108,12 @@ export class FarcasterHubClient {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
 
         if (!agentFid) {
-            elizaLogger.info("Farcaster: No FID found, skipping interactions");
+            elizaLogger.info(`Farcaster: Clanker: No FID found, skipping interactions`);
             return;
         }
 
         if (agentFid !== 527313) {
-            elizaLogger.info("Farcaster: Not Tom, skipping interactions");
+            elizaLogger.info("Farcaster: Clanker: ${agentFid} Not Tom, skipping start");
             return;
         }
 
@@ -1230,7 +1230,7 @@ export class FarcasterHubClient {
     async handleClankerMessage(cast: Cast) {
         // Ensure we have the required cast data
         if (!cast.text) {
-            elizaLogger.debug("Farcaster: Received invalid cast from Clanker");
+            elizaLogger.debug("Farcaster: Clanker: Received invalid cast from Clanker");
             return;
         }
 
@@ -1251,34 +1251,34 @@ export class FarcasterHubClient {
         // `);
 
         if (!this.isDeployEvent(cast)) {
-            elizaLogger.debug("Farcaster: Clanker Not a deploy event");
+            elizaLogger.debug("Farcaster: Clanker: Not a deploy event");
             return undefined;
         }
 
         const contractAddress = this.extractContractAddress(cast.text);
         if (!contractAddress) {
-            elizaLogger.debug("Farcaster: Clanker Missing Contract Address");
+            elizaLogger.debug("Farcaster: Clanker: Missing Contract Address");
             return undefined;
         }
 
         const parentFid = cast.inReplyTo?.fid;
         if (!parentFid) {
-            elizaLogger.debug("Farcaster: Clanker Missing cast.inReplyTo.fid");
+            elizaLogger.debug("Farcaster: Clanker: Missing cast.inReplyTo.fid");
             return undefined;
         }
 
         const deployerInfo = await this.fetchDeployerInfo(parentFid);
         if (!deployerInfo) {
-            elizaLogger.debug("Farcaster: Clanker Missing Deployer Info");
+            elizaLogger.debug("Farcaster: Clanker: Missing Deployer Info");
             return undefined;
         }
 
         const score = deployerInfo.score;
         if (score === undefined || score < this.MIN_NEYNAR_SCORE) {
-            elizaLogger.debug(`Farcaster: Score Low for "${deployerInfo.username}": ${score}`);
+            elizaLogger.debug(`Farcaster: Clanker: Score Low for "${deployerInfo.username}": ${score}`);
             return undefined;
         } else {
-            elizaLogger.debug(`Farcaster: Score Ok for "${deployerInfo.username}": ${score}`);
+            elizaLogger.debug(`Farcaster: Clanker: Score Ok for "${deployerInfo.username}": ${score}`);
         }
 
         const senderId = stringToUuid(cast.authorFid.toString());
@@ -1336,7 +1336,7 @@ export class FarcasterHubClient {
 `;
 
         if (image_description)
-            elizaLogger.debug("Farcaster: Image Description: " + image_description.description);
+            elizaLogger.debug("Farcaster: Clanker: Image Description: " + image_description.description);
 
         let reply: any;
         let theTokenReply: string = `Hey @${username}! Log into nounspace with Farcaster and customize your token space with Themes, Fidgets, and Tabs.\n\nHere's your token space: ${nounspacePage}`;
