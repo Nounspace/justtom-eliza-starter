@@ -194,6 +194,11 @@ export class FarcasterInteractionManager {
         });
 
         // Stage 1: Security/Spam Filter
+        if (!this.spamFilter.blockedUsers[senderId]) {
+            this.manageBlockedUsers(cast.profile.username, senderId);
+            return
+        }
+
         const shouldRespondSecurityContext = composeContext({
             state,
             template: shouldRespondSecurityTemplate,
@@ -338,12 +343,13 @@ export class FarcasterInteractionManager {
     }
 
 
-    // Cleanup blocked users who have not been active for a specified duration
+    
     private manageBlockedUsers(username, senderId) {
         const now = Date.now();
         const oneHour = 60 * 60 * 1000; // One hour in milliseconds
         const cleanupThreshold = 48 * 60 * 60 * 1000; // 24 hours in milliseconds
 
+        // Cleanup blocked users who have not been active for a specified duration
         for (const userId in this.spamFilter.blockedUsers) {
             const user = this.spamFilter.blockedUsers[userId];
             // Remove users who have not been blocked for more than the threshold
@@ -352,7 +358,6 @@ export class FarcasterInteractionManager {
             }
         }
 
-        const shouldLogReport = (this.spamFilter.blockedUsersCount - this.spamFilter.lastReportedCount >= 10) || (now - this.spamFilter.lastReportedTimestamp > oneHour);
 
         if (!this.spamFilter.blockedUsers[senderId]) {
             this.spamFilter.blockedUsers[senderId] = {
@@ -366,6 +371,7 @@ export class FarcasterInteractionManager {
         }
 
         // Check if we need to log a warning
+        const shouldLogReport = (this.spamFilter.blockedUsersCount - this.spamFilter.lastReportedCount >= 10) || (now - this.spamFilter.lastReportedTimestamp > oneHour);
         if (shouldLogReport) {
             const filteredReport = Object.entries(this.spamFilter.blockedUsers).map(([key, user]) => ({
                 username: user.username,
