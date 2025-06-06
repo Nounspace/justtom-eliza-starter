@@ -1,38 +1,49 @@
+import { UUID } from "@elizaos/core";
+
 class SpamFilterManager {
+    private static instance: SpamFilterManager;
     private blockedUsers: { [key: string]: { username: string; count: number, lastBlockedTimestamp: number } } = {};
     private blockedUsersCount: number = 0;
     private lastReportedCount: number = 0;
     private lastReportedTimestamp: number = 0;
 
+    // Private constructor
+    private constructor() {}
+
+    // Static method to get the instance
+    public static getInstance(): SpamFilterManager {
+        if (!SpamFilterManager.instance) {
+            SpamFilterManager.instance = new SpamFilterManager();
+        }
+        return SpamFilterManager.instance;
+    }
+
     public addUserToBlockList(username: string, senderId: string): void {
         const now = Date.now();
-
-        // Cleanup blocked users who have not been active for a specified duration
         this.cleanupBlockedUsers();
 
         if (!this.blockedUsers[senderId]) {
             this.blockedUsers[senderId] = {
                 username: username,
-                count: 1, // Initialize count to 1 when first blocked
-                lastBlockedTimestamp: now, // Track when the user was blocked
+                count: 1,
+                lastBlockedTimestamp: now,
             };
             this.blockedUsersCount++;
         } else {
-            this.blockedUsers[senderId].count++; // Increment count if already blocked
+            this.blockedUsers[senderId].count++;
         }
 
         this.logBlockedUsersReport();
     }
 
-    public isUserBlocked(senderId: string): boolean {
+    public isUserBlocked(senderId: UUID): boolean {
         return !!this.blockedUsers[senderId];
     }
 
-    public cleanupBlockedUsers(): void {
+    private cleanupBlockedUsers(): void {
         const now = Date.now();
-        const cleanupThreshold = 48 * 60 * 60 * 1000; // 48 hours in milliseconds
+        const cleanupThreshold = 48 * 60 * 60 * 1000;
 
-        // Remove users who have not been blocked for more than the threshold
         for (const userId in this.blockedUsers) {
             const user = this.blockedUsers[userId];
             if (now - user.lastBlockedTimestamp > cleanupThreshold) {
@@ -42,11 +53,10 @@ class SpamFilterManager {
         }
     }
 
-    public logBlockedUsersReport(): void {
+    private logBlockedUsersReport(): void {
         const now = Date.now();
-        const oneHour = 60 * 60 * 1000; // One hour in milliseconds
+        const oneHour = 60 * 60 * 1000;
 
-        // Check if we need to log a warning
         const shouldLogReport = (this.blockedUsersCount - this.lastReportedCount >= 10) || (now - this.lastReportedTimestamp > oneHour);
         if (shouldLogReport) {
             const filteredReport = Object.entries(this.blockedUsers).map(([key, user]) => ({
@@ -55,8 +65,8 @@ class SpamFilterManager {
             }));
 
             console.warn(`Spam Filter report ${this.blockedUsersCount}: ${JSON.stringify(filteredReport)}`);
-            this.lastReportedCount = this.blockedUsersCount; // Update last reported count
-            this.lastReportedTimestamp = now; // Update last reported timestamp
+            this.lastReportedCount = this.blockedUsersCount;
+            this.lastReportedTimestamp = now;
         }
     }
 }

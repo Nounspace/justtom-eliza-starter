@@ -28,7 +28,7 @@ import SpamFilterManager from './spamFilterManager';
 
 export class FarcasterInteractionManager {
     private timeout: NodeJS.Timeout | undefined;
-    public spamFilterManager: SpamFilterManager;
+    private spamFilterManager: SpamFilterManager;
 
     constructor(
         public client: FarcasterClient,
@@ -36,7 +36,7 @@ export class FarcasterInteractionManager {
         private signerUuid: string,
         public cache: Map<string, any>
     ) {
-        this.spamFilterManager = new SpamFilterManager();
+        this.spamFilterManager = SpamFilterManager.getInstance();
     }
 
     public async start() {

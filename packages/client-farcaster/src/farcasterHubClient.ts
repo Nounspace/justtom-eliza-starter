@@ -112,6 +112,7 @@ import {
 import { FarcasterClient } from './client';
 import { Cast, Profile } from "./types";
 import { buildConversationThread, createCastMemory } from "./memory";
+import SpamFilterManager from "./spamFilterManager";
 
 // import { BulkUsersResponse, CastWithInteractions, Conversation, UserResponse } from '@neynar/nodejs-sdk/build/neynar-api/v2';
 
@@ -143,7 +144,7 @@ export class FarcasterHubClient {
 
     private TARGETS: number[];
 
-    // private seenHashes = new Set();
+    private spamFilterManager: SpamFilterManager;
 
     constructor(
         // eventBus: FarcasterEventBusInterface, 
@@ -155,6 +156,8 @@ export class FarcasterHubClient {
         // public client: FarcasterClient,
         // public neynarClient: NeynarAPIClient
     ) {
+
+        this.spamFilterManager = SpamFilterManager.getInstance();
 
         // TARGETS? HUB_RPC? HUB_SSL?
         elizaLogger.warn(this.client.farcasterConfig.FARCASTER_FID);
@@ -957,7 +960,7 @@ export class FarcasterHubClient {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
 
         //not tom, get out
-        if(agentFid != 527313) 
+        if (agentFid != 527313)
             return
 
         const agent = await this.client.getProfile(agentFid);
@@ -1276,6 +1279,15 @@ export class FarcasterHubClient {
             return undefined;
         } else {
             elizaLogger.debug(`Farcaster: Score Ok for "${deployerInfo.username}": ${score}`);
+        }
+
+        const senderId = stringToUuid(cast.authorFid.toString());
+        if(this.spamFilterManager.isUserBlocked(senderId)) {
+            this.spamFilterManager.addUserToBlockList(deployerInfo.username, senderId);
+            elizaLogger.warn(
+                `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${deployerInfo.username}`
+            );
+            return
         }
 
         elizaLogger.debug(`Farcaster: Processing Clanker cast for ${deployerInfo.username}`);
