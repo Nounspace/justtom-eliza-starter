@@ -24,27 +24,20 @@ import {
 } from "./prompts";
 import { castUuid } from "./utils";
 import { sendCast } from "./actions";
+import SpamFilterManager from './spamFilterManager';
 
 export class FarcasterInteractionManager {
     private timeout: NodeJS.Timeout | undefined;
-    private spamFilter: {
-        blockedUsers: { [key: string]: { username: string; count: number, lastBlockedTimestamp: number } };
-        blockedUsersCount: number;
-        lastReportedCount: number;
-        lastReportedTimestamp: number
-    } = {
-            blockedUsers: {}, // key: fid, value: { username, count }
-            blockedUsersCount: 0,
-            lastReportedCount: 0,
-            lastReportedTimestamp: 0,
-        };
+    public spamFilterManager: SpamFilterManager;
 
     constructor(
         public client: FarcasterClient,
         public runtime: IAgentRuntime,
         private signerUuid: string,
         public cache: Map<string, any>
-    ) { }
+    ) {
+        this.spamFilterManager = new SpamFilterManager();
+    }
 
     public async start() {
         const handleInteractionsLoop = async () => {
@@ -101,7 +94,10 @@ export class FarcasterInteractionManager {
             }
 
             // Check if the user is already blocked
-            if (this.spamFilter.blockedUsers[userId]) {
+            if (this.spamFilterManager.isUserBlocked(userId)) {
+                elizaLogger.info(
+                    `Farcaster: Not responding to cast because Security/Spam filter BLOCK ${userId}`
+                );
                 continue; // Skip processing for blocked users
             }
 
@@ -194,8 +190,11 @@ export class FarcasterInteractionManager {
         });
 
         // Stage 1: Security/Spam Filter
-        if (!this.spamFilter.blockedUsers[senderId]) {
-            this.manageBlockedUsers(cast.profile.username, senderId);
+        if (this.spamFilterManager.isUserBlocked(senderId)) {
+            this.spamFilterManager.addUserToBlockList(cast.profile.username, senderId);
+            elizaLogger.warn(
+                `Farcaster: Not responding to cast because Security/Spam filter BLOCK ${cast.profile.username}`
+            );
             return
         }
 
@@ -212,17 +211,17 @@ export class FarcasterInteractionManager {
             })
         ).toUpperCase();
 
+        elizaLogger.info(
+            `Farcaster: Security/Spam Filter: ${securityResponse} ${cast.authorFid.toString()} ${cast.profile.username}: ${cast.text.slice(0, 15)}`
+        );
+
         if (securityResponse === "STOP") {
             elizaLogger.warn(
                 `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${cast.profile.username}`
             );
-            elizaLogger.warn(
-                `Farcaster: Security/Spam Filter: ${securityResponse} ${cast.authorFid.toString()} ${cast.profile.username}: ${cast.text.slice(0, 15)}`
-            );
 
             // If the user is blocked, update the spam filter
-            this.manageBlockedUsers(cast.profile.username, senderId); // Call cleanup before updating the spam filter
-
+            this.spamFilterManager.addUserToBlockList(cast.profile.username, senderId);
             return;
         }
 
@@ -343,45 +342,45 @@ export class FarcasterInteractionManager {
     }
 
 
-    
-    private manageBlockedUsers(username, senderId) {
-        const now = Date.now();
-        const oneHour = 60 * 60 * 1000; // One hour in milliseconds
-        const cleanupThreshold = 48 * 60 * 60 * 1000; // 24 hours in milliseconds
 
-        // Cleanup blocked users who have not been active for a specified duration
-        for (const userId in this.spamFilter.blockedUsers) {
-            const user = this.spamFilter.blockedUsers[userId];
-            // Remove users who have not been blocked for more than the threshold
-            if (now - user.lastBlockedTimestamp > cleanupThreshold) {
-                delete this.spamFilter.blockedUsers[userId];
-            }
-        }
+    // private manageBlockedUsers(username, senderId) {
+    //     const now = Date.now();
+    //     const oneHour = 60 * 60 * 1000; // One hour in milliseconds
+    //     const cleanupThreshold = 48 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+    //     // Cleanup blocked users who have not been active for a specified duration
+    //     for (const userId in this.spamFilter.blockedUsers) {
+    //         const user = this.spamFilter.blockedUsers[userId];
+    //         // Remove users who have not been blocked for more than the threshold
+    //         if (now - user.lastBlockedTimestamp > cleanupThreshold) {
+    //             delete this.spamFilter.blockedUsers[userId];
+    //         }
+    //     }
 
 
-        if (!this.spamFilter.blockedUsers[senderId]) {
-            this.spamFilter.blockedUsers[senderId] = {
-                username: username,
-                count: 1, // Initialize count to 1 when first blocked
-                lastBlockedTimestamp: Date.now(), // Track when the user was blocked
-            }
-            this.spamFilter.blockedUsersCount++;
-        } else {
-            this.spamFilter.blockedUsers[senderId].count++; // Increment count if already blocked
-        }
+    //     if (!this.spamFilter.blockedUsers[senderId]) {
+    //         this.spamFilter.blockedUsers[senderId] = {
+    //             username: username,
+    //             count: 1, // Initialize count to 1 when first blocked
+    //             lastBlockedTimestamp: Date.now(), // Track when the user was blocked
+    //         }
+    //         this.spamFilter.blockedUsersCount++;
+    //     } else {
+    //         this.spamFilter.blockedUsers[senderId].count++; // Increment count if already blocked
+    //     }
 
-        // Check if we need to log a warning
-        const shouldLogReport = (this.spamFilter.blockedUsersCount - this.spamFilter.lastReportedCount >= 10) || (now - this.spamFilter.lastReportedTimestamp > oneHour);
-        if (shouldLogReport) {
-            const filteredReport = Object.entries(this.spamFilter.blockedUsers).map(([key, user]) => ({
-                username: user.username,
-                count: user.count
-            }));
+    //     // Check if we need to log a warning
+    //     const shouldLogReport = (this.spamFilter.blockedUsersCount - this.spamFilter.lastReportedCount >= 10) || (now - this.spamFilter.lastReportedTimestamp > oneHour);
+    //     if (shouldLogReport) {
+    //         const filteredReport = Object.entries(this.spamFilter.blockedUsers).map(([key, user]) => ({
+    //             username: user.username,
+    //             count: user.count
+    //         }));
 
-            elizaLogger.warn(`Farcaster SPAM Filter report ${this.spamFilter.blockedUsersCount}: ${JSON.stringify(filteredReport)}`);
-            this.spamFilter.lastReportedCount = this.spamFilter.blockedUsersCount; // Update last reported count
-            this.spamFilter.lastReportedTimestamp = now; // Update last reported timestamp
-        }
-    }
+    //         elizaLogger.warn(`Farcaster SPAM Filter report ${this.spamFilter.blockedUsersCount}: ${JSON.stringify(filteredReport)}`);
+    //         this.spamFilter.lastReportedCount = this.spamFilter.blockedUsersCount; // Update last reported count
+    //         this.spamFilter.lastReportedTimestamp = now; // Update last reported timestamp
+    //     }
+    // }
 
 }
