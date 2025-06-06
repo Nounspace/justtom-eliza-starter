@@ -678,7 +678,7 @@ export class FarcasterHubClient {
 
             this.client.neynar
                 .publishCast({
-                    signerUuid: String(process.env.FARCASTER_NEYNAR_SIGNER_UUID),
+                    signerUuid: this.signerUuid,
                     text: msg,
                     channelId: options.channelId,
                     parentAuthorFid: options.parent_author_fid,
