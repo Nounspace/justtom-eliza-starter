@@ -268,7 +268,7 @@ export class FarcasterHubClient {
         switch (message.data?.type) {
             case MessageType.CAST_ADD: {
                 if (!message.data.castAddBody) {
-                    elizaLogger.debug("Farcaster: Missing castAddBody");
+                    elizaLogger.debug("Farcaster: Clanker: Missing castAddBody");
                     return
                 }
                 const {
@@ -417,7 +417,7 @@ export class FarcasterHubClient {
 
 
         if (result.isErr()) {
-            elizaLogger.error(`Farcaster: Error starting stream: ${result.error}`);
+            elizaLogger.error(`Farcaster: Clanker: Error starting stream: ${result.error}`);
             if (!this.isStopped)
                 this.reconnect();
             return
@@ -428,7 +428,7 @@ export class FarcasterHubClient {
 
         result.match(
             (stream) => {
-                elizaLogger.log(`Subscribed to Farcaster Stream from: ${fromEventId ? `event ${fromEventId}` : 'HEAD'}`);
+                elizaLogger.log(`Farcaster: Clanker: Subscribed Stream from: ${fromEventId ? `event ${fromEventId}` : 'HEAD'}`);
                 this.currentStream = stream;
 
                 stream.on('data', async (e: HubEvent) => {
@@ -443,7 +443,7 @@ export class FarcasterHubClient {
                 })
 
                 stream.on('end', async () => {
-                    elizaLogger.error(`Farcaster: Hub Stream ended`);
+                    elizaLogger.error(`Farcaster: Clanker: Hub Stream ended`);
                     // console.log(`Stream object details on END:`);
                     // this.logRelevantStreamDetails(stream);
                     // this.isConnected = false;
@@ -451,7 +451,7 @@ export class FarcasterHubClient {
 
                 stream.on('close', async () => {
                     const closeReason = this.determineCloseReason(stream);
-                    elizaLogger.error(`Farcaster: Hub Stream closed: ${closeReason}`);
+                    elizaLogger.error(`Farcaster: Clanker: Hub Stream closed: ${closeReason}`);
 
                     // console.log(`Stream object details on CLOSE:`);
                     // this.logRelevantStreamDetails(stream);
@@ -465,7 +465,7 @@ export class FarcasterHubClient {
                 stream.on('error', (error) => {
                     this.handleStreamError(error);
                 });
-            }, (e) => { elizaLogger.error('Farcaster: Error streaming data. ID: ' + getLatestEvent()) })
+            }, (e) => { elizaLogger.error('Farcaster: Clanker: Error streaming data. ID: ' + getLatestEvent()) })
     }
 
     private determineCloseReason(stream: any): string {
@@ -485,7 +485,7 @@ export class FarcasterHubClient {
     }
 
     private async handleStreamError(error: Error): Promise<void> {
-        elizaLogger.error('Stream error details:', {
+        elizaLogger.error('Farcaster: Clanker: Stream error details:', {
             eventId: await getLatestEvent(),
             name: error.name,
             message: error.message,
@@ -508,7 +508,7 @@ export class FarcasterHubClient {
         this.reconnectTimeout = setTimeout(async () => {
             try {
                 this.isReconnecting = true;
-                elizaLogger.warn(`Farcaster: Reconnecting to ${this.HUB_RPC}`);
+                elizaLogger.warn(`Farcaster: Clanker: Reconnecting to ${this.HUB_RPC}`);
 
                 this.cleanupStream();
 
@@ -518,7 +518,7 @@ export class FarcasterHubClient {
                     await this.subscriberStream(latestEvent);
                 }
             } catch (error) {
-                elizaLogger.error('Reconnection failed:', error);
+                elizaLogger.error('Farcaster: Clanker: Reconnection failed:', error);
             } finally {
                 this.reconnectTimeout = null;
                 if (!this.isConnected) {
