@@ -84,7 +84,7 @@ Tweet:
 {{currentTweet}}
 
 # Respond with qualifying action tags only. Default to NO action unless extremely confident of relevance.` +
-postActionResponseFooter;
+    postActionResponseFooter;
 
 /* Removed Action from twitterActionTemplate:
 [RETWEET] - Exceptional content that embodies character's expertise (9.5/10)
@@ -136,27 +136,24 @@ export class TwitterPostClient {
             `- Post Interval: ${this.client.twitterConfig.POST_INTERVAL_MIN}-${this.client.twitterConfig.POST_INTERVAL_MAX} minutes`
         );
         elizaLogger.log(
-            `- Action Processing: ${
-                this.client.twitterConfig.ENABLE_ACTION_PROCESSING
-                    ? "enabled"
-                    : "disabled"
+            `- Action Processing: ${this.client.twitterConfig.ENABLE_ACTION_PROCESSING
+                ? "enabled"
+                : "disabled"
             }`
         );
         elizaLogger.log(
             `- Action Interval: ${this.client.twitterConfig.ACTION_INTERVAL} minutes`
         );
         elizaLogger.log(
-            `- Post Immediately: ${
-                this.client.twitterConfig.POST_IMMEDIATELY
-                    ? "enabled"
-                    : "disabled"
+            `- Post Immediately: ${this.client.twitterConfig.POST_IMMEDIATELY
+                ? "enabled"
+                : "disabled"
             }`
         );
         elizaLogger.log(
-            `- Search Enabled: ${
-                this.client.twitterConfig.TWITTER_SEARCH_ENABLE
-                    ? "enabled"
-                    : "disabled"
+            `- Search Enabled: ${this.client.twitterConfig.TWITTER_SEARCH_ENABLE
+                ? "enabled"
+                : "disabled"
             }`
         );
 
@@ -983,8 +980,8 @@ export class TwitterPostClient {
                                 userId: this.runtime.agentId,
                                 roomId: stringToUuid(
                                     tweet.conversationId +
-                                        "-" +
-                                        this.runtime.agentId
+                                    "-" +
+                                    this.runtime.agentId
                                 ),
                                 agentId: this.runtime.agentId,
                                 content: {
@@ -999,11 +996,11 @@ export class TwitterPostClient {
                                 imageContext:
                                     imageDescriptions.length > 0
                                         ? `\nImages in Tweet:\n${imageDescriptions
-                                              .map(
-                                                  (desc, i) =>
-                                                      `Image ${i + 1}: ${desc}`
-                                              )
-                                              .join("\n")}`
+                                            .map(
+                                                (desc, i) =>
+                                                    `Image ${i + 1}: ${desc}`
+                                            )
+                                            .join("\n")}`
                                         : "",
                                 quotedContent,
                             }
@@ -1078,6 +1075,9 @@ export class TwitterPostClient {
 
                 if (actionResponse.reply) {
                     try {
+                        await this.client.twitterClient.likeTweet(tweet.id);
+                        executedActions.push("like");
+                        elizaLogger.log(`Liked tweet ${tweet.id}`);
                         await this.handleTextOnlyReply(
                             tweet,
                             tweetState,
@@ -1204,8 +1204,8 @@ export class TwitterPostClient {
                     imageContext:
                         imageDescriptions.length > 0
                             ? `\nImages in Tweet:\n${imageDescriptions
-                                  .map((desc, i) => `Image ${i + 1}: ${desc}`)
-                                  .join("\n")}`
+                                .map((desc, i) => `Image ${i + 1}: ${desc}`)
+                                .join("\n")}`
                             : "",
                     quotedContent,
                 }
