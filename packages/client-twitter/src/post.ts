@@ -893,7 +893,7 @@ export class TwitterPostClient {
                         try {
                             await this.client.twitterClient.likeTweet(tweet.id);
                             executedActions.push("like");
-                            elizaLogger.log(`Liked tweet ${tweet.id}`);
+                            elizaLogger.log(`${this.runtime.character.name} Liked tweet ${tweet.username} ${tweet.id}`);
                         } catch (error) {
                             elizaLogger.error(
                                 `Error liking tweet ${tweet.id}:`,

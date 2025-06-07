@@ -301,7 +301,7 @@ export class TwitterInteractionClient {
             // Save the latest checked tweet ID to the file
             await this.client.cacheLatestCheckedTweetId();
 
-            elizaLogger.log(this.runtime.character.name + " Finished checking Twitter interactions for ");
+            elizaLogger.log(this.runtime.character.name + " Finished checking Twitter interactions");
         } catch (error) {
             elizaLogger.error(this.runtime.character.name + " Error handling Twitter interactions:", error.message);
         }
