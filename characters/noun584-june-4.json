@@ -43,9 +43,9 @@
         },
         "twitterConfig": {
             "ENABLE_ACTION_PROCESSING": false,
-            "POST_INTERVAL_MIN": "1410",
-            "POST_INTERVAL_MAX": "1470",
-            "TWITTER_POLL_INTERVAL": 1200,
+            "POST_INTERVAL_MIN": 1410,
+            "POST_INTERVAL_MAX": 1470,
+            "TWITTER_POLL_INTERVAL": 420,
             "TWITTER_ACTION_INTERVAL": 200,
             "TWITTER_SEARCH_ENABLE": false,
             "TWITTER_TARGET_USERS": "",
