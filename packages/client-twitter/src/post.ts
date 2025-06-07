@@ -1075,9 +1075,6 @@ export class TwitterPostClient {
 
                 if (actionResponse.reply) {
                     try {
-                        await this.client.twitterClient.likeTweet(tweet.id);
-                        executedActions.push("like");
-                        elizaLogger.log(`Liked tweet ${tweet.id}`);
                         await this.handleTextOnlyReply(
                             tweet,
                             tweetState,
