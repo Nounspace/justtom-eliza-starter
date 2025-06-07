@@ -96,7 +96,7 @@ export class FarcasterInteractionManager {
             // Check if the user is already blocked
             if (this.spamFilterManager.isUserBlocked(userId)) {
                 elizaLogger.info(
-                    `Farcaster: Not responding to cast because Security/Spam filter BLOCK ${userId}`
+                    `Farcaster: Not responding to cast because Security/Spam filter BLOCK ${mention.profile.username}`
                 );
                 continue; // Skip processing for blocked users
             }
