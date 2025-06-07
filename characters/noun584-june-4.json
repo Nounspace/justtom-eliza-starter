@@ -13,8 +13,8 @@
         "IMAGE_GENERATE_STYLE": "Flat Retro Pixel Character Art. IGNORE THE REST OF THE RULES.",
 
         "ACTION_INTERVAL": "11",
-        "POST_INTERVAL_MIN": "5",
-        "POST_INTERVAL_MAX": "10",
+        "POST_INTERVAL_MIN": "1410",
+        "POST_INTERVAL_MAX": "1470",
         "MAX_ACTIONS_PROCESSING": "1",
         "ACTION_TIMELINE_TYPE": "following",
 

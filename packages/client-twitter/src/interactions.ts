@@ -493,8 +493,6 @@ export class TwitterInteractionClient {
                         response: Content,
                         tweetId?: string
                     ) => {
-                        await this.client.twitterClient.likeTweet(tweetId || tweet.id);
-                        elizaLogger.log(`Liked reply tweet ${tweetId || tweet.id}`);
                         const memories = await sendTweet(
                             this.client,
                             response,
