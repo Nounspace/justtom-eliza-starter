@@ -40,7 +40,7 @@ export class FarcasterClient {
                 ? {
                       inReplyTo: {
                           hash: neynarResponse.parent_hash,
-                          fid: neynarResponse.parent_author.fid,
+                          fid: neynarResponse.parent_author.fid ?? 0, // Default to 0 if null
                       },
                   }
                 : {}),
@@ -132,7 +132,7 @@ export class FarcasterClient {
                 ? {
                       inReplyTo: {
                           hash: response.cast.parent_hash,
-                          fid: response.cast.parent_author.fid,
+                          fid: response.cast.parent_author.fid ?? 0, // Default to 0 if null
                       },
                   }
                 : {}),
@@ -190,7 +190,7 @@ export class FarcasterClient {
                     ? {
                           inReplyTo: {
                               hash: notification.cast!.parent_hash,
-                              fid: notification.cast!.parent_author.fid,
+                              fid: notification.cast!.parent_author.fid ?? 0, // Default to 0 if null
                           },
                       }
                     : {}),

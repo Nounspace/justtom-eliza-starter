@@ -393,37 +393,19 @@ export class FarcasterInteractionManager {
 
     // Method to fetch global trending topics
     private async fetchGlobalTrending() {
-        const feed = await this.client.fetchGlobalTrending({
-            feedType: FeedType.Filter,
-            filterType: FilterType.GlobalTrending,
-            limit: 10,
-        });
-        console.log(feed);
+        const response = await this.client.getFeed();
+        console.warn("getFeed response global");
+        console.warn(response);
         // Process the feed to extract topics of interest
         // Implement logic to respond based on the topics
     }
 
     // Method to fetch ForYou feed
     private async fetchForYouFeed() {
-        const fid = 3; // Example fid
-        const viewerFid = 10; // Example viewer fid
-        const provider = ForYouProvider.Mbd;
-        const limit = 20;
-        const providerMetadata = encodeURIComponent(
-            JSON.stringify({
-                filters: {
-                    channels: ["https://farcaster.group/founders"],
-                },
-            })
-        );
-
-        const response = await this.client.fetchFeedForYou(fid, {
-            limit,
-            viewerFid,
-            provider,
-            providerMetadata: providerMetadata,
-        });
-        console.log("response:", response);
+        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;      
+        const response = await this.client.getFeed(agentFid);
+        elizaLogger.warn("getFeed response for you");
+        elizaLogger.warn(response);
         // Process the response to handle the ForYou feed
     }
 }
