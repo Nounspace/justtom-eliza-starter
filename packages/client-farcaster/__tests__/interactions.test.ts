@@ -46,24 +46,19 @@ vi.mock('@neynar/nodejs-sdk', () => ({
 describe('Interactions', () => {
     const mockCast: Cast = {
         hash: 'cast-1',
-        authorFid: '123',
+        authorFid: 123,
         text: 'Test cast',
         timestamp: new Date('2025-01-20T20:00:00Z'),
         profile: {
-            fid: '123',
+            fid: 123,
             username: 'test.farcaster',
             name: 'Test User',
             pfp: 'https://example.com/pic.jpg'
         },
-        stats: {
-            recasts: 5,
-            replies: 3,
-            likes: 10
-        }
     };
 
     const mockProfile: Profile = {
-        fid: '456',
+        fid: 456,
         username: 'other.farcaster',
         name: 'Other User',
         pfp: 'https://example.com/other-pic.jpg'
@@ -99,7 +94,7 @@ describe('Interactions', () => {
             vi.clearAllMocks();
             client = new FarcasterClient({
                 runtime: {
-                    name: 'test-runtime',
+                    username: 'test-runtime',
                     memory: new Map(),
                     getMemory: vi.fn(),
                     setMemory: vi.fn(),
@@ -180,4 +175,18 @@ describe('Interactions', () => {
             await expect(handleTestInteraction(client, interaction)).rejects.toThrow('Interaction failed');
         });
     });
+});
+
+// Test for fetching global trending topics
+it('should fetch global trending topics successfully', async () => {
+    const trendingTopics = await client.fetchGlobalTrending();
+    expect(trendingTopics).toBeDefined();
+    expect(trendingTopics.length).toBeLessThanOrEqual(10); // Assuming we limit to 10 topics
+});
+
+// Test for fetching ForYou feed
+it('should fetch ForYou feed successfully', async () => {
+    const forYouFeed = await client.fetchForYouFeed();
+    expect(forYouFeed).toBeDefined();
+    expect(forYouFeed.length).toBeLessThanOrEqual(20); // Assuming we limit to 20 items
 });
