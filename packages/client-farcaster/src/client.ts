@@ -2,6 +2,7 @@ import { type IAgentRuntime, elizaLogger } from "@elizaos/core";
 import { type NeynarAPIClient, isApiErrorResponse } from "@neynar/nodejs-sdk";
 import type { NeynarCastResponse, Cast, Profile, FidRequest, CastId } from "./types";
 import type { FarcasterConfig } from "./environment";
+import { FeedResponse, FeedType, FilterType } from "@neynar/nodejs-sdk/build/api";
 
 export class FarcasterClient {
     runtime: IAgentRuntime;
@@ -264,4 +265,19 @@ export class FarcasterClient {
             //nextPageToken: results.nextPageToken,
         };
     }
+
+    async getFeed(agentFid?:number): Promise<{
+        timeline: FeedResponse;
+    }> {
+
+        const timeline = await this.neynar.fetchFeed({
+            feedType: FeedType.Filter,
+            filterType: FilterType.GlobalTrending,
+            viewerFid: agentFid ? agentFid : undefined,
+            limit: 10
+        })
+
+        return {timeline};
+    }
+
 }
