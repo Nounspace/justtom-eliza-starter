@@ -185,7 +185,7 @@ export class TwitterInteractionClient {
                             if (validTweets.length > 0) {
                                 tweetsByUser.set(username, validTweets);
                                 elizaLogger.log(
-                                    `Found ${validTweets.length} valid tweets from ${username}`
+                                    `${this.runtime.character.name} Found ${validTweets.length} valid tweets from ${username}`
                                 );
                             }
                         } catch (error) {
@@ -493,6 +493,8 @@ export class TwitterInteractionClient {
                         response: Content,
                         tweetId?: string
                     ) => {
+                        await this.client.twitterClient.likeTweet(tweetId || tweet.id);
+                        elizaLogger.log(`${this.runtime.character.name} Liked tweet ${tweet.username} ${tweet.id}`);
                         const memories = await sendTweet(
                             this.client,
                             response,
