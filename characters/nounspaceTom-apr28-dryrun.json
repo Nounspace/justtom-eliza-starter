@@ -4,7 +4,7 @@
         "farcaster"
     ],
     
-    "modelProvider": "venice",
+    "modelProvider": "openai",
     "imageVisionModelProvider": "groq",
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
