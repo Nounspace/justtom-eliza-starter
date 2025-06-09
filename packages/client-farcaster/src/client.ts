@@ -277,6 +277,8 @@ export class FarcasterClient {
             limit: 10
         })
 
+        console.dir(timeline.casts)
+
         return {timeline};
     }
 

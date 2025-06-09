@@ -71,7 +71,14 @@ export class FarcasterInteractionManager {
         }
 
         // Fetch global trending topics
-        await this.fetchGlobalTrending();
+        const now = new Date();
+        // Check if a day has passed since the last execution
+        if (this.lastFetchGlobalTrending && (now.getTime() - this.lastFetchGlobalTrending.getTime()) < 24 * 60 * 60 * 1000) {
+            console.log("fetchGlobalTrending has already been executed today.");
+        } else {
+            await this.fetchGlobalTrending();
+        }
+
 
         // Fetch ForYou feed
         await this.fetchForYouFeed();
@@ -349,63 +356,75 @@ export class FarcasterInteractionManager {
     }
 
 
-
-    // private manageBlockedUsers(username, senderId) {
-    //     const now = Date.now();
-    //     const oneHour = 60 * 60 * 1000; // One hour in milliseconds
-    //     const cleanupThreshold = 48 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-    //     // Cleanup blocked users who have not been active for a specified duration
-    //     for (const userId in this.spamFilter.blockedUsers) {
-    //         const user = this.spamFilter.blockedUsers[userId];
-    //         // Remove users who have not been blocked for more than the threshold
-    //         if (now - user.lastBlockedTimestamp > cleanupThreshold) {
-    //             delete this.spamFilter.blockedUsers[userId];
-    //         }
-    //     }
-
-
-    //     if (!this.spamFilter.blockedUsers[senderId]) {
-    //         this.spamFilter.blockedUsers[senderId] = {
-    //             username: username,
-    //             count: 1, // Initialize count to 1 when first blocked
-    //             lastBlockedTimestamp: Date.now(), // Track when the user was blocked
-    //         }
-    //         this.spamFilter.blockedUsersCount++;
-    //     } else {
-    //         this.spamFilter.blockedUsers[senderId].count++; // Increment count if already blocked
-    //     }
-
-    //     // Check if we need to log a warning
-    //     const shouldLogReport = (this.spamFilter.blockedUsersCount - this.spamFilter.lastReportedCount >= 10) || (now - this.spamFilter.lastReportedTimestamp > oneHour);
-    //     if (shouldLogReport) {
-    //         const filteredReport = Object.entries(this.spamFilter.blockedUsers).map(([key, user]) => ({
-    //             username: user.username,
-    //             count: user.count
-    //         }));
-
-    //         elizaLogger.warn(`Farcaster SPAM Filter report ${this.spamFilter.blockedUsersCount}: ${JSON.stringify(filteredReport)}`);
-    //         this.spamFilter.lastReportedCount = this.spamFilter.blockedUsersCount; // Update last reported count
-    //         this.spamFilter.lastReportedTimestamp = now; // Update last reported timestamp
-    //     }
-    // }
-
+    // Add a property to track the last execution timestamp
+    private lastFetchGlobalTrending: Date | null = null;
 
     // Method to fetch global trending topics
     private async fetchGlobalTrending() {
         const response = await this.client.getFeed();
-        console.warn("getFeed response global");
-        console.warn(response);
-        // Process the feed to extract topics of interest
-        // Implement logic to respond based on the topics
+        console.warn("fetchGlobalTrending");
+        // console.dir(response);
+
+        const casts = response.timeline.casts; // Assuming timeline contains the casts
+        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+        const agent: Profile = await this.client.getProfile(agentFid); // Obtain the agent using the correct fid
+        for (const cast of casts) {
+            // console.dir(cast)
+            // Process the feed to extract topics of interest
+            const userId = stringToUuid(cast.author.fid.toString());
+            const senderId = stringToUuid(userId); // Define senderId using the correct property
+            const senderProfile: Profile = await this.client.getProfile(cast.author.fid); // Obtain the agent using the correct fid
+
+            const conversationId = `${toHex(cast.hash)}-${this.runtime.agentId}`;
+            const roomId = stringToUuid(conversationId); // Define roomId
+
+            // Create a Cast object from CastWithInteractions
+            const castData: Cast = {
+                hash: cast.hash, // Ensure to include the hash
+                text: cast.text, // Ensure to include the text
+                timestamp: new Date(cast.timestamp), // Ensure to include the timestamp
+                authorFid: cast.author.fid, // Assuming this is available in cast
+                profile: senderProfile, // Assuming agent contains the profile information
+            };
+
+
+            await this.runtime.ensureConnection(
+                userId,
+                roomId,
+                senderProfile.username,
+                senderProfile.name,
+                "farcaster"
+            );
+
+            const memory: Memory = createCastMemory({
+                roomId,
+                senderId,
+                runtime: this.runtime,
+                cast: castData, // Pass the constructed Cast object
+            });
+
+            const castDataObject = {
+                agent,
+                cast: castData,
+                memory,
+                thread: [castData], // Assuming the current cast is the only one in the thread
+            };
+
+            console.warn("handling cast:")
+            console.dir(cast)
+            await this.handleCast(castDataObject); // Send the constructed object to handleCast
+        }
+
+        // Update the last execution timestamp
+        this.lastFetchGlobalTrending = now;
     }
 
     // Method to fetch ForYou feed
     private async fetchForYouFeed() {
-        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;      
+        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         const response = await this.client.getFeed(agentFid);
-        elizaLogger.warn("getFeed response for you");
-        elizaLogger.warn(response);
+        console.warn("getFeed response for you");
+        console.dir(response);
         // Process the response to handle the ForYou feed
     }
 }

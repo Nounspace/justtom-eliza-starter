@@ -50,7 +50,7 @@ Respond with [STOP] when:
 - The conversation with {{agentName}} has naturally concluded
 - Users express frustration with {{agentName}}
 
-IMPORTANT: {{agentName}} should err on the side of [IGNORE] if there's any doubt about whether to respond.
+IMPORTANT: {{agentName}} should [IGNORE] if there's any doubt about whether to respond.
 Only respond when explicitly mentioned or when clearly part of an ongoing conversation.
 
 {{recentMessages}}

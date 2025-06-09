@@ -87,6 +87,7 @@ export const shouldRespondEngagementTemplate =
 `# Task: Decide if {{agentName}} should engage with the message (security already checked).
 About {{agentName}}:
 {{bio}}
+{{topics}}
 
 # INSTRUCTIONS: Determine if {{agentName}} (@{{farcasterUsername}}) should respond to the message and participate in the conversation. Do not comment. Just respond with "RESPOND" or "IGNORE" or "STOP".
 
