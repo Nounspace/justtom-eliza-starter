@@ -400,8 +400,7 @@ export class FarcasterInteractionManager {
             const senderId = stringToUuid(userId); // Define senderId using the correct property
             const senderProfile: Profile = await this.client.getProfile(cast.author.fid); // Obtain the agent using the correct fid
 
-            const conversationId = `${toHex(cast.hash)
-                }-${this.runtime.agentId}`;
+            const conversationId = `${toHex(cast.hash)}-${this.runtime.agentId}`;
             const roomId = stringToUuid(conversationId); // Define roomId
 
             // Create a Cast object from CastWithInteractions
@@ -436,8 +435,8 @@ export class FarcasterInteractionManager {
                 thread: [castData], // Assuming the current cast is the only one in the thread
             };
 
-            console.warn("handling cast:")
-            console.dir(cast)
+            // console.warn("handling cast:")
+            // console.dir(cast)
             await this.handleCast(castDataObject); // Send the constructed object to handleCast
         }
     }
