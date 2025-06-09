@@ -25,7 +25,7 @@ import {
 import { castUuid } from "./utils";
 import { sendCast } from "./actions";
 import SpamFilterManager from './spamFilterManager';
-import { ForYouProvider } from "@neynar/nodejs-sdk/build/api";
+import { FeedResponse, ForYouProvider } from "@neynar/nodejs-sdk/build/api";
 
 export class FarcasterInteractionManager {
     private timeout: NodeJS.Timeout | undefined;
@@ -71,17 +71,16 @@ export class FarcasterInteractionManager {
         }
 
         // Fetch global trending topics
-        const now = new Date();
         // Check if a day has passed since the last execution
+        const now = new Date();
         if (this.lastFetchGlobalTrending && (now.getTime() - this.lastFetchGlobalTrending.getTime()) < 24 * 60 * 60 * 1000) {
-            console.log("fetchGlobalTrending has already been executed today.");
+            console.log("fetch Feeds has already been executed today.");
         } else {
             await this.fetchGlobalTrending();
+            await this.fetchForYouFeed();
+            this.lastFetchGlobalTrending = now;         // Update the last execution timestamp
         }
 
-
-        // Fetch ForYou feed
-        await this.fetchForYouFeed();
 
         const mentions = await this.client.getMentions({
             fid: agentFid,
@@ -362,10 +361,36 @@ export class FarcasterInteractionManager {
     // Method to fetch global trending topics
     private async fetchGlobalTrending() {
         const response = await this.client.getFeed();
-        console.warn("fetchGlobalTrending");
-        // console.dir(response);
+        elizaLogger.debug("fetchGlobalTrending");
+        response.timeline.casts.forEach(cast => {
+            elizaLogger.debug(`Username: ${cast.author.username}`);
+            elizaLogger.debug(`Text: ${cast.text}`);
+        });
 
-        const casts = response.timeline.casts; // Assuming timeline contains the casts
+        // Process the response to handle the ForYou feed
+        await this.processAgentFeed(response.timeline);
+    }
+
+
+    // Method to fetch ForYou feed
+    private async fetchForYouFeed() {
+        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+        const response = await this.client.getFeed(agentFid);
+
+        elizaLogger.debug("getFeed response for you");
+        response.timeline.casts.forEach(cast => {
+            elizaLogger.debug(`getFeed Username: ${cast.author.username}`);
+            elizaLogger.debug(`getFeed Text: ${cast.text}`);
+        });
+
+        // Process the response to handle the ForYou feed
+        await this.processAgentFeed(response.timeline);
+    }
+
+
+
+    private async processAgentFeed(timeline: FeedResponse) {
+        const casts = timeline.casts; // Assuming timeline contains the casts
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         const agent: Profile = await this.client.getProfile(agentFid); // Obtain the agent using the correct fid
         for (const cast of casts) {
@@ -375,7 +400,8 @@ export class FarcasterInteractionManager {
             const senderId = stringToUuid(userId); // Define senderId using the correct property
             const senderProfile: Profile = await this.client.getProfile(cast.author.fid); // Obtain the agent using the correct fid
 
-            const conversationId = `${toHex(cast.hash)}-${this.runtime.agentId}`;
+            const conversationId = `${toHex(cast.hash)
+                }-${this.runtime.agentId}`;
             const roomId = stringToUuid(conversationId); // Define roomId
 
             // Create a Cast object from CastWithInteractions
@@ -414,17 +440,6 @@ export class FarcasterInteractionManager {
             console.dir(cast)
             await this.handleCast(castDataObject); // Send the constructed object to handleCast
         }
-
-        // Update the last execution timestamp
-        this.lastFetchGlobalTrending = now;
     }
 
-    // Method to fetch ForYou feed
-    private async fetchForYouFeed() {
-        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
-        const response = await this.client.getFeed(agentFid);
-        console.warn("getFeed response for you");
-        console.dir(response);
-        // Process the response to handle the ForYou feed
-    }
 }

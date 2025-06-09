@@ -38,11 +38,11 @@ export class FarcasterClient {
             profile,
             ...(neynarResponse.parent_hash
                 ? {
-                      inReplyTo: {
-                          hash: neynarResponse.parent_hash,
-                          fid: neynarResponse.parent_author.fid ?? 0, // Default to 0 if null
-                      },
-                  }
+                    inReplyTo: {
+                        hash: neynarResponse.parent_hash,
+                        fid: neynarResponse.parent_author.fid ?? 0, // Default to 0 if null
+                    },
+                }
                 : {}),
             timestamp: new Date(neynarResponse.timestamp),
         };
@@ -130,11 +130,11 @@ export class FarcasterClient {
             },
             ...(response.cast.parent_hash
                 ? {
-                      inReplyTo: {
-                          hash: response.cast.parent_hash,
-                          fid: response.cast.parent_author.fid ?? 0, // Default to 0 if null
-                      },
-                  }
+                    inReplyTo: {
+                        hash: response.cast.parent_hash,
+                        fid: response.cast.parent_author.fid ?? 0, // Default to 0 if null
+                    },
+                }
                 : {}),
             timestamp: new Date(response.cast.timestamp),
         };
@@ -188,11 +188,11 @@ export class FarcasterClient {
                 },
                 ...(notification.cast!.parent_hash
                     ? {
-                          inReplyTo: {
-                              hash: notification.cast!.parent_hash,
-                              fid: notification.cast!.parent_author.fid ?? 0, // Default to 0 if null
-                          },
-                      }
+                        inReplyTo: {
+                            hash: notification.cast!.parent_hash,
+                            fid: notification.cast!.parent_author.fid ?? 0, // Default to 0 if null
+                        },
+                    }
                     : {}),
                 timestamp: new Date(notification.cast!.timestamp),
             };
@@ -266,20 +266,29 @@ export class FarcasterClient {
         };
     }
 
-    async getFeed(agentFid?:number): Promise<{
+    async getFeed(agentFid?: number): Promise<{
         timeline: FeedResponse;
     }> {
-
-        const timeline = await this.neynar.fetchFeed({
-            feedType: FeedType.Filter,
-            filterType: FilterType.GlobalTrending,
-            viewerFid: agentFid ? agentFid : undefined,
-            limit: 10
-        })
-
-        console.dir(timeline.casts)
-
-        return {timeline};
+        if (agentFid) {
+            const timeline = await this.neynar.fetchFeedForYou({
+                fid: agentFid,
+                viewerFid: agentFid,
+                // provider
+                limit: 10,
+                // providerMetadata
+            })
+            return { timeline };
+        }
+        else {
+            const timeline = await this.neynar.fetchFeed({
+                feedType: FeedType.Filter,
+                filterType: FilterType.GlobalTrending,
+                viewerFid: agentFid ? agentFid : undefined,
+                limit: 10
+            })
+            return { timeline };
+        }
+        // console.dir(timeline.casts)
     }
 
 }
