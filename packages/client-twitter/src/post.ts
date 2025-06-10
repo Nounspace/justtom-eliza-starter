@@ -122,35 +122,35 @@ export class TwitterPostClient {
         this.isDryRun = this.client.twitterConfig.TWITTER_DRY_RUN;
 
         // Log configuration on initialization
-        elizaLogger.log("Twitter Client Configuration:");
-        elizaLogger.log(`- Username: ${this.twitterUsername}`);
-        elizaLogger.log(
+        elizaLogger.warn("Twitter Client Configuration:");
+        elizaLogger.warn(`- Username: ${this.twitterUsername}`);
+        elizaLogger.warn(
             `- Dry Run Mode: ${this.isDryRun ? "enabled" : "disabled"}`
         );
 
-        elizaLogger.log(
+        elizaLogger.warn(
             `- Enable Post: ${this.client.twitterConfig.ENABLE_TWITTER_POST_GENERATION ? "enabled" : "disabled"}`
         );
 
-        elizaLogger.log(
+        elizaLogger.warn(
             `- Post Interval: ${this.client.twitterConfig.POST_INTERVAL_MIN}-${this.client.twitterConfig.POST_INTERVAL_MAX} minutes`
         );
-        elizaLogger.log(
+        elizaLogger.warn(
             `- Action Processing: ${this.client.twitterConfig.ENABLE_ACTION_PROCESSING
                 ? "enabled"
                 : "disabled"
             }`
         );
-        elizaLogger.log(
+        elizaLogger.warn(
             `- Action Interval: ${this.client.twitterConfig.ACTION_INTERVAL} minutes`
         );
-        elizaLogger.log(
+        elizaLogger.warn(
             `- Post Immediately: ${this.client.twitterConfig.POST_IMMEDIATELY
                 ? "enabled"
                 : "disabled"
             }`
         );
-        elizaLogger.log(
+        elizaLogger.warn(
             `- Search Enabled: ${this.client.twitterConfig.TWITTER_SEARCH_ENABLE
                 ? "enabled"
                 : "disabled"
@@ -159,11 +159,11 @@ export class TwitterPostClient {
 
         const targetUsers = this.client.twitterConfig.TWITTER_TARGET_USERS;
         if (targetUsers) {
-            elizaLogger.log(`- Target Users: ${targetUsers}`);
+            elizaLogger.warn(`- Target Users: ${targetUsers}`);
         }
 
         if (this.isDryRun) {
-            elizaLogger.log(
+            elizaLogger.warn(
                 "Twitter client initialized in dry run mode - no actual tweets should be posted"
             );
         }
@@ -367,7 +367,7 @@ export class TwitterPostClient {
         await client.cacheTweet(tweet);
 
         // Log the posted tweet
-        elizaLogger.log(`Tweet posted:\n ${tweet.permanentUrl}`);
+        elizaLogger.warn(`${this.runtime.character.name} Tweet posted:\n ${tweet.permanentUrl}`);
 
         // Ensure the room and participant exist
         await runtime.ensureRoomExists(roomId);
@@ -462,7 +462,7 @@ export class TwitterPostClient {
         mediaData?: MediaData[]
     ) {
         try {
-            elizaLogger.log(`Posting new tweet:\n`);
+            elizaLogger.debug(`Posting new tweet:\n`);
 
             let result;
 
@@ -504,7 +504,7 @@ export class TwitterPostClient {
      * Generates and posts a new tweet. If isDryRun is true, only logs what would have been posted.
      */
     async generateNewTweet() {
-        elizaLogger.log("Generating new tweet");
+        elizaLogger.debug("Generating new tweet");
 
         try {
             const roomId = stringToUuid(
@@ -668,7 +668,7 @@ export class TwitterPostClient {
             modelClass: ModelClass.SMALL,
         });
 
-        elizaLogger.log("generate tweet content response:\n" + response);
+        elizaLogger.debug("generate tweet content response:\n" + response);
 
         // First clean up any markdown and newlines
         const cleanedResponse = cleanJsonResponse(response);
@@ -942,7 +942,7 @@ export class TwitterPostClient {
                         // Generate image descriptions if present
                         const imageDescriptions = [];
                         if (tweet.photos?.length > 0) {
-                            elizaLogger.log(
+                            elizaLogger.debug(
                                 "Processing images in tweet for context"
                             );
                             for (const photo of tweet.photos) {
@@ -1157,7 +1157,7 @@ export class TwitterPostClient {
             // Generate image descriptions if present
             const imageDescriptions = [];
             if (tweet.photos?.length > 0) {
-                elizaLogger.log("Processing images in tweet for context");
+                elizaLogger.debug("Processing images in tweet for context");
                 for (const photo of tweet.photos) {
                     const description = await this.runtime
                         .getService<IImageDescriptionService>(
@@ -1414,7 +1414,7 @@ export class TwitterPostClient {
     }
 
     private async handlePendingTweet() {
-        elizaLogger.log("Checking Pending Tweets...");
+        elizaLogger.debug("Checking Pending Tweets...");
         const pendingTweetsKey = `twitter/${this.client.profile.username}/pendingTweet`;
         const pendingTweets =
             (await this.runtime.cacheManager.get<PendingTweet[]>(
@@ -1460,7 +1460,7 @@ export class TwitterPostClient {
                 await this.checkApprovalStatus(pendingTweet.discordMessageId);
 
             if (approvalStatus === "APPROVED") {
-                elizaLogger.log("Tweet Approved, Posting");
+                elizaLogger.warn("Tweet Approved, Posting");
                 await this.postTweet(
                     this.runtime,
                     this.client,

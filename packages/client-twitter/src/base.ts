@@ -517,7 +517,7 @@ export class ClientBase extends EventEmitter {
                             : undefined,
                     } as Content;
 
-                    elizaLogger.log("Creating memory for tweet", tweet.id);
+                    elizaLogger.debug("Creating memory for tweet", tweet.id);
 
                     // check if it already exists
                     const memory =

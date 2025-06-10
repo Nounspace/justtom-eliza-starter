@@ -167,7 +167,7 @@ export class TwitterInteractionClient {
                                     Date.now() - tweet.timestamp * 1000 <
                                     2 * 60 * 60 * 1000;
 
-                                elizaLogger.log(`Tweet ${tweet.id} checks:`, {
+                                elizaLogger.debug(`Tweet ${tweet.id} checks:`, {
                                     isUnprocessed,
                                     isRecent,
                                     isReply: tweet.isReply,
@@ -208,7 +208,7 @@ export class TwitterInteractionClient {
                                 ];
                             selectedTweets.push(randomTweet);
                             elizaLogger.log(
-                                `Selected tweet from ${username}: ${randomTweet.text?.substring(0, 100)}`
+                                `Selected tweet from ${username}: ${randomTweet.text?.substring(0, 25)}`
                             );
                         }
                     }
@@ -248,7 +248,7 @@ export class TwitterInteractionClient {
                         );
 
                     if (existingResponse) {
-                        elizaLogger.log(
+                        elizaLogger.debug(
                             `Already responded to tweet ${tweet.id}, skipping`
                         );
                         continue;
@@ -323,7 +323,7 @@ export class TwitterInteractionClient {
         }
 
         if (!message.content.text) {
-            elizaLogger.log("Skipping Tweet with no text", tweet.id);
+            elizaLogger.debug("Skipping Tweet with no text", tweet.id);
             return { text: "", action: "IGNORE" };
         }
 
@@ -629,7 +629,7 @@ export class TwitterInteractionClient {
             thread.unshift(currentTweet);
 
             if (currentTweet.inReplyToStatusId) {
-                elizaLogger.log(
+                elizaLogger.debug(
                     "Fetching parent tweet:",
                     currentTweet.inReplyToStatusId
                 );
@@ -639,25 +639,25 @@ export class TwitterInteractionClient {
                     );
 
                     if (parentTweet) {
-                        elizaLogger.log("Found parent tweet:", {
+                        elizaLogger.debug("Found parent tweet:", {
                             id: parentTweet.id,
                             text: parentTweet.text?.slice(0, 50),
                         });
                         await processThread(parentTweet, depth + 1);
                     } else {
-                        elizaLogger.log(
+                        elizaLogger.debug(
                             "No parent tweet found for:",
                             currentTweet.inReplyToStatusId
                         );
                     }
                 } catch (error) {
-                    elizaLogger.log("Error fetching parent tweet:", {
+                    elizaLogger.debug("Error fetching parent tweet:", {
                         tweetId: currentTweet.inReplyToStatusId,
                         error,
                     });
                 }
             } else {
-                elizaLogger.log(
+                elizaLogger.debug(
                     "Reached end of reply chain at:",
                     currentTweet.id
                 );

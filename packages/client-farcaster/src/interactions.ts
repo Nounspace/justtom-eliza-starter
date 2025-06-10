@@ -70,15 +70,17 @@ export class FarcasterInteractionManager {
             return;
         }
 
-        // Fetch global trending topics
+        // Fetch Global Trending Topics and ForYou feeds
         // Check if a day has passed since the last execution
         const now = new Date();
         if (this.lastFetchGlobalTrending && (now.getTime() - this.lastFetchGlobalTrending.getTime()) < 24 * 60 * 60 * 1000) {
-            console.log("fetch Feeds has already been executed today.");
+            const lastExecutedTime = this.lastFetchGlobalTrending.toISOString();            
+            elizaLogger.log(`${this.runtime.character.name} has already read the feeds today. Last read time: ${lastExecutedTime}`);
         } else {
             await this.fetchGlobalTrending();
             await this.fetchForYouFeed();
-            this.lastFetchGlobalTrending = now;         // Update the last execution timestamp
+            // Update the last execution timestamp
+            this.lastFetchGlobalTrending = now;
         }
 
 
