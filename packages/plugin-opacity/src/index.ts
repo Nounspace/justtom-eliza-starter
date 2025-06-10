@@ -35,7 +35,7 @@ export class OpacityAdapter implements IVerifiableInferenceAdapter {
         const model = models[provider].model[modelClass];
         const apiKey = this.options.token;
 
-        elizaLogger.log("Generating text with options:", {
+        elizaLogger.debug("Generating text with options:", {
             modelProvider: provider,
             model: modelClass,
         });

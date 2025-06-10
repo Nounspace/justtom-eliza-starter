@@ -369,12 +369,12 @@ export async function generateText({
 
     elizaLogger.log("Generating text...");
 
-    elizaLogger.info("Generating text with options:", {
+    elizaLogger.debug("Generating text with options:", {
         modelProvider: runtime.modelProvider,
         model: modelClass,
         verifiableInference,
     });
-    elizaLogger.log("Using provider:", runtime.modelProvider);
+    elizaLogger.debug("Using provider:", runtime.modelProvider);
     // If verifiable inference is requested and adapter is provided, use it
     if (verifiableInference && runtime.verifiableInferenceAdapter) {
         elizaLogger.log(
@@ -489,7 +489,7 @@ export async function generateText({
             break;
     }
 
-    elizaLogger.info("Selected model:", model);
+    elizaLogger.debug("Selected model:", model);
 
     const modelConfiguration = runtime.character?.settings?.modelConfig;
     const temperature =
@@ -567,7 +567,7 @@ export async function generateText({
                 });
 
                 response = openaiResponse;
-                console.log("Received response from OpenAI model.");
+                console.debug("Received response from OpenAI model.");
                 break;
             }
 
