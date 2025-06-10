@@ -75,7 +75,7 @@ export async function buildConversationThread({
         const memory = await runtime.messageManager.getMemoryById(roomId);
 
         if (!memory) {
-            elizaLogger.degub("Creating memory for cast", currentCast.hash);
+            elizaLogger.debug("Creating memory for cast", currentCast.hash);
 
             const userId = stringToUuid(currentCast.authorFid.toString());
 
