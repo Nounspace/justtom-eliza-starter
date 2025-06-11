@@ -3,6 +3,7 @@ import path from 'path';
 import axios from 'axios';
 import { MediaType, MediaAsset } from '../types/cosmos.js';
 import { NimError, NimErrorCode, ErrorSeverity } from '../errors/nimErrors.js';
+import { elizaLogger } from '@elizaos/core';
 
 const SUPPORTED_FORMATS = {
     "png": ["image/png", "img"],

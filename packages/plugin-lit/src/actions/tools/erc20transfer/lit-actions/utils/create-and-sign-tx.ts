@@ -1,3 +1,5 @@
+import { elizaLogger } from "@elizaos/core";
+
 /**
  * Creates and signs the transaction.
  * @param {any} gasLimit - The gas limit for the transaction.

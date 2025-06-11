@@ -1,3 +1,5 @@
+import { elizaLogger } from "@elizaos/core";
+
 /**
  * Estimates the gas limit for the transaction.
  * @param {any} provider - The Ethereum provider.

@@ -1,4 +1,4 @@
-import { Provider, Memory, State, IAgentRuntime } from "@elizaos/core";
+import { Provider, Memory, State, IAgentRuntime, elizaLogger } from "@elizaos/core";
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { LitContracts } from "@lit-protocol/contracts-sdk";
 import { LIT_RPC, LIT_NETWORK } from "@lit-protocol/constants";

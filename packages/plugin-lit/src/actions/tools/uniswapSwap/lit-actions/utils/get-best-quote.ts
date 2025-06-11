@@ -1,3 +1,5 @@
+import { elizaLogger } from "@elizaos/core";
+
 /**
  * Retrieves the best quote for a Uniswap V3 swap.
  * @param {JsonRpcProvider} provider - The Ethereum provider.

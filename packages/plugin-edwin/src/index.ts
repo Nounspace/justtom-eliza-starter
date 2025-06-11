@@ -1,4 +1,4 @@
-import type { Plugin } from "@elizaos/core";
+import { elizaLogger, type Plugin } from "@elizaos/core";
 import { edwinProvider, getEdwinClient } from "./provider";
 import { getEdwinActions } from "./actions";
 

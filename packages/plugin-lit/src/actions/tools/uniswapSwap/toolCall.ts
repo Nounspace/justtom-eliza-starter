@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import {
   Action,
   composeContext,
+  elizaLogger,
   generateObjectDeprecated,
   HandlerCallback,
   ModelClass,

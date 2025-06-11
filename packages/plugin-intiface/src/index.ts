@@ -8,7 +8,7 @@ import type {
     Plugin,
     State,
 } from "@elizaos/core";
-import { Service, ServiceType } from "@elizaos/core";
+import { elizaLogger, Service, ServiceType } from "@elizaos/core";
 import {
     isPortAvailable,
     startIntifaceEngine,

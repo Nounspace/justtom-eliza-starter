@@ -1,5 +1,6 @@
 import type { Database } from "better-sqlite3";
 import { v4 as uuidv4 } from "uuid";
+import {elizaLogger} from "@elizaos/core";
 
 export interface Recommender {
     id: string; // UUID

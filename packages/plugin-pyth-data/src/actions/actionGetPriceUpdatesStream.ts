@@ -16,8 +16,8 @@ const activeStreams = new Map<string, EventSource>();
 // Enhanced logging helper
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
-        elizaLogger.info(`[PriceUpdatesStream] ${message}`, data);
-        elizaLogger.log(`[PriceUpdatesStream] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        console.info(`[PriceUpdatesStream] ${message}`, data);
+        console.log(`[PriceUpdatesStream] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -430,7 +430,7 @@ export const getPriceUpdatesStreamAction: Action = {
             } catch (error) {
                 logGranular("Schema validation failed", { error });
                 if (error instanceof DataError) {
-                    elizaLogger.error("Schema validation failed", {
+                    console.error("Schema validation failed", {
                         errors: error.details?.errors
                     });
                     throw error;

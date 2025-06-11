@@ -1,4 +1,4 @@
-import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
+import { type IAgentRuntime, type Memory, type State, type HandlerCallback, elizaLogger } from "@elizaos/core";
 import { WalletProvider } from "../providers/wallet";
 import { queueProposalTemplate } from "../templates";
 import type { QueueProposalParams, SupportedChain, Transaction } from "../types";
@@ -118,7 +118,7 @@ export const queueAction = {
             const action = new QueueAction(walletProvider);
             return await action.queue(queueParams);
         } catch (error) {
-            console.error("Error in queue handler:", error.message);
+            elizaLogger.error("Error in queue handler:", error.message);
             if (callback) {
                 callback({ text: `Error: ${error.message}` });
             }

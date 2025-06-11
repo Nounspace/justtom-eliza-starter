@@ -15,6 +15,7 @@ import {
   signTx,
   broadcastTransaction,
 } from './utils';
+import { elizaLogger } from '@elizaos/core';
 
 declare global {
   // Required Inputs

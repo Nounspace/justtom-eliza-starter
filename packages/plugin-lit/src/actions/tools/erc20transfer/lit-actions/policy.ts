@@ -1,3 +1,4 @@
+import { elizaLogger } from '@elizaos/core';
 import {
   checkLitAuthAddressIsDelegatee,
   getPolicyParameters,

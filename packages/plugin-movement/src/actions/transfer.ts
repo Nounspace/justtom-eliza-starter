@@ -33,7 +33,7 @@ export interface TransferContent extends Content {
 }
 
 function isTransferContent(content: unknown): content is TransferContent {
-    elizaLogger.debug("Validating transfer content:", content);
+    console.debug("Validating transfer content:", content);
     return (
         typeof (content as TransferContent).recipient === "string" &&
         (typeof (content as TransferContent).amount === "string" ||
@@ -95,11 +95,11 @@ export default {
         );
     },
     validate: async (_runtime: IAgentRuntime, message: Memory) => {
-        elizaLogger.debug(
+        console.debug(
             "Starting transfer validation for user:",
             message.userId
         );
-        elizaLogger.debug("Message text:", message.content?.text);
+        console.debug("Message text:", message.content?.text);
         return true; // Let the handler do the validation
     },
     priority: 1000, // High priority for transfer actions
@@ -112,8 +112,8 @@ export default {
         _options: { [key: string]: unknown },
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        elizaLogger.debug("Starting TRANSFER_MOVE handler...");
-        elizaLogger.debug("Message:", {
+        console.debug("Starting TRANSFER_MOVE handler...");
+        console.debug("Message:", {
             text: message.content?.text,
             userId: message.userId,
             action: message.content?.action,
@@ -121,14 +121,14 @@ export default {
 
         try {
             const privateKey = runtime.getSetting("MOVEMENT_PRIVATE_KEY");
-            elizaLogger.debug(
+            console.debug(
                 "Got private key:",
                 privateKey ? "Present" : "Missing"
             );
 
             const network = runtime.getSetting("MOVEMENT_NETWORK");
-            elizaLogger.debug("Network config:", network);
-            elizaLogger.debug(
+            console.debug("Network config:", network);
+            console.debug(
                 "Available networks:",
                 Object.keys(MOVEMENT_NETWORK_CONFIG)
             );
@@ -141,7 +141,7 @@ export default {
                     )
                 ),
             });
-            elizaLogger.debug(
+            console.debug(
                 "Created Movement account:",
                 movementAccount.accountAddress.toStringLong()
             );
@@ -152,7 +152,7 @@ export default {
                     fullnode: MOVEMENT_NETWORK_CONFIG[network].fullnode,
                 })
             );
-            elizaLogger.debug(
+            console.debug(
                 "Created Aptos client with network:",
                 MOVEMENT_NETWORK_CONFIG[network].fullnode
             );
@@ -200,7 +200,7 @@ export default {
             const adjustedAmount = BigInt(
                 Number(content.amount) * 10 ** MOVE_DECIMALS
             );
-            elizaLogger.log(
+            console.log(
                 `Transferring: ${content.amount} tokens (${adjustedAmount} base units)`
             );
 
@@ -222,7 +222,7 @@ export default {
             });
 
             const explorerUrl = `${MOVEMENT_EXPLORER_URL}/${executedTransaction.hash}?network=${MOVEMENT_NETWORK_CONFIG[network].explorerNetwork}`;
-            elizaLogger.debug("Transfer successful:", {
+            console.debug("Transfer successful:", {
                 hash: executedTransaction.hash,
                 amount: content.amount,
                 recipient: content.recipient,

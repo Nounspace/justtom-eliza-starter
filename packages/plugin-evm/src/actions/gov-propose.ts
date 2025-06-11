@@ -1,4 +1,4 @@
-import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
+import { type IAgentRuntime, type Memory, type State, type HandlerCallback, elizaLogger } from "@elizaos/core";
 import { WalletProvider } from "../providers/wallet";
 import { proposeTemplate } from "../templates";
 import type { ProposeProposalParams, SupportedChain, Transaction } from "../types";
@@ -114,7 +114,7 @@ export const proposeAction = {
             const action = new ProposeAction(walletProvider);
             return await action.propose(proposeParams);
         } catch (error) {
-            console.error("Error in propose handler:", error.message);
+            elizaLogger.error("Error in propose handler:", error.message);
             if (callback) {
                 callback({ text: `Error: ${error.message}` });
             }

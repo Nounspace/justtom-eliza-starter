@@ -231,7 +231,7 @@ export function parseAPIContent(text: string): ParsedAPIContent {
         return parsed;
 
     } catch (error) {
-        elizaLogger.error("API content parsing failed", {
+        console.error("API content parsing failed", {
             error: error instanceof Error ? error.message : String(error)
         });
         throw error;

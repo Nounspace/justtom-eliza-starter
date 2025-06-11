@@ -54,7 +54,7 @@ export async function validatePriceUpdatesData(data: unknown): Promise<boolean> 
 
         if (!valid) {
             const errors = validate.errors || [];
-            elizaLogger.error("Price updates validation failed", {
+            console.error("Price updates validation failed", {
                 errors,
                 data
             });
@@ -80,7 +80,7 @@ export async function validatePriceUpdatesData(data: unknown): Promise<boolean> 
             throw error;
         }
 
-        elizaLogger.error("Price updates validation error", {
+        console.error("Price updates validation error", {
             error: error instanceof Error ? error.message : String(error),
             data
         });

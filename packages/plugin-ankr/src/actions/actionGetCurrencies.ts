@@ -20,8 +20,8 @@ const GRANULAR_LOG = config.ANKR_GRANULAR_LOG;
 // Enhanced logging helper
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
-        elizaLogger.debug(`[GetCurrencies] ${message}`, data);
-        elizaLogger.log(`[GetCurrencies] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        console.debug(`[GetCurrencies] ${message}`, data);
+        console.log(`[GetCurrencies] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 // ------------------------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ export const actionGetCurrencies: Action = {
 
         try {
             const messageContent = message.content as GetCurrenciesContent;
-            elizaLogger.log("Debug - Full message content:", {
+            console.log("Debug - Full message content:", {
                 fullContent: message.content,
                 rawText: messageContent?.text,
                 type: message.content?.type,
@@ -153,7 +153,7 @@ export const actionGetCurrencies: Action = {
             });
 
             const config = await validateankrConfig(runtime);
-            elizaLogger.log("Debug - Config validated:", {
+            console.log("Debug - Config validated:", {
                 hasWallet: !!config.ANKR_WALLET,
                 env: config.ANKR_ENV
             });
@@ -166,13 +166,13 @@ export const actionGetCurrencies: Action = {
             const endpoint = `https://rpc.ankr.com/multichain/${wallet}`;
 
             // Parse the prompt using our API content parser
-            elizaLogger.log("Debug - Raw prompt:", {
+            console.log("Debug - Raw prompt:", {
                 text: messageContent.text,
                 promptLength: messageContent.text?.length,
             });
 
             const parsedContent = parseAPIContent(messageContent.text);
-            elizaLogger.log("Debug - Parsed API content:", {
+            console.log("Debug - Parsed API content:", {
                 hasChain: !!parsedContent.chain,
                 chain: parsedContent.chain,
                 matches: parsedContent.raw.matches
@@ -187,7 +187,7 @@ export const actionGetCurrencies: Action = {
                 pageSize: messageContent.filters?.pageSize ?? 5
             };
 
-            elizaLogger.log("Debug - API request parameters:", {
+            console.log("Debug - API request parameters:", {
                 params: requestParams,
                 endpoint: ANKR_ENDPOINTS.production.multichain
             });

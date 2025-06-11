@@ -1,4 +1,4 @@
-import type { Plugin } from "@elizaos/core";
+import { elizaLogger, type Plugin } from "@elizaos/core";
 import { walletProvider, getClient } from "./provider";
 import { getAgentKitActions } from "./actions";
 

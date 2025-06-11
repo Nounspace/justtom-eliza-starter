@@ -1,3 +1,5 @@
+import { elizaLogger } from "@elizaos/core";
+
 /**
  * Retrieves gas data (maxFeePerGas, maxPriorityFeePerGas, and nonce).
  * @param {JsonRpcProvider} provider - The Ethereum provider.

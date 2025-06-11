@@ -5,6 +5,7 @@ import {
     type Memory,
     type State,
     HandlerCallback,
+    elizaLogger,
 } from "@elizaos/core";
 import LitJsSdk from '@lit-protocol/lit-node-client';
 import { LIT_NETWORK, LIT_ABILITY } from '@lit-protocol/constants';

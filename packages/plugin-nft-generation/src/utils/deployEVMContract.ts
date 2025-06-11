@@ -8,6 +8,7 @@ import type {
 } from 'viem';
 import { compileWithImports } from "./generateERC721ContractCode.ts";
 import CustomERC721 from "../contract/CustomERC721.sol"
+import { elizaLogger } from "@elizaos/core";
 
 // 动态生成 ERC-721 合约代码
 export function generateERC721ContractCode(NFTContractName) {

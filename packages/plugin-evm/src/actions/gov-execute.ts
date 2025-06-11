@@ -1,4 +1,4 @@
-import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
+import { type IAgentRuntime, type Memory, type State, type HandlerCallback, elizaLogger } from "@elizaos/core";
 import { WalletProvider } from "../providers/wallet";
 import { executeProposalTemplate } from "../templates";
 import type { ExecuteProposalParams, SupportedChain, Transaction } from "../types";
@@ -121,7 +121,7 @@ export const executeAction = {
             const action = new ExecuteAction(walletProvider);
             return await action.execute(executeParams);
         } catch (error) {
-            console.error("Error in execute handler:", error.message);
+            elizaLogger.error("Error in execute handler:", error.message);
             if (callback) {
                 callback({ text: `Error: ${error.message}` });
             }

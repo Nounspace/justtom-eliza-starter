@@ -1,4 +1,4 @@
-import type { Plugin} from "@elizaos/core";
+import { elizaLogger, type Plugin} from "@elizaos/core";
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import ora from 'ora';

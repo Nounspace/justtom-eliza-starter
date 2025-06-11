@@ -13,8 +13,8 @@ const GRANULAR_LOG = config.PYTH_GRANULAR_LOG;
 // Enhanced logging helper
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
-        elizaLogger.info(`[PublisherCaps] ${message}`, data);
-        elizaLogger.log(`[PublisherCaps] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        console.info(`[PublisherCaps] ${message}`, data);
+        console.log(`[PublisherCaps] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -78,7 +78,7 @@ export const getLatestPublisherCapsAction: Action = {
             } catch (error) {
                 logGranular("Publisher caps validation failed", { error });
                 if (error instanceof DataError) {
-                    elizaLogger.error("Publisher caps validation failed", {
+                    console.error("Publisher caps validation failed", {
                         errors: error.details?.errors
                     });
                     throw error;
@@ -94,7 +94,7 @@ export const getLatestPublisherCapsAction: Action = {
             return true;
         } catch (error) {
             logGranular("Validation failed", { error });
-            elizaLogger.error("Validation failed for GET_LATEST_PUBLISHER_CAPS", {
+            console.error("Validation failed for GET_LATEST_PUBLISHER_CAPS", {
                 error: error instanceof Error ? error.message : String(error)
             });
             return false;

@@ -57,10 +57,10 @@ export const priceUpdateStreamSchema = z.object({
 export async function validatePriceUpdateStreamData(content: unknown): Promise<boolean> {
     try {
         const result = await priceUpdateStreamSchema.parseAsync(content);
-        elizaLogger.debug('Price update stream validation passed', { result });
+        console.debug('Price update stream validation passed', { result });
         return true;
     } catch (error) {
-        elizaLogger.error('Price update stream validation failed', { error });
+        console.error('Price update stream validation failed', { error });
         throw new DataError(
             DataErrorCode.VALIDATION_FAILED,
             'Price update stream validation failed',

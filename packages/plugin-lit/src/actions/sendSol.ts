@@ -5,6 +5,7 @@ import {
     Memory,
     State,
     Content,
+    elizaLogger,
 } from "@elizaos/core";
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { LIT_ABILITY } from "@lit-protocol/constants";

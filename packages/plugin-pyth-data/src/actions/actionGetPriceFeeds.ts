@@ -13,8 +13,8 @@ const GRANULAR_LOG = config.PYTH_GRANULAR_LOG;
 // Enhanced logging helper
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
-        elizaLogger.info(`[PriceFeeds] ${message}`, data);
-        elizaLogger.log(`[PriceFeeds] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        console.info(`[PriceFeeds] ${message}`, data);
+        console.log(`[PriceFeeds] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -112,7 +112,7 @@ export const getPriceFeedsAction: Action = {
             } catch (error) {
                 logGranular("Schema validation error", { error });
                 if (error instanceof DataError) {
-                    elizaLogger.error("Schema validation failed", {
+                    console.error("Schema validation failed", {
                         errors: error.details?.errors
                     });
                     throw error;

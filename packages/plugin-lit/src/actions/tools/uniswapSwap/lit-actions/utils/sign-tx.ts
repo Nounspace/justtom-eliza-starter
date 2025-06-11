@@ -1,3 +1,5 @@
+import { elizaLogger } from "@elizaos/core";
+
 /**
  * Signs a transaction using the PKP's public key.
  * @param {any} tx - The transaction to sign.

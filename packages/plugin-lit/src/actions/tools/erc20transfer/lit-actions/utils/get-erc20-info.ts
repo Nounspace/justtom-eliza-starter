@@ -1,3 +1,5 @@
+import { elizaLogger } from "@elizaos/core";
+
 /**
  * Retrieves token information (decimals, balance, and parsed amount).
  * @param {any} provider - The Ethereum provider.

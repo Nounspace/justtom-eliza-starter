@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+import { elizaLogger } from '@elizaos/core';
 
 // Define __dirname using import.meta.url
 const __filename = fileURLToPath(import.meta.url);

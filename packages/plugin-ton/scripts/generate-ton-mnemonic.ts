@@ -1,6 +1,7 @@
 // pnpm install @ton/ton @ton/crypto
 import { mnemonicNew, KeyPair, mnemonicToPrivateKey } from '@ton/crypto';
 import { WalletContractV4 } from "@ton/ton";
+import { elizaLogger } from "@elizaos/core";
 
 async function start() {
   const amount = 2;

@@ -40,10 +40,10 @@ export const priceFeedsSchema = z.object({
 export async function validatePriceFeedsData(content: unknown): Promise<boolean> {
     try {
         const result = await priceFeedsSchema.parseAsync(content);
-        elizaLogger.debug('Price feeds validation passed', { result });
+        console.debug('Price feeds validation passed', { result });
         return true;
     } catch (error) {
-        elizaLogger.error('Price feeds validation failed', { error });
+        console.error('Price feeds validation failed', { error });
         throw new DataError(
             DataErrorCode.VALIDATION_FAILED,
             'Price feeds validation failed',

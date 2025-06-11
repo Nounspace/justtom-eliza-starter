@@ -5,6 +5,7 @@ import {
   NETWORK_CONFIG,
 } from '@lit-protocol/aw-tool';
 import { signMessage } from './utils/sign-message';
+import { elizaLogger } from '@elizaos/core';
 
 declare global {
   // Required Inputs

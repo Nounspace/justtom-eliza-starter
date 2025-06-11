@@ -58,7 +58,7 @@ export async function validatePublisherCapsData(data: unknown): Promise<boolean>
 
         if (!valid) {
             const errors = validate.errors || [];
-            elizaLogger.error("Publisher caps validation failed", {
+            console.error("Publisher caps validation failed", {
                 errors,
                 data
             });
@@ -84,7 +84,7 @@ export async function validatePublisherCapsData(data: unknown): Promise<boolean>
             throw error;
         }
 
-        elizaLogger.error("Publisher caps validation error", {
+        console.error("Publisher caps validation error", {
             error: error instanceof Error ? error.message : String(error),
             data
         });

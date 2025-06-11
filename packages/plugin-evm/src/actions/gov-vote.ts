@@ -1,4 +1,4 @@
-import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
+import { type IAgentRuntime, type Memory, type State, type HandlerCallback, elizaLogger } from "@elizaos/core";
 import { WalletProvider } from "../providers/wallet";
 import { voteTemplate } from "../templates";
 import type { VoteParams, SupportedChain, Transaction } from "../types";
@@ -104,7 +104,7 @@ export const voteAction = {
             const action = new VoteAction(walletProvider);
             return await action.vote(voteParams);
         } catch (error) {
-            console.error("Error in vote handler:", error.message);
+            elizaLogger.error("Error in vote handler:", error.message);
             if (callback) {
                 callback({ text: `Error: ${error.message}` });
             }

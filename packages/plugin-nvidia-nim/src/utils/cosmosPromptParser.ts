@@ -1,4 +1,4 @@
-import { Media } from "@elizaos/core";
+import { elizaLogger, Media } from "@elizaos/core";
 import { AssetManager } from "./assetManager.js";
 import { NimError, NimErrorCode, ErrorSeverity } from "../errors/nimErrors.js";
 import path from 'path';

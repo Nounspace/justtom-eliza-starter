@@ -1,4 +1,4 @@
-import type { Plugin } from "@elizaos/core";
+import { elizaLogger, type Plugin } from "@elizaos/core";
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import ora from 'ora';
@@ -25,12 +25,12 @@ const actions = [
 ];
 
 // Initial banner with chalk styling
-elizaLogger.log('\n' + chalk.cyan('┌────────────────────────────────────────┐'));
-elizaLogger.log(chalk.cyan('│') + chalk.yellow.bold('          PYTH DATA PLUGIN             ') + chalk.cyan(' │'));
-elizaLogger.log(chalk.cyan('├────────────────────────────────────────┤'));
-elizaLogger.log(chalk.cyan('│') + chalk.white('  Initializing Pyth Data Services...    ') + chalk.cyan('│'));
-elizaLogger.log(chalk.cyan('│') + chalk.white('  Version: 1.0.0                        ') + chalk.cyan('│'));
-elizaLogger.log(chalk.cyan('└────────────────────────────────────────┘'));
+console.log('\n' + chalk.cyan('┌────────────────────────────────────────┐'));
+console.log(chalk.cyan('│') + chalk.yellow.bold('          PYTH DATA PLUGIN             ') + chalk.cyan(' │'));
+console.log(chalk.cyan('├────────────────────────────────────────┤'));
+console.log(chalk.cyan('│') + chalk.white('  Initializing Pyth Data Services...    ') + chalk.cyan('│'));
+console.log(chalk.cyan('│') + chalk.white('  Version: 1.0.0                        ') + chalk.cyan('│'));
+console.log(chalk.cyan('└────────────────────────────────────────┘'));
 
 // Stop the loader
 spinner.succeed(chalk.green('Pyth Data Plugin initialized successfully!'));
@@ -62,7 +62,7 @@ actions.forEach(action => {
 });
 
 // Display the action table
-elizaLogger.log('\n' + actionTable.toString());
+console.log('\n' + actionTable.toString());
 
 // Plugin status with a nice table
 const statusTable = new Table({
@@ -78,7 +78,7 @@ statusTable.push(
   [chalk.white('Status  : ') + chalk.green('Loaded & Ready')]
 );
 
-elizaLogger.log('\n' + statusTable.toString() + '\n');
+console.log('\n' + statusTable.toString() + '\n');
 
 const pythDataPlugin: Plugin = {
   name: "pyth-data",

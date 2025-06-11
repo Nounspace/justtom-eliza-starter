@@ -49,12 +49,15 @@ export function getCdpConfig(config: Partial<HyperbolicConfig>): {
     keyName: string;
     privateKey: string;
 } | null {
-    if (!config.HYPERBOLIC_CDP_NAME || !config.HYPERBOLIC_CDP_PRIVATE_KEY) {
+    if (!
+        // config.HYPERBOLIC_CDP_NAME 
+        // || !config.HYPERBOLIC_CDP_PRIVATE_KEY || 
+        process.env.HYPERBOLIC_CDP_PRIVATE_KEY) {
         return null;
     }
 
     return {
-        keyName: config.HYPERBOLIC_CDP_NAME,
-        privateKey: config.HYPERBOLIC_CDP_PRIVATE_KEY
+        keyName: process.env.HYPERBOLIC_CDP_PRIVATE_KEY, //config.HYPERBOLIC_CDP_NAME,
+        privateKey: process.env.HYPERBOLIC_CDP_PRIVATE_KEY //config.HYPERBOLIC_CDP_PRIVATE_KEY
     };
 }

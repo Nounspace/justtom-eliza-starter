@@ -8,6 +8,7 @@ import {
     type IAgentRuntime,
     type Memory,
     type State,
+    elizaLogger,
 } from "@elizaos/core";
 
 import { initWalletProvider, type WalletProvider } from "../providers/wallet";
@@ -142,7 +143,7 @@ export const transferAction: Action = {
             }
             return true;
         } catch (error) {
-            console.error("Error during token transfer:", error);
+            elizaLogger.error("Error during token transfer:", error);
             if (callback) {
                 callback({
                     text: `Error transferring tokens: ${error.message}`,

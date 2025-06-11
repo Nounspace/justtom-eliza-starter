@@ -1,4 +1,4 @@
-import type { Action, IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
+import { type Action, type IAgentRuntime, type Memory, type State, type HandlerCallback, elizaLogger } from "@elizaos/core";
 import { TokenPriceProvider } from "../providers/tokenProvider";
 
 export const priceTemplate = `Determine if this is a token price request. If it is one of the specified situations, perform the corresponding action:

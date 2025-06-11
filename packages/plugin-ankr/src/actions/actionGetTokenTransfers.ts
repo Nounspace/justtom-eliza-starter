@@ -20,8 +20,8 @@ const GRANULAR_LOG = config.ANKR_GRANULAR_LOG;
 // Enhanced logging helper
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
-        elizaLogger.debug(`[GetTokenTransfers] ${message}`, data);
-        elizaLogger.log(`[GetTokenTransfers] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        console.debug(`[GetTokenTransfers] ${message}`, data);
+        console.log(`[GetTokenTransfers] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -187,7 +187,7 @@ export const actionGetTokenTransfers: Action = {
         try {
             const messageContent = message.content as GetTokenTransfersContent;
             const config = await validateankrConfig(runtime);
-            elizaLogger.log("Debug - Config validated:", {
+            console.log("Debug - Config validated:", {
                 hasWallet: !!config.ANKR_WALLET,
                 env: config.ANKR_ENV
             });
@@ -200,14 +200,14 @@ export const actionGetTokenTransfers: Action = {
             const endpoint = `https://rpc.ankr.com/multichain/${wallet}`;
 
             // Parse the prompt using our API content parser
-            elizaLogger.log("Debug - Raw prompt:", {
+            console.log("Debug - Raw prompt:", {
                 text: messageContent.text,
                 promptLength: messageContent.text?.length,
             });
 
             // Parse the prompt using our API content parser
             const parsedContent = parseAPIContent(messageContent.text);
-            elizaLogger.log("Debug - Parsed API content:", {
+            console.log("Debug - Parsed API content:", {
                 hasContract: !!parsedContent.contract,
                 hasChain: !!parsedContent.chain,
                 hasFromTimestamp: !!parsedContent.fromTimestamp,

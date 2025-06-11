@@ -10,6 +10,7 @@ import { getGasData } from './utils/get-gas-data';
 import { estimateGasLimit } from './utils/estimate-gas-limit';
 import { createAndSignTransaction } from './utils/create-and-sign-tx';
 import { broadcastTransaction } from './utils/broadcast-tx';
+import { elizaLogger } from '@elizaos/core';
 
 declare global {
   // Required Inputs

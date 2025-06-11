@@ -20,8 +20,8 @@ const GRANULAR_LOG = config.ANKR_GRANULAR_LOG;
 // Enhanced logging helper
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
-        elizaLogger.debug(`[GetNFTsByOwner] ${message}`, data);
-        elizaLogger.log(`[GetNFTsByOwner] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        console.debug(`[GetNFTsByOwner] ${message}`, data);
+        console.log(`[GetNFTsByOwner] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 // ------------------------------------------------------------------------------------------------
@@ -181,14 +181,14 @@ export const actionGetNFTsByOwner: Action = {
 
         try {
             const messageContent = message.content as GetNFTsByOwnerContent;
-            elizaLogger.log("Debug - Full message content:", {
+            console.log("Debug - Full message content:", {
                 fullContent: message.content,
                 rawText: messageContent?.text,
                 type: message.content?.type
             });
 
             const config = await validateankrConfig(runtime);
-            elizaLogger.log("Debug - Config validated:", {
+            console.log("Debug - Config validated:", {
                 hasWallet: !!config.ANKR_WALLET,
                 env: config.ANKR_ENV
             });
@@ -201,7 +201,7 @@ export const actionGetNFTsByOwner: Action = {
 
             // Parse the prompt using our API content parser
             const parsedContent = parseAPIContent(messageContent.text);
-            elizaLogger.log("Debug - Parsed API content:", {
+            console.log("Debug - Parsed API content:", {
                 hasWallet: !!parsedContent.wallet,
                 hasChain: !!parsedContent.chain,
                 wallet: parsedContent.wallet,
@@ -220,7 +220,7 @@ export const actionGetNFTsByOwner: Action = {
                 pageToken: messageContent.filters?.pageToken
             };
 
-            elizaLogger.log("Debug - API request parameters:", requestParams);
+            console.log("Debug - API request parameters:", requestParams);
 
             try {
                 const response = await axios.post(

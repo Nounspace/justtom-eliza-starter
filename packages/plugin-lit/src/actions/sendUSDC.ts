@@ -1,4 +1,4 @@
-import { Action, HandlerCallback, IAgentRuntime, Memory, State } from "@elizaos/core";
+import { Action, elizaLogger, HandlerCallback, IAgentRuntime, Memory, State } from "@elizaos/core";
 import { ethers } from "ethers";
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import { LIT_RPC, LIT_ABILITY } from "@lit-protocol/constants";

@@ -7,6 +7,7 @@ import {
     type IAgentRuntime,
     type Memory,
     type State,
+    elizaLogger,
 } from "@elizaos/core";
 
 import { initWalletProvider, type WalletProvider } from "../providers/wallet";

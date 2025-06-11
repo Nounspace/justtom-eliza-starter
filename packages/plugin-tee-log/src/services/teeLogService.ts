@@ -1,4 +1,4 @@
-import { type IAgentRuntime, Service, ServiceType, type ITeeLogService } from "@elizaos/core";
+import { type IAgentRuntime, Service, ServiceType, type ITeeLogService, elizaLogger } from "@elizaos/core";
 import { TEEMode } from "@elizaos/plugin-tee";
 import { SqliteTeeLogDAO } from "../adapters/sqliteDAO";
 import { TeeType, type TeeLogDAO, type TeeAgent, type TeeLog, type TeeLogQuery, type PageQuery } from "../types";

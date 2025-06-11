@@ -1,6 +1,7 @@
 import type { IAgentRuntime, Memory, State, HandlerCallback } from "@elizaos/core";
 import {
     composeContext,
+    elizaLogger,
     generateObjectDeprecated,
     ModelClass,
 } from "@elizaos/core";
@@ -135,7 +136,7 @@ export const bridgeAction = {
             }
             return true;
         } catch (error) {
-            console.error("Error in bridge handler:", error.message);
+            elizaLogger.error("Error in bridge handler:", error.message);
             if (callback) {
                 callback({ text: `Error: ${error.message}` });
             }

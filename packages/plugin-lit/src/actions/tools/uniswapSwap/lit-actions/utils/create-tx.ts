@@ -1,3 +1,5 @@
+import { elizaLogger } from "@elizaos/core";
+
 /**
  * Creates a transaction for approval or swap.
  * @param {any} gasLimit - The gas limit for the transaction.

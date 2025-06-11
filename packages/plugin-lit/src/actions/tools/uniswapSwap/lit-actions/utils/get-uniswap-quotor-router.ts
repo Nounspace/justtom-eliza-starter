@@ -1,3 +1,5 @@
+import { elizaLogger } from "@elizaos/core";
+
 export const getUniswapQuoterRouter = (chainId: string) => {
   let UNISWAP_V3_QUOTER: string;
   let UNISWAP_V3_ROUTER: string;

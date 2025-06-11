@@ -23,7 +23,7 @@ const PYTH_NETWORKS = {
 } as const;
 
 // // Log environment information
-// elizaLogger.info("Environment sources", {
+// console.info("Environment sources", {
 //     shellVars: Object.keys(process.env).filter(key => key.startsWith('PYTH_')),
 // });
 

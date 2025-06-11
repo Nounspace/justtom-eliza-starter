@@ -1,6 +1,6 @@
 import express from "express";
 
-import type { AgentRuntime } from "@elizaos/core";
+import { elizaLogger, type AgentRuntime } from "@elizaos/core";
 import { createSolanaCollection } from "./handlers/createSolanaCollection.ts";
 import { createNFT, createNFTMetadata } from "./handlers/createNFT.ts";
 import { verifyNFT } from "./handlers/verifyNFT.ts";

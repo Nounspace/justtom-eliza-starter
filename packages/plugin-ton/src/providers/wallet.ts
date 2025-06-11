@@ -1,9 +1,10 @@
-import type {
-    IAgentRuntime,
-    ICacheManager,
-    Memory,
-    Provider,
-    State,
+import {
+    elizaLogger,
+    type IAgentRuntime,
+    type ICacheManager,
+    type Memory,
+    type Provider,
+    type State,
 } from "@elizaos/core";
 
 import { TonClient, WalletContractV4, fromNano } from "@ton/ton";
