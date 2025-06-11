@@ -1,4 +1,4 @@
-import { UUID } from "@elizaos/core";
+import { elizaLogger, UUID } from "@elizaos/core";
 
 class SpamFilterManager {
     private static instance: SpamFilterManager;
