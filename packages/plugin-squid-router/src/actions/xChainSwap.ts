@@ -25,7 +25,7 @@ const approveSpending = async (transactionRequestTarget: string, fromToken: stri
     try {
         const tx = await tokenContract.approve(transactionRequestTarget, fromAmount);
         await tx.wait();
-        console.log(`Approved ${fromAmount} tokens for ${transactionRequestTarget}`);
+        elizaLogger.log(`Approved ${fromAmount} tokens for ${transactionRequestTarget}`);
     } catch (error) {
         console.error('Approval failed:', error);
         throw error;
@@ -88,7 +88,7 @@ export const xChainSwapAction = {
 
             const squidRouter = initSquidRouterProvider(runtime);
             await squidRouter.initialize();
-            console.log("Initialized Squid SDK");
+            elizaLogger.log("Initialized Squid SDK");
 
             const fromChainObject = squidRouter.getChain(content.fromChain);
             if(!fromChainObject) {
@@ -131,7 +131,7 @@ export const xChainSwapAction = {
                 quoteOnly: false
             };
 
-            console.log("Parameters:", params); // Printing the parameters for QA
+            elizaLogger.log("Parameters:", params); // Printing the parameters for QA
 
             const throttleInterval = runtime.getSetting("SQUID_API_THROTTLE_INTERVAL") ? Number(runtime.getSetting("SQUID_API_THROTTLE_INTERVAL")) : 0
 
@@ -139,7 +139,7 @@ export const xChainSwapAction = {
 
             // Get the swap route using Squid SDK
             const {route} = await squidRouter.getRoute(params);
-            console.log("Calculated route:", route.estimate.toAmount);
+            elizaLogger.log("Calculated route:", route.estimate.toAmount);
 
             const transactionRequest = route.transactionRequest;
 

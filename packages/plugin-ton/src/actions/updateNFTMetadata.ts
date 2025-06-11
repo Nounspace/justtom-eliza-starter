@@ -197,7 +197,7 @@ async function updateNFTMetadataOnChain(
     messages: [updateMessage],
   });
   await contract.send(transfer);
-  console.log("Transaction sent, still waiting for confirmation...");
+  elizaLogger.log("Transaction sent, still waiting for confirmation...");
 
   await waitSeqno(seqno, this.walletProvider.wallet);
 

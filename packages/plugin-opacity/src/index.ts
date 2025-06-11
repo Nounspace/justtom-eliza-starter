@@ -169,7 +169,7 @@ export class OpacityAdapter implements IVerifiableInferenceAdapter {
             result.id,
             result.proof
         );
-        console.log("Proof is valid:", isValid.success);
+        elizaLogger.log("Proof is valid:", isValid.success);
         if (!isValid.success) {
             throw new Error("Proof is invalid");
         }

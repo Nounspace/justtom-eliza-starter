@@ -17,8 +17,8 @@ export const getUniswapQuoterRouter = (chainId: string) => {
       throw new Error(`Unsupported chain ID: ${chainId}`);
   }
 
-  console.log(`Using Uniswap V3 Quoter: ${UNISWAP_V3_QUOTER}`);
-  console.log(`Using Uniswap V3 Router: ${UNISWAP_V3_ROUTER}`);
+  elizaLogger.log(`Using Uniswap V3 Quoter: ${UNISWAP_V3_QUOTER}`);
+  elizaLogger.log(`Using Uniswap V3 Router: ${UNISWAP_V3_ROUTER}`);
 
   return {
     UNISWAP_V3_QUOTER,

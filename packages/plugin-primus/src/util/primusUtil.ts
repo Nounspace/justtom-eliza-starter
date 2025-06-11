@@ -21,7 +21,7 @@ export const generateProof = async (
               method: method,
               header: headers,
           };
-    // console.log('requestParam:',requestParam)
+    // elizaLogger.log('requestParam:',requestParam)
     const attestationParams = zkTLS.generateRequestParams(requestParam, [
         {
             keyName: "content",

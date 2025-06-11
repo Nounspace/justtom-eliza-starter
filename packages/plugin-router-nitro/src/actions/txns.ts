@@ -33,28 +33,28 @@ export const checkNativeTokenBalance = async (wallet, _decimals) => {
 
 export const checkAndSetAllowance = async (wallet, tokenAddress, approvalAddress, amount) => {
     if (tokenAddress === ethers.ZeroAddress || tokenAddress.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee') {
-        console.log("Native token detected; no approval needed.");
+        elizaLogger.log("Native token detected; no approval needed.");
         return;
     }
 
-    console.log(`Checking allowance for token ${tokenAddress} and approval address ${approvalAddress}`);
+    elizaLogger.log(`Checking allowance for token ${tokenAddress} and approval address ${approvalAddress}`);
 
     const erc20ReadOnly = new ethers.Contract(tokenAddress, erc20Abi, wallet.provider);
     const walletAddress = await wallet.getAddress();
 
     try {
         const allowance = await erc20ReadOnly.allowance(walletAddress, approvalAddress);
-        console.log("Current allowance:", allowance.toString());
+        elizaLogger.log("Current allowance:", allowance.toString());
 
         if (allowance < amount) {
             const erc20WithSigner = new ethers.Contract(tokenAddress, erc20Abi, wallet);
             const approveTx = await erc20WithSigner.approve(approvalAddress, amount);
 
-            console.log(`Approve transaction sent: ${approveTx.hash}`);
+            elizaLogger.log(`Approve transaction sent: ${approveTx.hash}`);
             await approveTx.wait();
-            console.log(`Approved successfully: ${approveTx.hash}`);
+            elizaLogger.log(`Approved successfully: ${approveTx.hash}`);
         } else {
-            console.log("Sufficient allowance already set.");
+            elizaLogger.log("Sufficient allowance already set.");
         }
     } catch (error) {
         console.error("Error during allowance check or approval:", error);

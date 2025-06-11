@@ -20,7 +20,7 @@ export interface TransferNFTContent extends Content {
 }
 
 function isTransferNFTContent(content: Content): content is TransferNFTContent {
-    console.log("Content for transfer", content);
+    elizaLogger.log("Content for transfer", content);
     return (
         typeof content.nftAddress === "string" &&
         typeof content.newOwner === "string"
@@ -126,13 +126,13 @@ class TransferNFTAction {
             });
             await sleep(1500);
             await contract.send(transfer);
-            console.log("Transaction sent, still waiting for confirmation...");
+            elizaLogger.log("Transaction sent, still waiting for confirmation...");
             await sleep(1500);
             // this.waitForTransaction(seqno, contract);
             const state = await walletClient.getContractState(
                 this.walletProvider.wallet.address,
             );
-            console.log("Transaction sent, still waiting for confirmation...");
+            elizaLogger.log("Transaction sent, still waiting for confirmation...");
             const { lt: _, hash: lastHash } = state.lastTransaction;
             return base64ToHex(lastHash);
         } catch (error) {
@@ -152,7 +152,7 @@ class TransferNFTAction {
             await sleep(2000);
             currentSeqno = await contract.getSeqno();
         }
-        console.log("transaction confirmed!");
+        elizaLogger.log("transaction confirmed!");
     }
 }
 

@@ -44,7 +44,7 @@ export interface MintContent extends Content {
  * A type guard to verify the MintContent payload.
  */
 function isMintContent(content: MintContent): content is MintContent {
-  console.log("Content for mint", content);
+  elizaLogger.log("Content for mint", content);
   return (typeof content.nftType === "string" &&
     (content.nftType === "collection" && content.collection || content.nftType === "standalone" && !content.collection) &&
     typeof content.owner === "string" &&
@@ -326,7 +326,7 @@ class MintNFTAction {
     
         const nftItem = new NftItem(params.collection!);
         seqno = await nftItem.deploy(this.walletProvider.wallet, mintParams);
-        console.log(`Successfully deployed ${index + 1} NFT`);
+        elizaLogger.log(`Successfully deployed ${index + 1} NFT`);
         await waitSeqno(seqno, this.walletProvider.wallet);
         index++;
       }
@@ -344,7 +344,7 @@ class MintNFTAction {
       };
       const collection = new NFTCollection(collectionData);
       let seqno = await collection.deploy(this.walletProvider.wallet);
-      console.log(`Collection deployed: ${collection.address}`);
+      elizaLogger.log(`Collection deployed: ${collection.address}`);
       await waitSeqno(seqno, this.walletProvider.wallet);
     } else {
       throw new Error("Invalid NFT type");

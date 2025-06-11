@@ -198,7 +198,7 @@ export const EmailClientInterface: ClientWithType = {
         return client;
     },
     stop: async (_runtime: IAgentRuntime) => {
-        console.warn("Email client does not support stopping yet");
+        elizaLogger.warn("Email client does not support stopping yet");
     },
 };
 

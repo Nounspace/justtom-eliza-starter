@@ -127,10 +127,10 @@ export default {
 
             // const provider = new WalletProvider(connection, walletPublicKey);
 
-            console.log("Wallet Public Key:", sak.wallet_address.toString());
-            console.log("inputTokenSymbol:", response.inputTokenCA);
-            console.log("outputTokenSymbol:", response.outputTokenCA);
-            console.log("amount:", response.amount);
+            elizaLogger.log("Wallet Public Key:", sak.wallet_address.toString());
+            elizaLogger.log("inputTokenSymbol:", response.inputTokenCA);
+            elizaLogger.log("outputTokenSymbol:", response.outputTokenCA);
+            elizaLogger.log("amount:", response.amount);
 
             const txid = await sak.trade(
                 new PublicKey(response.outputTokenCA),

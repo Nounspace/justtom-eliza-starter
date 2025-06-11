@@ -24,7 +24,7 @@ export const agentPortfolioProvider: Provider = {
             const walletAddr = runtime.getSetting("BIRDEYE_WALLET_ADDR");
 
             if (!walletAddr) {
-                console.warn("No Birdeye wallet was specified");
+                elizaLogger.warn("No Birdeye wallet was specified");
                 return "";
             }
 

@@ -38,7 +38,7 @@ export class EnhancedWebSocketManager {
 
     private setupWebSocket() {
         this.ws.on('open', () => {
-            console.log('WebSocket connection established');
+            elizaLogger.log('WebSocket connection established');
             this.subscribeToAll();
         });
 
@@ -48,7 +48,7 @@ export class EnhancedWebSocketManager {
         });
 
         this.ws.on('close', () => {
-            console.log('WebSocket connection closed');
+            elizaLogger.log('WebSocket connection closed');
             this.reconnect();
         });
 
@@ -179,7 +179,7 @@ export class EnhancedWebSocketManager {
             if (this.isSwapTransaction(decodedInput)) {
                 // Special handling for ETH swaps
                 if (decodedInput.swapType === 'ETH_FOR_TOKENS') {
-                    console.log(`Detected ETH swap: ${tx.value} ETH for ${decodedInput.tokenOut}`);
+                    elizaLogger.log(`Detected ETH swap: ${tx.value} ETH for ${decodedInput.tokenOut}`);
 
                     // Calculate potential arbitrage opportunity with actual ETH value
                     const opportunity = await this.calculateArbitrageOpportunity(
@@ -213,7 +213,7 @@ export class EnhancedWebSocketManager {
 
     private async checkArbitrageOpportunities(blockNumber: string) {
         // Implement your cross-DEX arbitrage checking logic here
-        console.log(`Checking arbitrage opportunities for block ${blockNumber}`);
+        elizaLogger.log(`Checking arbitrage opportunities for block ${blockNumber}`);
     }
 
     private decodeTransactionInput(input: string, tx?: any): any {
@@ -320,7 +320,7 @@ export class EnhancedWebSocketManager {
             // Check if profit meets minimum threshold (e.g., covers gas)
             const minProfitThreshold = BigNumber.from(process.env.MIN_PROFIT_THRESHOLD || '0');
             if (opportunity.profit.lt(minProfitThreshold)) {
-                console.log('Profit too low to execute arbitrage');
+                elizaLogger.log('Profit too low to execute arbitrage');
                 return;
             }
 
@@ -333,11 +333,11 @@ export class EnhancedWebSocketManager {
                 opportunity.route.amountIn
             );
 
-            console.log(`Arbitrage executed: ${tx.hash}`);
+            elizaLogger.log(`Arbitrage executed: ${tx.hash}`);
 
             // Wait for confirmation
             const receipt = await tx.wait();
-            console.log(`Arbitrage confirmed in block ${receipt.blockNumber}`);
+            elizaLogger.log(`Arbitrage confirmed in block ${receipt.blockNumber}`);
         } catch (error) {
             console.error('Error executing arbitrage:', error);
         }
@@ -415,7 +415,7 @@ export class EnhancedWebSocketManager {
 
     private reconnect() {
         setTimeout(() => {
-            console.log('Attempting to reconnect...');
+            elizaLogger.log('Attempting to reconnect...');
             this.ws = new WebSocket(this.ws.url);
             this.setupWebSocket();
         }, 5000); // Wait 5 seconds before reconnecting

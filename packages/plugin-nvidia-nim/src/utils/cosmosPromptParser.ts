@@ -7,7 +7,7 @@ import fs from 'fs';
 
 // Debug logging helper
 const debugLog = (message: string, data?: unknown) => {
-    console.log(`Debug - Cosmos Parser - ${message}:`, data);
+    elizaLogger.log(`Debug - Cosmos Parser - ${message}:`, data);
 };
 
 export interface CosmosParsedPrompt {

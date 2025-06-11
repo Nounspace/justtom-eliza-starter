@@ -3,16 +3,16 @@ import { edwinProvider, getEdwinClient } from "./provider";
 import { getEdwinActions } from "./actions";
 
 // Initial banner
-console.log("\n┌═════════════════════════════════════┐");
-console.log("│            EDWIN PLUGIN             │");
-console.log("│                 ,_,                 │");
-console.log("│                (o,o)                │");
-console.log("│                {`\"'}                │");
-console.log("│                -\"-\"-                │");
-console.log("├─────────────────────────────────────┤");
-console.log("│  Initializing Edwin Plugin...       │");
-console.log("│  Version: 0.0.1                     │");
-console.log("└═════════════════════════════════════┘");
+elizaLogger.log("\n┌═════════════════════════════════════┐");
+elizaLogger.log("│            EDWIN PLUGIN             │");
+elizaLogger.log("│                 ,_,                 │");
+elizaLogger.log("│                (o,o)                │");
+elizaLogger.log("│                {`\"'}                │");
+elizaLogger.log("│                -\"-\"-                │");
+elizaLogger.log("├─────────────────────────────────────┤");
+elizaLogger.log("│  Initializing Edwin Plugin...       │");
+elizaLogger.log("│  Version: 0.0.1                     │");
+elizaLogger.log("└═════════════════════════════════════┘");
 
 export const edwinPlugin: Plugin = {
     name: "[Edwin] Integration",

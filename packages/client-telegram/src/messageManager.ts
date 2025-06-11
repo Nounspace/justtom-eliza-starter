@@ -238,7 +238,7 @@ export class MessageManager {
                     );
                     if (!responseContent?.text) return;
 
-                    console.log(
+                    elizaLogger.log(
                         `[Auto Post Telegram] Recent Messages: ${responseContent}`
                     );
 

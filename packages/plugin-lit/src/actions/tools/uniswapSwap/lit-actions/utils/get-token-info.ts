@@ -10,7 +10,7 @@ export async function getTokenInfo(
   tokenOut: string,
   pkp: any
 ) {
-  console.log('Gathering token info...');
+  elizaLogger.log('Gathering token info...');
   ethers.utils.getAddress(tokenIn);
   ethers.utils.getAddress(tokenOut);
 
@@ -45,13 +45,13 @@ export async function getTokenInfo(
     tokenInContract.decimals(),
     tokenOutContract.decimals(),
   ]);
-  console.log('Token decimals:', decimalsIn, decimalsOut);
+  elizaLogger.log('Token decimals:', decimalsIn, decimalsOut);
 
   const [balanceIn, balanceOut] = await Promise.all([
     tokenInContract.balanceOf(pkp.ethAddress),
     tokenOutContract.balanceOf(pkp.ethAddress),
   ]);
-  console.log(
+  elizaLogger.log(
     'Token balances (in/out):',
     balanceIn.toString(),
     balanceOut.toString()

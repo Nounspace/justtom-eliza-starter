@@ -280,7 +280,7 @@ export default {
                         )
                         .join(", ");
 
-                    console.log("Final response:", {
+                    elizaLogger.log("Final response:", {
                         text: `Deployment created and ready!\nLease ID: ${result.leaseId.toString()}\n${portInfo ? `Access URLs: ${portInfo}` : ""}`,
                         content: {
                             success: true,
@@ -371,7 +371,7 @@ export default {
             }
             return true;
         } catch (error) {
-            console.log("Error:", error);
+            elizaLogger.log("Error:", error);
             elizaLogger.error("Deployment operation failed:", error.message);
             callback?.({
                 text: "Deployment operation failed",

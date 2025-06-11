@@ -47,7 +47,7 @@ export class AIService {
                 finalPrompt = this.codeFormatter.truncateCodeBlock(prompt, 8000);
             }
 
-            console.log(
+            elizaLogger.log(
                 `Generating comment for prompt of length: ${finalPrompt.length}`
             );
 
@@ -64,7 +64,7 @@ export class AIService {
                     error instanceof Error &&
                     error.message.includes("maximum context length")
                 ) {
-                    console.warn(
+                    elizaLogger.warn(
                         "Token limit exceeded, attempting with further truncation..."
                     );
                     // Try with more aggressive truncation
@@ -80,7 +80,7 @@ export class AIService {
                                 "maximum context length"
                             )
                         ) {
-                            console.warn(
+                            elizaLogger.warn(
                                 "Still exceeding token limit, using minimal context..."
                             );
                             // Final attempt with minimal context

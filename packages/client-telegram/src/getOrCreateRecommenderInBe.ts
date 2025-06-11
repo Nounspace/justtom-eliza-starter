@@ -30,7 +30,7 @@ export async function getOrCreateRecommenderInBe(
                 error
             );
             if (attempt < retries) {
-                console.log(`Retrying in ${delayMs} ms...`);
+                elizaLogger.log(`Retrying in ${delayMs} ms...`);
                 await new Promise((resolve) => setTimeout(resolve, delayMs));
             } else {
                 console.error("All attempts failed.");

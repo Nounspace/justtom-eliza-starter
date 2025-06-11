@@ -60,7 +60,7 @@ const getDateRange = async (
             context,
             modelClass: ModelClass.SMALL,
         });
-        console.log("response", response);
+        elizaLogger.log("response", response);
         // try parsing to a json object
         const parsedResponse = parseJSONObjectFromText(response) as {
             objective: string;
@@ -109,13 +109,13 @@ const getDateRange = async (
                     startInteger *
                     multipliers[startMultiplier as keyof typeof multipliers];
 
-                console.log("startTime", startTime);
+                elizaLogger.log("startTime", startTime);
 
                 const endTime =
                     endInteger *
                     multipliers[endMultiplier as keyof typeof multipliers];
 
-                console.log("endTime", endTime);
+                elizaLogger.log("endTime", endTime);
 
                 // get the current time and subtract the start and end times
                 parsedResponse.start = Date.now() - startTime;
@@ -212,7 +212,7 @@ const summarizeAction = {
             return;
         }
 
-        console.log("dateRange", dateRange);
+        elizaLogger.log("dateRange", dateRange);
 
         const { objective, start, end } = dateRange;
 
@@ -312,7 +312,7 @@ ${currentSummary.trim()}
                 [summaryFilename]
             );
         } else {
-            console.warn(
+            elizaLogger.warn(
                 "Empty response from summarize conversation action, skipping"
             );
         }

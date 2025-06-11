@@ -1,5 +1,5 @@
 const _litActionCode = async () => {
-  console.log(magicNumber);
+  elizaLogger.log(magicNumber);
   try {
     LitActions.setResponse({ response: JSON.stringify({ message: "Hello from Lit Protocol!" }) });
   } catch (error) {

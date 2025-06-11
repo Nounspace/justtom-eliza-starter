@@ -34,12 +34,12 @@ export class WebhookHandler {
     private async handleMessage(message: any): Promise<void> {
         // Implement message handling logic
         // This could emit events or trigger callbacks based on your framework's needs
-        console.log("Received message:", message);
+        elizaLogger.log("Received message:", message);
     }
 
     private async handleStatus(status: any): Promise<void> {
         // Implement status update handling logic
         // This could emit events or trigger callbacks based on your framework's needs
-        console.log("Received status update:", status);
+        elizaLogger.log("Received status update:", status);
     }
 }

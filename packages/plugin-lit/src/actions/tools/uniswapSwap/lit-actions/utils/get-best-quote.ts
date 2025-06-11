@@ -11,7 +11,7 @@ export const getBestQuote = async (
   amount: any,
   decimalsOut: number
 ) => {
-  console.log('Getting best quote for swap...');
+  elizaLogger.log('Getting best quote for swap...');
   const quoterInterface = new ethers.utils.Interface([
     'function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96)) external returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)',
   ]);
@@ -30,7 +30,7 @@ export const getBestQuote = async (
         sqrtPriceLimitX96: 0,
       };
 
-      console.log(`Trying fee tier ${fee / 10000}%...`);
+      elizaLogger.log(`Trying fee tier ${fee / 10000}%...`);
       const quote = await provider.call({
         to: uniswapV3Quoter,
         data: quoterInterface.encodeFunctionData('quoteExactInputSingle', [
@@ -47,7 +47,7 @@ export const getBestQuote = async (
       if (!bestQuote || currentQuote.gt(bestQuote)) {
         bestQuote = currentQuote;
         bestFee = fee;
-        console.log(
+        elizaLogger.log(
           `New best quote found with fee tier ${
             fee / 10000
           }%: ${ethers.utils.formatUnits(currentQuote, decimalsOut)}`
@@ -55,7 +55,7 @@ export const getBestQuote = async (
       }
     } catch (error) {
       if ((error as { reason?: string }).reason === 'Unexpected error') {
-        console.log(`No pool found for fee tier ${fee / 10000}%`);
+        elizaLogger.log(`No pool found for fee tier ${fee / 10000}%`);
       } else {
         console.error('Debug: Quoter call failed for fee tier:', fee, error);
       }
@@ -72,7 +72,7 @@ export const getBestQuote = async (
   // Calculate minimum output with 0.5% slippage tolerance
   const slippageTolerance = 0.005;
   const amountOutMin = bestQuote.mul(1000 - slippageTolerance * 1000).div(1000);
-  console.log(
+  elizaLogger.log(
     'Minimum output:',
     ethers.utils.formatUnits(amountOutMin, decimalsOut)
   );

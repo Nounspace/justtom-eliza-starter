@@ -24,7 +24,7 @@ export class TransferAction {
             params.fromChain
         );
 
-        console.log(
+        elizaLogger.log(
             `Transferring: ${params.amount} tokens from (${walletClient.account.address} to (${params.toAddress} on ${params.fromChain})`
         );
 
@@ -109,7 +109,7 @@ export const transferAction = {
         _options: Record<string, unknown>,
         callback?: HandlerCallback
     ) => {
-        console.log("Transfer action handler called");
+        elizaLogger.log("Transfer action handler called");
         const walletProvider = initWalletProvider(runtime);
         const action = new TransferAction(walletProvider);
 

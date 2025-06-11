@@ -48,7 +48,7 @@ export class ArbitrageService extends Service {
                     
 
         // Debug logging
-        console.log('ArbitrageService initialize - URLs:', {
+        elizaLogger.log('ArbitrageService initialize - URLs:', {
             wsUrl,
             rpcUrl
         });
@@ -60,7 +60,7 @@ export class ArbitrageService extends Service {
         // If we only have RPC URL, derive WS URL
         if (!wsUrl && rpcUrl) {
             wsUrl = rpcUrl.replace('https://', 'wss://');
-            console.log('Using derived WebSocket URL:', wsUrl);
+            elizaLogger.log('Using derived WebSocket URL:', wsUrl);
         }
 
         if (!wsUrl) {
@@ -72,7 +72,7 @@ export class ArbitrageService extends Service {
         if (!walletKey) throw new Error("Missing ARBITRAGE_EVM_PRIVATE_KEY env");
 
         // Initialize provider
-        console.log('Initializing WebSocketProvider with URL:', wsUrl);
+        elizaLogger.log('Initializing WebSocketProvider with URL:', wsUrl);
         const provider = new WebSocketProvider(wsUrl as string);
         const wallet = new Wallet(walletKey, provider);
 
@@ -108,7 +108,7 @@ export class ArbitrageService extends Service {
         );
 
         // Setup WebSocket connection
-        console.log('Setting up WebSocket connection to:', wsUrl);
+        elizaLogger.log('Setting up WebSocket connection to:', wsUrl);
         this.wsConnection = new WebSocket(wsUrl);
         this.setupWebSocketHandlers();
     }
@@ -117,7 +117,7 @@ export class ArbitrageService extends Service {
         if (!this.wsConnection) return;
 
         this.wsConnection.on('open', () => {
-            console.log('WebSocket connection established');
+            elizaLogger.log('WebSocket connection established');
             // Subscribe to new blocks
             this.wsConnection?.send(JSON.stringify({
                 jsonrpc: '2.0',
@@ -139,7 +139,7 @@ export class ArbitrageService extends Service {
         });
 
         this.wsConnection.on('close', () => {
-            console.log('WebSocket connection closed');
+            elizaLogger.log('WebSocket connection closed');
             // Attempt to reconnect after a delay
             setTimeout(() => this.initialize(this.runtime), 5000);
         });

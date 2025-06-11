@@ -24,7 +24,7 @@ export interface TransferContent extends Content {
 }
 
 function isTransferContent(content: Content): content is TransferContent {
-    console.log("Content for transfer", content);
+    elizaLogger.log("Content for transfer", content);
     return (
         typeof content.recipient === "string" &&
         (typeof content.amount === "string" ||
@@ -67,7 +67,7 @@ export class TransferAction {
     }
 
     async transfer(params: TransferContent): Promise<string> {
-        console.log(
+        elizaLogger.log(
             `Transferring: ${params.amount} tokens to (${params.recipient})`,
         );
         // { recipient: 'xx', amount: '0\\.3'}
@@ -93,7 +93,7 @@ export class TransferAction {
             });
             await sleep(1500);
             await contract.send(transfer);
-            console.log("Transaction sent, still waiting for confirmation...");
+            elizaLogger.log("Transaction sent, still waiting for confirmation...");
             await sleep(1500);
             //this.waitForTransaction(seqno, contract);
             const state = await walletClient.getContractState(
@@ -118,7 +118,7 @@ export class TransferAction {
             await sleep(2000);
             currentSeqno = await contract.getSeqno();
         }
-        console.log("transaction confirmed!");
+        elizaLogger.log("transaction confirmed!");
     }
 }
 
@@ -233,7 +233,7 @@ export default {
     template: transferTemplate,
     // eslint-disable-next-line
     validate: async (_runtime: IAgentRuntime) => {
-        //console.log("Validating TON transfer from user:", message.userId);
+        //elizaLogger.log("Validating TON transfer from user:", message.userId);
         return true;
     },
     examples: [

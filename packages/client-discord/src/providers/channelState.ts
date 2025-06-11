@@ -31,7 +31,7 @@ const channelStateProvider: Provider = {
         const channel = discordMessage.channel;
 
         if (!channel) {
-            console.log("channel is null");
+            elizaLogger.log("channel is null");
             return "";
         }
 

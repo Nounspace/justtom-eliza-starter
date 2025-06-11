@@ -437,7 +437,7 @@ export class FarcasterInteractionManager {
                 thread: [castData], // Assuming the current cast is the only one in the thread
             };
 
-            // console.warn("handling cast:")
+            // elizaLogger.warn("handling cast:")
             // console.dir(cast)
             await this.handleCast(castDataObject); // Send the constructed object to handleCast
         }

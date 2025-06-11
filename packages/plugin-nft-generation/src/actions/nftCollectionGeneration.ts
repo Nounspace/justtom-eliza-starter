@@ -195,7 +195,7 @@ const nftCollectionGeneration: Action = {
 
             return [];
         } catch (e: any) {
-            console.log(e);
+            elizaLogger.log(e);
             throw e;
         }
     },

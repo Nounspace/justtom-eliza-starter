@@ -21,7 +21,7 @@ const GRANULAR_LOG = config.ANKR_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.debug(`[GetTokenPrice] ${message}`, data);
-        console.log(`[GetTokenPrice] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[GetTokenPrice] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -127,14 +127,14 @@ export const actionGetTokenPrice: Action = {
 
         try {
             const messageContent = message.content as GetTokenPriceContent;
-            console.log("Debug - Full message content:", {
+            elizaLogger.log("Debug - Full message content:", {
                 fullContent: message.content,
                 rawText: messageContent?.text,
                 type: message.content?.type,
                 allKeys: Object.keys(message.content || {})
             });
             const config = await validateankrConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasWallet: !!config.ANKR_WALLET,
                 env: config.ANKR_ENV
             });
@@ -147,7 +147,7 @@ export const actionGetTokenPrice: Action = {
             const endpoint = `https://rpc.ankr.com/multichain/${wallet}`;
 
             // Parse the prompt using our API content parser
-            console.log("Debug - Raw prompt:", {
+            elizaLogger.log("Debug - Raw prompt:", {
                 text: messageContent.text,
                 promptLength: messageContent.text?.length,
             });

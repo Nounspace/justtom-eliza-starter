@@ -404,7 +404,7 @@ export class MessageManager {
                 !message.mentions.has(this.client.user.id) &&
                 !hasInterest
             ) {
-                console.log("Ignoring muted room");
+                elizaLogger.log("Ignoring muted room");
                 // Ignore muted rooms unless explicitly mentioned
                 return;
             }

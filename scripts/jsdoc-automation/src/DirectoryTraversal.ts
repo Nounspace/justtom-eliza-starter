@@ -64,7 +64,7 @@ export class DirectoryTraversal {
      */
     public traverse(): string[] {
         if (this.prFiles.length > 0) {
-            console.log("Detected PR Files:", this.prFiles);
+            elizaLogger.log("Detected PR Files:", this.prFiles);
 
             // PR files are already relative to repo root, filter and convert to absolute paths
             const files = this.prFiles
@@ -86,10 +86,10 @@ export class DirectoryTraversal {
                 })
                 .map((file) => this.config.toAbsolutePath(file));
 
-            console.log("Files to process:", files);
+            elizaLogger.log("Files to process:", files);
             return files;
         } else {
-            console.log(
+            elizaLogger.log(
                 "No PR Files Detected, Scanning all files in root directory"
             );
             const typeScriptFiles: string[] = [];

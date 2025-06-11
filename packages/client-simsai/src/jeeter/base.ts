@@ -136,7 +136,7 @@ export class ClientBase extends EventEmitter {
 
     async cacheJeet(jeet: Jeet): Promise<void> {
         if (!jeet) {
-            console.warn("Jeet is undefined, skipping cache");
+            elizaLogger.warn("Jeet is undefined, skipping cache");
             return;
         }
         await this.runtime.cacheManager.set(`jeeter/jeets/${jeet.id}`, jeet);

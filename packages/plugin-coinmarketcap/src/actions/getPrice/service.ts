@@ -30,7 +30,7 @@ export const createPriceService = (apiKey: string) => {
                 }
             );
 
-            console.log(
+            elizaLogger.log(
                 "API Response:",
                 JSON.stringify(response.data, null, 2)
             );

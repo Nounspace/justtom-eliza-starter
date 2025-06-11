@@ -115,7 +115,7 @@ export class FullDocumentationGenerator {
 
     private formatFAQSection(faq: FAQ[]): string {
         if (!Array.isArray(faq)) {
-            console.warn('FAQ data is not an array, returning empty string');
+            elizaLogger.warn('FAQ data is not an array, returning empty string');
             return '';
         }
 
@@ -127,7 +127,7 @@ export class FullDocumentationGenerator {
 
     private formatTroubleshootingSection(troubleshooting: Troubleshooting): string {
         if (!troubleshooting?.commonIssues || !troubleshooting?.debuggingTips) {
-            console.warn('Troubleshooting data is missing required fields, returning empty string');
+            elizaLogger.warn('Troubleshooting data is missing required fields, returning empty string');
             return '';
         }
         const issues = troubleshooting.commonIssues
@@ -238,7 +238,7 @@ export class FullDocumentationGenerator {
     private async generateBasicInstallPrompt(
         packageJson: any
     ): Promise<string> {
-        console.log(
+        elizaLogger.log(
             "AIService::generateInstallation threw an error, generating basic install prompt"
         );
         const prompt = `Generate basic installation instructions for this ElizaOS plugin:
@@ -403,7 +403,7 @@ export class FullDocumentationGenerator {
                 const bounds = this.typeScriptParser.findActionBounds(ast);
 
                 if (!bounds) {
-                    console.warn(`No action bounds found in ${filePath}`);
+                    elizaLogger.warn(`No action bounds found in ${filePath}`);
                     continue;
                 }
 
@@ -420,7 +420,7 @@ export class FullDocumentationGenerator {
                     documentation += actionDocumentation + "\n\n";
                 }
             } catch (error) {
-                console.warn(
+                elizaLogger.warn(
                     `Warning: Could not process action file ${filePath}:`,
                     error
                 );
@@ -461,7 +461,7 @@ export class FullDocumentationGenerator {
                     documentation += providerDocumentation + "\n\n";
                 }
             } catch (error) {
-                console.warn(
+                elizaLogger.warn(
                     `Warning: Could not read provider file ${filePath}:`,
                     error
                 );
@@ -503,7 +503,7 @@ export class FullDocumentationGenerator {
                     documentation += `### ${relativePath}\n\n${evaluatorDocumentation}\n\n`;
                 }
             } catch (error) {
-                console.warn(
+                elizaLogger.warn(
                     `Warning: Could not read evaluator file ${filePath}:`,
                     error
                 );

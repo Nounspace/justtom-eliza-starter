@@ -28,14 +28,14 @@ export const getWalletPortfolio: Action = {
         return addressRegex.test(message.content.text);
     },
     handler: async (runtime: IAgentRuntime, message: Memory, _state?: State, _options?: { [key: string]: unknown; }, callback?: HandlerCallback): Promise<boolean> => {
-        console.log("inside handler of zerion");
+        elizaLogger.log("inside handler of zerion");
         const response = await zerionProvider.get(runtime, message);
-        console.log("ZERION portfolioAPI response: ", response);
+        elizaLogger.log("ZERION portfolioAPI response: ", response);
         if (!response.success || !response.data) {
             return false;
         }
 
-        console.log("ZERION API response: ", response);
+        elizaLogger.log("ZERION API response: ", response);
 
         // Add type guard to ensure we have PortfolioData
         if (!isPortfolioData(response.data)) {
@@ -46,7 +46,7 @@ export const getWalletPortfolio: Action = {
         const formattedResponse = formatPortfolioData(response.data);
 
         if (callback) {
-            console.log("sending response to callback");
+            elizaLogger.log("sending response to callback");
             callback({
                 text: formattedResponse,
                 content: {

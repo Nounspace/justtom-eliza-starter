@@ -44,7 +44,7 @@ export const executeSwapAction = {
         _options: { [key: string]: unknown } = {},
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        console.log("Starting ROUTER_NITRO_SWAP handler...");
+        elizaLogger.log("Starting ROUTER_NITRO_SWAP handler...");
         elizaLogger.log("Starting ROUTER_NITRO_SWAP handler...");
 
         // Initialize or update state
@@ -65,7 +65,7 @@ export const executeSwapAction = {
             context: swapContext,
             modelClass: ModelClass.LARGE,
         });
-        console.log("content: ", content);
+        elizaLogger.log("content: ", content);
         elizaLogger.log("swap content: ", JSON.stringify(content));
 
         if (content.toAddress === null || !(typeof content.toAddress === "string" && content.toAddress.startsWith("0x") && content.toAddress.length === 42)) {
@@ -99,7 +99,7 @@ export const executeSwapAction = {
                 
                 let amountIn = BigInt(Math.floor(Number(amount) * 10 ** fromTokenConfig.decimals));
 
-                console.log(`Amount to swap: ${amountIn}`);
+                elizaLogger.log(`Amount to swap: ${amountIn}`);
 
                 if (fromTokenConfig.address.toLowerCase() === "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") {
                     const userBalance = await checkNativeTokenBalance(wallet, fromTokenConfig.decimals);
@@ -126,7 +126,7 @@ export const executeSwapAction = {
                     toTokenChainId: Number(swapDetails.toChainId),
                     partnerId: 127,
                 };
-                // console.log("Pathfinder Params: ", pathfinderParams);
+                // elizaLogger.log("Pathfinder Params: ", pathfinderParams);
        const pathfinderResponse = await fetchPathfinderQuote(pathfinderParams) as PathfinderResponse;
                 if (pathfinderResponse) {
                     let destinationData = pathfinderResponse.destination;
@@ -163,7 +163,7 @@ export const executeSwapAction = {
                         }
                     }
                     catch (error) {
-                        console.log(`Transaction failed with error: ${error}`)
+                        elizaLogger.log(`Transaction failed with error: ${error}`)
                     }
                 }
             }

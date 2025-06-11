@@ -38,7 +38,7 @@ export const litProvider: Provider = {
   ) => {
     // Guard against re-execution
     if (isExecutionInProgress) {
-      console.log("Execution already in progress, skipping...");
+      elizaLogger.log("Execution already in progress, skipping...");
       return;
     }
 
@@ -76,7 +76,7 @@ export const litProvider: Provider = {
         // Verify the saved config is still valid
         const isValid = await configManager.verifyConfig(savedConfig);
         if (!isValid) {
-          console.log("Saved config is invalid, will create new PKP");
+          elizaLogger.log("Saved config is invalid, will create new PKP");
           state!.lit.pkp = undefined;
           state!.lit.evmWallet = undefined;
         }
@@ -84,7 +84,7 @@ export const litProvider: Provider = {
 
       // Strengthen the check for existing initialization
       if (state?.lit?.nodeClient && state?.lit?.contractClient) {
-        console.log("📝 Reusing existing Lit environment", {
+        elizaLogger.log("📝 Reusing existing Lit environment", {
           network: state.lit.network,
           pkpAddress: state?.lit?.pkp?.ethAddress,
         });
@@ -103,11 +103,11 @@ export const litProvider: Provider = {
 
       if (!state?.lit?.nodeClient) {
         await litNodeClient.connect();
-        console.log("✅ Connected to the Lit network");
+        elizaLogger.log("✅ Connected to the Lit network");
       }
 
       const thisExecution = ++executionCount;
-      console.log(`Starting execution #${thisExecution}`, {
+      elizaLogger.log(`Starting execution #${thisExecution}`, {
         hasExistingClient: !!state?.lit?.nodeClient,
         messageId: _message?.id, // If messages have IDs
       });
@@ -142,14 +142,14 @@ export const litProvider: Provider = {
         signer: evmWallet,
       });
       await contractClient.connect();
-      console.log("✅ Connected LitContracts client to network");
+      elizaLogger.log("✅ Connected LitContracts client to network");
 
       let pkpPublicKey =
         runtime.getSetting("LIT_PKP_PUBLIC_KEY") || state?.lit?.pkp?.publicKey;
 
       // If no PKP exists, mint a new one
       if (!pkpPublicKey) {
-        console.log("🔄 No PKP found. Creating new dual wallet...");
+        elizaLogger.log("🔄 No PKP found. Creating new dual wallet...");
 
         if (!state!.lit) {
           state!.lit = {} as LitState;
@@ -166,13 +166,13 @@ export const litProvider: Provider = {
 
         // Check the balance of the funding wallet
         const balance = await provider.getBalance(fundingWallet.address);
-        console.log(
+        elizaLogger.log(
           `Funding wallet balance: ${ethers.utils.formatEther(balance)} tstLPX`
         );
 
         // Fund the EVM wallet first
         try {
-          console.log("Funding new EVM wallet with gas...");
+          elizaLogger.log("Funding new EVM wallet with gas...");
 
           const tx = await fundingWallet.sendTransaction({
             to: evmWallet.address,
@@ -180,9 +180,9 @@ export const litProvider: Provider = {
             gasLimit: 21000,
           });
 
-          console.log(`Funding transaction sent. Hash: ${tx.hash}`);
+          elizaLogger.log(`Funding transaction sent. Hash: ${tx.hash}`);
           const receipt = await tx.wait();
-          console.log("💰 EVM Wallet funded successfully", {
+          elizaLogger.log("💰 EVM Wallet funded successfully", {
             gasUsed: receipt.gasUsed.toString(),
             fundedAmount: "0.006",
           });
@@ -190,7 +190,7 @@ export const litProvider: Provider = {
           const mintResult =
             await contractClient.pkpNftContractUtils.write.mint();
 
-          console.log("✅ Dual PKP minted:", {
+          elizaLogger.log("✅ Dual PKP minted:", {
             tokenId: mintResult.pkp.tokenId,
             publicKey: mintResult.pkp.publicKey,
             ethAddress: mintResult.pkp.ethAddress,
@@ -237,7 +237,7 @@ export const litProvider: Provider = {
           signer: fundingWallet,
         });
         await capacityCreditClient.connect();
-        console.log("🔄 Minting Capacity Credit NFT...");
+        elizaLogger.log("🔄 Minting Capacity Credit NFT...");
         const capacityCreditInfo =
           await capacityCreditClient.mintCapacityCreditsNFT({
             requestsPerKilosecond: 80,
@@ -248,7 +248,7 @@ export const litProvider: Provider = {
         state!.lit!.capacityCredit = {
           tokenId: capacityCreditInfo.capacityTokenIdStr, // This is your resource ID
         };
-        console.log(
+        elizaLogger.log(
           `✅ Minted Capacity Credit with ID: ${capacityCreditInfo.capacityTokenIdStr}`
         );
 

@@ -13,7 +13,7 @@ const GRANULAR_LOG = config.HYPERBOLIC_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.info(`[RentCompute] ${message}`, data);
-        console.log(`[RentCompute] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[RentCompute] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -122,7 +122,7 @@ export const actionRentCompute: Action = {
 
         try {
             const config = await validateHyperbolicConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasApiKey: !!config.HYPERBOLIC_API_KEY,
                 env: config.HYPERBOLIC_ENV
             });

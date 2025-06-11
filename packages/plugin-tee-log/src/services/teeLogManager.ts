@@ -43,7 +43,7 @@ export class TeeLogManager {
             attestation,
         };
 
-        console.log("registerAgent new_agent", new_agent);
+        elizaLogger.log("registerAgent new_agent", new_agent);
 
         return this.teeLogDAO.addAgent(new_agent);
     }

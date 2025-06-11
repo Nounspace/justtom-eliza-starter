@@ -126,7 +126,7 @@ export default {
                 content.tokenAmount
             );
 
-            console.log("GibWork task creation result:", gibworkResult);
+            elizaLogger.log("GibWork task creation result:", gibworkResult);
 
             if (callback) {
                 callback({

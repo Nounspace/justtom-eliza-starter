@@ -16,11 +16,11 @@ declare global {
 
 (async () => {
   try {
-    console.log(`Using Lit Network: ${LIT_NETWORK}`);
-    console.log(
+    elizaLogger.log(`Using Lit Network: ${LIT_NETWORK}`);
+    elizaLogger.log(
       `Using PKP Tool Registry Address: ${PKP_TOOL_REGISTRY_ADDRESS}`
     );
-    console.log(
+    elizaLogger.log(
       `Using Pubkey Router Address: ${
         NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG]
           .pubkeyRouterAddress
@@ -47,7 +47,7 @@ declare global {
       toolPolicy.policyIpfsCid !== '0x' &&
       toolPolicy.policyIpfsCid !== ''
     ) {
-      console.log(`Executing policy ${toolPolicy.policyIpfsCid}`);
+      elizaLogger.log(`Executing policy ${toolPolicy.policyIpfsCid}`);
 
       await Lit.Actions.call({
         ipfsId: toolPolicy.policyIpfsCid,
@@ -62,7 +62,7 @@ declare global {
         },
       });
     } else {
-      console.log(
+      elizaLogger.log(
         `No policy found for tool ${toolIpfsCid} on PKP ${pkp.tokenId} for delegatee ${delegateeAddress}`
       );
     }

@@ -29,7 +29,7 @@ export async function deployContract({
     bytecode,
     args,
 }) {
-    console.log("Deploying contract...");
+    elizaLogger.log("Deploying contract...");
 
     const txHash = await walletClient.deployContract({
         abi,
@@ -37,11 +37,11 @@ export async function deployContract({
         args,
     });
 
-    console.log(`Deployment transaction hash: ${txHash}`);
+    elizaLogger.log(`Deployment transaction hash: ${txHash}`);
     const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash,
     });
-    console.log(`Contract deployed at address: ${receipt.contractAddress}`);
+    elizaLogger.log(`Contract deployed at address: ${receipt.contractAddress}`);
     return receipt.contractAddress;
 }
 
@@ -61,7 +61,7 @@ export async function mintNFT({
     publicClient: any;
 
 }) {
-    console.log("Minting NFT...");
+    elizaLogger.log("Minting NFT...");
     const txHash = await walletClient.writeContract({
         address: contractAddress,
         abi: abi,
@@ -69,11 +69,11 @@ export async function mintNFT({
         args: [recipient],
     });
 
-    console.log(`Mint transaction hash: ${txHash}`);
+    elizaLogger.log(`Mint transaction hash: ${txHash}`);
     const receipt = await publicClient.waitForTransactionReceipt({
         hash: txHash,
     });
-    console.log("Mint successful!");
+    elizaLogger.log("Mint successful!");
     return receipt;
 }
 

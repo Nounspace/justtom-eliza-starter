@@ -444,7 +444,7 @@ export class FarcasterHubClient {
 
                 stream.on('end', async () => {
                     elizaLogger.error(`Farcaster: Clanker: Hub Stream ended`);
-                    // console.log(`Stream object details on END:`);
+                    // elizaLogger.log(`Stream object details on END:`);
                     // this.logRelevantStreamDetails(stream);
                     // this.isConnected = false;
                 })
@@ -453,7 +453,7 @@ export class FarcasterHubClient {
                     const closeReason = this.determineCloseReason(stream);
                     elizaLogger.error(`Farcaster: Clanker: Hub Stream closed: ${closeReason}`);
 
-                    // console.log(`Stream object details on CLOSE:`);
+                    // elizaLogger.log(`Stream object details on CLOSE:`);
                     // this.logRelevantStreamDetails(stream);
                     if (!this.isStopped) {
                         this.cleanupStream(); // <--- ensure listeners are off before reconnecting
@@ -623,7 +623,7 @@ export class FarcasterHubClient {
                         break
                     }
                     default: {
-                        // console.log('UNHANDLED PRUNE_MESSAGE EVENT ' + msg.data);
+                        // elizaLogger.log('UNHANDLED PRUNE_MESSAGE EVENT ' + msg.data);
                         elizaLogger.error('UNHANDLED PRUNE_MESSAGE EVENT ' + msg.data);
                     }
                 }
@@ -725,7 +725,7 @@ export class FarcasterHubClient {
             }).then(response => {
                 elizaLogger.info("Farcaster: Clanker: Reaction published successfully");
                 // this.farcasterLog.info("Reaction published successfully ", "INFO")
-                // console.log('Publish Reaction Operation Status:', response); // Outputs the status of the reaction post
+                // elizaLogger.log('Publish Reaction Operation Status:', response); // Outputs the status of the reaction post
             }).catch(error => {
                 if (isApiErrorResponse(error)) {
                     elizaLogger.error("Farcaster: Clanker: Failed to publish reaction");
@@ -787,7 +787,7 @@ export class FarcasterHubClient {
                 // const maxHashes = 1000;
 
                 // if (this.seenHashes.has(hash)) {
-                //     console.warn(`[DUPLICATE] Duplicate hash detected in batch: ${hash}`);
+                //     elizaLogger.warn(`[DUPLICATE] Duplicate hash detected in batch: ${hash}`);
                 // } else {
                 //     this.seenHashes.add(hash);
 
@@ -950,7 +950,7 @@ export class FarcasterHubClient {
     // private async handleMentioned(message: Message, foundMention: number): Promise<void> {
     //     // const tName = await this.handleTargetFid(foundMention);  // target Name
     //     const castObj = await this.createCastObj(message);
-    //     // console.log(tName + " was mentioned by " + castObj.fName);
+    //     // elizaLogger.log(tName + " was mentioned by " + castObj.fName);
     //     // console.dir(castObj);
     //     this.eventBus.publish("WAS_MENTIONED", castObj);
     // }
@@ -977,7 +977,7 @@ export class FarcasterHubClient {
         }
 
         if (message.data && message.data.castAddBody && message.data.castAddBody.parentUrl) {
-            // console.warn("New Message at Channel: " + message.data.castAddBody.parentUrl);
+            // elizaLogger.warn("New Message at Channel: " + message.data.castAddBody.parentUrl);
             const cast = await this.createCastObj(message);
             if (!cast) return
 
@@ -1441,7 +1441,7 @@ export class FarcasterHubClient {
             elizaLogger.error(error);
         }
 
-        // console.log(imageUrls);
+        // elizaLogger.log(imageUrls);
 
         // Add the conversation details
         const conversationDetail = `@${conversationUsername}: ${conversationText}`;

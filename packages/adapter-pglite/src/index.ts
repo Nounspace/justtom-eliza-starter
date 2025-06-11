@@ -1073,7 +1073,7 @@ export class PGLiteDatabaseAdapter
                 );
                 return true;
             } catch (error) {
-                console.log("Error adding participant", error);
+                elizaLogger.log("Error adding participant", error);
                 return false;
             }
         }, "addParticpant");
@@ -1088,7 +1088,7 @@ export class PGLiteDatabaseAdapter
                 );
                 return true;
             } catch (error) {
-                console.log("Error removing participant", error);
+                elizaLogger.log("Error removing participant", error);
                 return false;
             }
         }, "removeParticipant");

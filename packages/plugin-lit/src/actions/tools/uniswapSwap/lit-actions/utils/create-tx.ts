@@ -19,7 +19,7 @@ export const createTransaction = async (
     amountOutMin: any;
   }
 ) => {
-  console.log(`Creating transaction...`);
+  elizaLogger.log(`Creating transaction...`);
 
   let txData;
   if (isApproval) {

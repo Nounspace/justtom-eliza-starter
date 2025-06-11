@@ -48,7 +48,7 @@ class ButtplugDeviceWrapper implements TestDevice {
     async vibrate(speed: number) {
         try {
             await this.device.vibrate(speed);
-            console.log(
+            elizaLogger.log(
                 `[Simulation] Vibrating ${this.name} at ${speed * 100}%`
             );
         } catch (err) {
@@ -60,7 +60,7 @@ class ButtplugDeviceWrapper implements TestDevice {
     async stop() {
         try {
             await this.device.stop();
-            console.log(`[Simulation] Stopping ${this.name}`);
+            elizaLogger.log(`[Simulation] Stopping ${this.name}`);
         } catch (err) {
             console.error("Stop error:", err);
             throw err;
@@ -96,7 +96,7 @@ class ButtplugDeviceWrapper implements TestDevice {
     async getBatteryLevel(): Promise<number> {
         try {
             const battery = await this.device.battery();
-            console.log(
+            elizaLogger.log(
                 `[Simulation] Battery level for ${this.name}: ${battery * 100}%`
             );
             return battery;
@@ -148,7 +148,7 @@ async function getTestDevice(): Promise<TestDevice> {
     try {
         await client.connect(connector);
         client.on("deviceremoved", () => {
-            console.log("Device disconnected");
+            elizaLogger.log("Device disconnected");
         });
 
         await client.startScanning();
@@ -156,15 +156,15 @@ async function getTestDevice(): Promise<TestDevice> {
 
         const devices = client.devices;
         if (devices.length > 0) {
-            console.log("Using real Buttplug device:", devices[0].name);
+            elizaLogger.log("Using real Buttplug device:", devices[0].name);
             return new ButtplugDeviceWrapper(devices[0], client);
         }
 
         await client.disconnect();
-        console.log("No real devices found, falling back to simulator");
+        elizaLogger.log("No real devices found, falling back to simulator");
         return new LovenseNora(WEBSOCKET_PORT);
     } catch (err) {
-        console.log(
+        elizaLogger.log(
             "Couldn't connect to Buttplug server, attempting to start Intiface Engine..."
         );
         try {
@@ -179,85 +179,85 @@ async function getTestDevice(): Promise<TestDevice> {
 
                 const devices = client.devices;
                 if (devices.length > 0) {
-                    console.log("Using real Buttplug device:", devices[0].name);
+                    elizaLogger.log("Using real Buttplug device:", devices[0].name);
                     return new ButtplugDeviceWrapper(devices[0], client);
                 }
             }
             await client.disconnect();
         } catch (startupErr) {
-            console.log("Failed to start Intiface Engine:", startupErr);
+            elizaLogger.log("Failed to start Intiface Engine:", startupErr);
             try {
                 await client.disconnect();
             } catch {} // Ignore disconnect errors
         }
-        console.log("Falling back to simulator");
+        elizaLogger.log("Falling back to simulator");
         return new LovenseNora(WEBSOCKET_PORT);
     }
 }
 
 async function runTestSequence(device: TestDevice) {
-    console.log("Starting test sequence with:", device.name);
+    elizaLogger.log("Starting test sequence with:", device.name);
     await new Promise((r) => setTimeout(r, 1000));
 
     // Check battery level if supported
     if (device.getBatteryLevel) {
-        console.log("\n=== Testing Battery Level ===");
+        elizaLogger.log("\n=== Testing Battery Level ===");
         try {
             const batteryLevel = await device.getBatteryLevel();
-            console.log(`Battery level: ${batteryLevel * 100}%`);
+            elizaLogger.log(`Battery level: ${batteryLevel * 100}%`);
         } catch (err) {
-            console.log("Battery level check not supported or failed");
+            elizaLogger.log("Battery level check not supported or failed");
         }
         await new Promise((r) => setTimeout(r, 1000));
     }
 
     // Test vibration
-    console.log("\n=== Testing Vibration ===");
-    console.log("Vibrating at 25%");
+    elizaLogger.log("\n=== Testing Vibration ===");
+    elizaLogger.log("Vibrating at 25%");
     await device.vibrate(0.25);
     await new Promise((r) => setTimeout(r, 2000));
 
-    console.log("Vibrating at 75%");
+    elizaLogger.log("Vibrating at 75%");
     await device.vibrate(0.75);
     await new Promise((r) => setTimeout(r, 2000));
 
-    console.log("Stopping vibration");
+    elizaLogger.log("Stopping vibration");
     await device.stop();
     await new Promise((r) => setTimeout(r, 1000));
 
     // Test rotation if available
     if ("rotate" in device) {
-        console.log("\n=== Testing Rotation ===");
-        console.log("Rotating at 30%");
+        elizaLogger.log("\n=== Testing Rotation ===");
+        elizaLogger.log("Rotating at 30%");
         await (device as LovenseNora).rotate(0.3);
         await new Promise((r) => setTimeout(r, 2000));
 
-        console.log("Rotating at 90%");
+        elizaLogger.log("Rotating at 90%");
         await (device as LovenseNora).rotate(0.9);
         await new Promise((r) => setTimeout(r, 2000));
 
-        console.log("Stopping rotation");
+        elizaLogger.log("Stopping rotation");
         await device.stop();
         await new Promise((r) => setTimeout(r, 1000));
     }
 
     // Test combined movements if available
     if ("rotate" in device) {
-        console.log("\n=== Testing Combined Movements ===");
-        console.log("Vibrating at 50% and rotating at 60%");
+        elizaLogger.log("\n=== Testing Combined Movements ===");
+        elizaLogger.log("Vibrating at 50% and rotating at 60%");
         await device.vibrate(0.5);
         await (device as LovenseNora).rotate(0.6);
         await new Promise((r) => setTimeout(r, 3000));
 
-        console.log("Stopping all motors");
+        elizaLogger.log("Stopping all motors");
         await device.stop();
         await new Promise((r) => setTimeout(r, 1000));
     }
 
     // Test rapid changes
-    console.log("\n=== Testing Rapid Changes ===");
+    elizaLogger.log("\n=== Testing Rapid Changes ===");
     for (let i = 0; i < 5; i++) {
-        console.log(`Quick pulse ${i + 1}/5`);
+        elizaLogger.log(`Quick pulse ${i + 1}/5`);
         await device.vibrate(0.8);
         await new Promise((r) => setTimeout(r, 200));
         await device.stop();
@@ -266,18 +266,18 @@ async function runTestSequence(device: TestDevice) {
 
     // Check battery level again after usage
     if (device.getBatteryLevel) {
-        console.log("\n=== Checking Battery After Usage ===");
+        elizaLogger.log("\n=== Checking Battery After Usage ===");
         try {
             const batteryLevel = await device.getBatteryLevel();
-            console.log(`Battery level after tests: ${batteryLevel * 100}%`);
+            elizaLogger.log(`Battery level after tests: ${batteryLevel * 100}%`);
         } catch (err) {
-            console.log("Battery level check not supported or failed");
+            elizaLogger.log("Battery level check not supported or failed");
         }
         await new Promise((r) => setTimeout(r, 1000));
     }
 
     // Final cleanup
-    console.log("\n=== Test Sequence Complete ===");
+    elizaLogger.log("\n=== Test Sequence Complete ===");
     await device.stop();
     await new Promise((r) => setTimeout(r, 500));
 }

@@ -99,7 +99,7 @@ export class ClientBase extends EventEmitter {
 
     async cacheTweet(tweet: Tweet): Promise<void> {
         if (!tweet) {
-            console.warn("Tweet is undefined, skipping cache");
+            elizaLogger.warn("Tweet is undefined, skipping cache");
             return;
         }
 
@@ -467,7 +467,7 @@ export class ClientBase extends EventEmitter {
                         )
                 );
 
-                console.log({
+                elizaLogger.log({
                     processingTweets: tweetsToSave
                         .map((tweet) => tweet.id)
                         .join(","),

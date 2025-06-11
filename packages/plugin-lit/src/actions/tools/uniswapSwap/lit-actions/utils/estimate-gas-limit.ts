@@ -19,7 +19,7 @@ export const estimateGasLimit = async (
     amountOutMin: any;
   }
 ) => {
-  console.log(`Estimating gas limit...`);
+  elizaLogger.log(`Estimating gas limit...`);
 
   try {
     let estimatedGas;
@@ -58,13 +58,13 @@ export const estimateGasLimit = async (
 
     // Add 20% buffer
     const gasLimit = estimatedGas.mul(120).div(100);
-    console.log(`Estimated gas limit: ${gasLimit.toString()}`);
+    elizaLogger.log(`Estimated gas limit: ${gasLimit.toString()}`);
     return gasLimit;
   } catch (error) {
     console.error('Error estimating gas:', error);
     // Use fallback gas limits
     const fallbackGas = isApproval ? '300000' : '500000';
-    console.log(`Using fallback gas limit: ${fallbackGas}`);
+    elizaLogger.log(`Using fallback gas limit: ${fallbackGas}`);
     return ethers.BigNumber.from(fallbackGas);
   }
 };

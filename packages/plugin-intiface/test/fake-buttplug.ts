@@ -27,14 +27,14 @@ abstract class SimulatedDevice extends EventEmitter {
     private connect(): void {
         if (this.ws || !this.shouldReconnect) return;
 
-        console.log(
+        elizaLogger.log(
             `[fake-buttplug] Connecting ${this.deviceType} to port ${this.port}`
         );
         this.ws = new WebSocket(`ws://127.0.0.1:${this.port}`);
 
         this.ws.on("open", () => {
             this.connected = true;
-            console.log(`[fake-buttplug] ${this.deviceType} connected`);
+            elizaLogger.log(`[fake-buttplug] ${this.deviceType} connected`);
             const handshake: DeviceHandshake = {
                 identifier: this.getIdentifier(),
                 address: this.address,
@@ -45,7 +45,7 @@ abstract class SimulatedDevice extends EventEmitter {
 
         this.ws.on("message", (data: string) => {
             const message = data.toString();
-            console.log(
+            elizaLogger.log(
                 `[fake-buttplug] ${this.deviceType} received:`,
                 message
             );
@@ -54,7 +54,7 @@ abstract class SimulatedDevice extends EventEmitter {
 
         this.ws.on("error", (error) => {
             if (this.shouldReconnect) {
-                console.log(
+                elizaLogger.log(
                     `[fake-buttplug] ${this.deviceType} error:`,
                     error.message
                 );
@@ -64,7 +64,7 @@ abstract class SimulatedDevice extends EventEmitter {
 
         this.ws.on("close", () => {
             if (this.shouldReconnect) {
-                console.log(`[fake-buttplug] ${this.deviceType} disconnected`);
+                elizaLogger.log(`[fake-buttplug] ${this.deviceType} disconnected`);
                 this.connected = false;
                 this.reconnect();
             }
@@ -111,7 +111,7 @@ export class LovenseNora extends SimulatedDevice {
     protected handleMessage(message: string): void {
         if (message.startsWith("DeviceType;")) {
             this.ws?.send(`A:${this.address}:10`);
-            console.log(
+            elizaLogger.log(
                 `[fake-buttplug] Sent device type response: A:${this.address}:10`
             );
         } else if (message.startsWith("Vibrate:")) {
@@ -125,7 +125,7 @@ export class LovenseNora extends SimulatedDevice {
                     return;
                 }
                 this.vibrateCmdLog[Date.now()] = message;
-                console.log(
+                elizaLogger.log(
                     `[fake-buttplug] Vibrate command logged: ${message}`
                 );
             }
@@ -140,7 +140,7 @@ export class LovenseNora extends SimulatedDevice {
                     return;
                 }
                 this.rotateCmdLog[Date.now()] = message;
-                console.log(
+                elizaLogger.log(
                     `[fake-buttplug] Rotate command logged: ${message}`
                 );
             }
@@ -148,7 +148,7 @@ export class LovenseNora extends SimulatedDevice {
             this.batteryQueryReceived = true;
             const response = `${Math.floor(this.batteryLevel * 100)};`;
             this.ws?.send(response);
-            console.log(
+            elizaLogger.log(
                 `[fake-buttplug] Battery query received, responding with: ${response}`
             );
         }
@@ -160,7 +160,7 @@ export class LovenseNora extends SimulatedDevice {
         }
         const command = `Vibrate:${Math.floor(speed * 100)};`;
         this.ws.send(command);
-        console.log(`[fake-buttplug] Sending vibrate command: ${command}`);
+        elizaLogger.log(`[fake-buttplug] Sending vibrate command: ${command}`);
     }
 
     async rotate(speed: number): Promise<void> {
@@ -169,14 +169,14 @@ export class LovenseNora extends SimulatedDevice {
         }
         const command = `Rotate:${Math.floor(speed * 100)};`;
         this.ws.send(command);
-        console.log(`[fake-buttplug] Sending rotate command: ${command}`);
+        elizaLogger.log(`[fake-buttplug] Sending rotate command: ${command}`);
     }
 
     async stop(): Promise<void> {
         if (this.connected && this.ws) {
             this.ws.send("Vibrate:0;");
             this.ws.send("Rotate:0;");
-            console.log("[fake-buttplug] Stopping all motors");
+            elizaLogger.log("[fake-buttplug] Stopping all motors");
         }
     }
 
@@ -191,11 +191,11 @@ export class LovenseNora extends SimulatedDevice {
 
 // Start simulator if run directly
 if (import.meta.url === new URL(import.meta.url).href) {
-    console.log("[fake-buttplug] Starting simulator service");
+    elizaLogger.log("[fake-buttplug] Starting simulator service");
     const simulator = new LovenseNora();
 
     process.on("SIGINT", async () => {
-        console.log("[fake-buttplug] Shutting down simulator");
+        elizaLogger.log("[fake-buttplug] Shutting down simulator");
         await simulator.disconnect();
         process.exit(0);
     });

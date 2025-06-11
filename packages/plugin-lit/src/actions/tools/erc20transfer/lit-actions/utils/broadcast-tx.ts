@@ -4,16 +4,16 @@
  * @returns {Promise<string>} The transaction hash.
  */
 export const broadcastTransaction = async (provider: any, signedTx: string) => {
-  console.log('Broadcasting transfer...');
+  elizaLogger.log('Broadcasting transfer...');
   return await Lit.Actions.runOnce(
     { waitForResponse: true, name: 'txnSender' },
     async () => {
       try {
         const tx = await provider.sendTransaction(signedTx);
-        console.log('Transaction sent:', tx.hash);
+        elizaLogger.log('Transaction sent:', tx.hash);
 
         const receipt = await tx.wait(1);
-        console.log('Transaction mined:', receipt.transactionHash);
+        elizaLogger.log('Transaction mined:', receipt.transactionHash);
 
         return receipt.transactionHash;
       } catch (err: any) {

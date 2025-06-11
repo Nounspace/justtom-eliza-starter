@@ -68,7 +68,7 @@ function getActionHandler(
                 maxSteps: 10,
                 // Uncomment to see the log each tool call when debugging
                 // onStepFinish: (step) => {
-                //     console.log(step.toolResults);
+                //     elizaLogger.log(step.toolResults);
                 // },
                 modelClass: ModelClass.LARGE,
             });

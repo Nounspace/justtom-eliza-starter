@@ -90,7 +90,7 @@ export const sendEth: Action = {
     _options: Record<string, unknown>,
     callback?: HandlerCallback
   ): Promise<boolean> => {
-    console.log("SEND_ETH handler started");
+    elizaLogger.log("SEND_ETH handler started");
     try {
       // Initialize or update state
       let currentState: State;
@@ -126,13 +126,13 @@ export const sendEth: Action = {
       }
 
       if (!sendEthContent.amount) {
-        console.log("Amount is not provided, skipping transfer");
+        elizaLogger.log("Amount is not provided, skipping transfer");
         callback?.({ text: "The amount must be provided" });
         return false;
       }
 
       if (!sendEthContent.to) {
-        console.log("Destination address is not provided, skipping transfer");
+        elizaLogger.log("Destination address is not provided, skipping transfer");
         callback?.({ text: "The destination address must be provided" });
         return false;
       }
@@ -199,7 +199,7 @@ export const sendEth: Action = {
         });
 
       // Get session signatures with capacity delegation
-      console.log("Generating session signatures with capacity delegation...");
+      elizaLogger.log("Generating session signatures with capacity delegation...");
       const sessionSigs = await litState.nodeClient.getSessionSigs({
         pkpPublicKey: litState.pkp.publicKey,
         chain: "sepolia",
@@ -238,9 +238,9 @@ export const sendEth: Action = {
           });
         },
       });
-      console.log("Session signatures generated");
+      elizaLogger.log("Session signatures generated");
 
-      console.log("Signing transaction...");
+      elizaLogger.log("Signing transaction...");
       const sig = await litState.nodeClient.pkpSign({
         pubKey: litState.pkp.publicKey,
         toSign: ethers.utils.arrayify(
@@ -283,7 +283,7 @@ export const sendEth: Action = {
       const signedTx = ethers.utils.serializeTransaction(unsignedTx, signature);
 
       // Send transaction
-      console.log("Sending transaction...");
+      elizaLogger.log("Sending transaction...");
       const sentTx = await provider.sendTransaction(signedTx);
       await sentTx.wait();
 

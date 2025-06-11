@@ -49,7 +49,7 @@ const getMediaAttachmentId = async (
             context,
             modelClass: ModelClass.SMALL,
         });
-        console.log("response", response);
+        elizaLogger.log("response", response);
 
         const parsedResponse = parseJSONObjectFromText(response) as {
             attachmentId: string;
@@ -181,7 +181,7 @@ ${mediaTranscript.trim()}
                 [transcriptFilename]
             );
         } else {
-            console.warn(
+            elizaLogger.warn(
                 "Empty response from transcribe media action, skipping"
             );
         }

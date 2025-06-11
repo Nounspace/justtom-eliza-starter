@@ -95,7 +95,7 @@ export const currentNewsAction: Action = {
         });
 
         // For debugging
-        console.log("Search term extracted:", searchTerm);
+        elizaLogger.log("Search term extracted:", searchTerm);
 
         const currentNews = await getCurrentNews(searchTerm);
         const responseText = ` *protocol droid noises*\n\n${currentNews}`;

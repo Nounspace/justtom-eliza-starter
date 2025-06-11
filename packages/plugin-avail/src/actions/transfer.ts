@@ -114,7 +114,7 @@ export default {
 
         // Validate transfer content
         if (!isTransferContent(content)) {
-            console.log(content);
+            elizaLogger.log(content);
             console.error("Invalid content for TRANSFER_TOKEN action.");
             if (callback) {
                 callback({

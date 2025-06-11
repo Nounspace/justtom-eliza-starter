@@ -91,7 +91,7 @@ export const sendSol: Action = {
         _options: Record<string, unknown>,
         callback?: HandlerCallback
     ): Promise<boolean> => {
-        console.log("SEND_SOL handler started");
+        elizaLogger.log("SEND_SOL handler started");
         try {
             // Initialize or update state
             let currentState: State;
@@ -129,13 +129,13 @@ export const sendSol: Action = {
             }
 
             if (!sendSolContent.amount) {
-                console.log("Amount is not provided, skipping transfer");
+                elizaLogger.log("Amount is not provided, skipping transfer");
                 callback?.({ text: "The amount must be provided" });
                 return false;
             }
 
             if (!sendSolContent.to) {
-                console.log("Destination address is not provided, skipping transfer");
+                elizaLogger.log("Destination address is not provided, skipping transfer");
                 callback?.({ text: "The destination address must be provided" });
                 return false;
             }
@@ -166,7 +166,7 @@ export const sendSol: Action = {
                 // Only create new wrapped key if one doesn't exist
                 const ethersSigner = litState.evmWallet;
 
-                console.log("Getting PKP Session Sigs for wrapped key creation...");
+                elizaLogger.log("Getting PKP Session Sigs for wrapped key creation...");
                 const pkpSessionSigs = await litState.nodeClient.getPkpSessionSigs({
                     pkpPublicKey: litState.pkp.publicKey,
                     authMethods: [
@@ -184,13 +184,13 @@ export const sendSol: Action = {
                     ],
                     expiration: new Date(Date.now() + 1000 * 60 * 10).toISOString(),
                 });
-                console.log("✅ Successfully created PKP Session Sigs:", !!pkpSessionSigs);
+                elizaLogger.log("✅ Successfully created PKP Session Sigs:", !!pkpSessionSigs);
 
                 // Decode and import the private key
                 const privateKeyBytes = Buffer.from(config.solanaWalletPrivateKey, 'base64');
                 const keypair = web3.Keypair.fromSecretKey(privateKeyBytes);
 
-                console.log("Importing Solana private key as wrapped key...");
+                elizaLogger.log("Importing Solana private key as wrapped key...");
                 const importResponse = await importPrivateKey({
                     pkpSessionSigs,
                     litNodeClient: litState.nodeClient,
@@ -199,7 +199,7 @@ export const sendSol: Action = {
                     keyType: "ed25519",
                     memo: "Solana PKP Wallet",
                 });
-                console.log("✅ Successfully imported Solana private key as wrapped key:", importResponse.id);
+                elizaLogger.log("✅ Successfully imported Solana private key as wrapped key:", importResponse.id);
 
                 // Save wrapped key ID to both state and config
                 litState.wrappedKeyId = importResponse.id;
@@ -216,16 +216,16 @@ export const sendSol: Action = {
             const fromPubkey = new web3.PublicKey(litState.pkp.solanaAddress);
             const toPubkey = new web3.PublicKey(sendSolContent.to);
 
-            console.log("Sending from wallet address:", fromPubkey.toString());
+            elizaLogger.log("Sending from wallet address:", fromPubkey.toString());
 
             // Check current balance
             const balance = await connection.getBalance(fromPubkey);
-            console.log("Current wallet balance:", balance / web3.LAMPORTS_PER_SOL, "SOL");
+            elizaLogger.log("Current wallet balance:", balance / web3.LAMPORTS_PER_SOL, "SOL");
 
             /* DEVNET ONLY: Uncomment this block when using devnet
             if (balance === 0) {
                 try {
-                    console.log("Wallet empty, requesting 2 SOL airdrop...");
+                    elizaLogger.log("Wallet empty, requesting 2 SOL airdrop...");
                     const airdropSignature = await connection.requestAirdrop(
                         fromPubkey,
                         2 * web3.LAMPORTS_PER_SOL
@@ -236,13 +236,13 @@ export const sendSol: Action = {
                         blockhash: latestBlockhash.blockhash,
                         lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
                     });
-                    console.log("Airdrop successful");
+                    elizaLogger.log("Airdrop successful");
                 } catch (error) {
                     console.error("Airdrop failed:", error);
                     throw new Error("Failed to fund wallet with devnet SOL");
                 }
             } else {
-                console.log("Wallet already has sufficient balance, skipping airdrop");
+                elizaLogger.log("Wallet already has sufficient balance, skipping airdrop");
             }
             */
 

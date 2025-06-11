@@ -101,7 +101,7 @@ export default {
 
         // Validate transfer content
         // if (!isDataContent(content)) {
-        //     console.log(content + typeof(content.data))
+        //     elizaLogger.log(content + typeof(content.data))
         //     console.error("Invalid content for SUBMIT_DATA action.");
         //     if (callback) {
         //         callback({
@@ -157,7 +157,7 @@ export default {
 
                 // Rejected Transaction handling
                 if (txResult.isError) {
-                    console.log('Transaction was not executed');
+                    elizaLogger.log('Transaction was not executed');
                 }
 
                 // Failed Transaction handling
@@ -168,9 +168,9 @@ export default {
                             error.asModule
                         );
                         const { docs, name, section } = decoded;
-                        console.log(`${section}.${name}: ${docs.join(" ")}`);
+                        elizaLogger.log(`${section}.${name}: ${docs.join(" ")}`);
                     } else {
-                        console.log(error.toString());
+                        elizaLogger.log(error.toString());
                     }
                 }
 

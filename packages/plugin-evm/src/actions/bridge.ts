@@ -96,7 +96,7 @@ export const bridgeAction = {
         _options: Record<string, unknown>,
         callback?: HandlerCallback
     ) => {
-        console.log("Bridge action handler called");
+        elizaLogger.log("Bridge action handler called");
         const walletProvider = await initWalletProvider(runtime);
         const action = new BridgeAction(walletProvider);
 

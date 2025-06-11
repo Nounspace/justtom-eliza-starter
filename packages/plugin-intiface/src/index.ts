@@ -109,7 +109,7 @@ export class IntifaceService extends Service implements IIntifaceService {
                 throw error;
             }
         } else {
-            console.log(
+            elizaLogger.log(
                 "Port 12345 is in use, assuming Intiface is already running"
             );
         }
@@ -128,7 +128,7 @@ export class IntifaceService extends Service implements IIntifaceService {
             } catch (error) {
                 retries--;
                 if (retries > 0) {
-                    console.log(
+                    elizaLogger.log(
                         `Connection attempt failed, retrying... (${retries} attempts left)`
                     );
                     await new Promise((r) => setTimeout(r, 2000));
@@ -145,16 +145,16 @@ export class IntifaceService extends Service implements IIntifaceService {
 
     private async scanAndGrabDevices() {
         await this.client.startScanning();
-        console.log("Scanning for devices...");
+        elizaLogger.log("Scanning for devices...");
         await new Promise((r) => setTimeout(r, 2000));
 
         for (const device of this.client.devices) {
             this.devices.set(device.name, device);
-            console.log(`- ${device.name} (${device.index})`);
+            elizaLogger.log(`- ${device.name} (${device.index})`);
         }
 
         if (this.devices.size === 0) {
-            console.log("No devices found");
+            elizaLogger.log("No devices found");
         }
     }
 
@@ -176,7 +176,7 @@ export class IntifaceService extends Service implements IIntifaceService {
         if (this.preferredDeviceName) {
             targetDevice = this.devices.get(this.preferredDeviceName);
             if (!targetDevice) {
-                console.warn(
+                elizaLogger.warn(
                     `Preferred device ${this.preferredDeviceName} not found, using first available device`
                 );
                 targetDevice = devices[0];
@@ -197,12 +197,12 @@ export class IntifaceService extends Service implements IIntifaceService {
 
     private handleDeviceAdded(device: Device) {
         this.devices.set(device.name, device);
-        console.log(`Device connected: ${device.name}`);
+        elizaLogger.log(`Device connected: ${device.name}`);
     }
 
     private handleDeviceRemoved(device: Device) {
         this.devices.delete(device.name);
-        console.log(`Device disconnected: ${device.name}`);
+        elizaLogger.log(`Device disconnected: ${device.name}`);
     }
 
     getDevices() {
@@ -280,7 +280,7 @@ export class IntifaceService extends Service implements IIntifaceService {
 
         try {
             const battery = await targetDevice.battery();
-            console.log(
+            elizaLogger.log(
                 `Battery level for ${targetDevice.name}: ${battery * 100}%`
             );
             return battery;

@@ -25,18 +25,18 @@ export const getWalletPositions: Action = {
     handler: async (runtime: IAgentRuntime, message: Memory, _state?: State, _options?: { [key: string]: unknown; }, callback?: HandlerCallback): Promise<boolean> => {
 
         const response = await zerionProvider.getPositions(runtime, message);
-        console.log("ZERION positions API response: ", response);
+        elizaLogger.log("ZERION positions API response: ", response);
         if (!response.success || !response.data) {
             return false;
         }
 
-        console.log("ZERION API response: ", response);
+        elizaLogger.log("ZERION API response: ", response);
 
         // format response into a message string;
         const formattedResponse = formatPositionsData(response.data as PositionData);
 
         if (callback) {
-            console.log("sending response to callback");
+            elizaLogger.log("sending response to callback");
             callback({
                 text: formattedResponse,
                 content: {

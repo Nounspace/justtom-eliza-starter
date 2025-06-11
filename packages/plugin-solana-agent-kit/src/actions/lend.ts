@@ -102,7 +102,7 @@ export default {
                 content.amount
             );
 
-            console.log("Lend result:", lendResult);
+            elizaLogger.log("Lend result:", lendResult);
 
             if (callback) {
                 callback({

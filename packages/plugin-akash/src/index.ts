@@ -39,12 +39,12 @@ const AKASH_SPASH = getConfig().AKASH_WALLET_ADDRESS;
 // Only show splash screen if AKASH_SPASH is true
 if (AKASH_SPASH) {
     // Initial banner with chalk styling
-    console.log(`\n${chalk.cyan('┌────────────────────────────────────────┐')}`);
-    console.log(chalk.cyan('│') + chalk.yellow.bold('          AKASH NETWORK PLUGIN           ') + chalk.cyan(' │'));
-    console.log(chalk.cyan('├────────────────────────────────────────┤'));
-    console.log(chalk.cyan('│') + chalk.white('  Initializing Akash Network Plugin...   ') + chalk.cyan('│'));
-    console.log(chalk.cyan('│') + chalk.white('  Version: 0.1.1                         ') + chalk.cyan('│'));
-    console.log(chalk.cyan('└────────────────────────────────────────┘'));
+    elizaLogger.log(`\n${chalk.cyan('┌────────────────────────────────────────┐')}`);
+    elizaLogger.log(chalk.cyan('│') + chalk.yellow.bold('          AKASH NETWORK PLUGIN           ') + chalk.cyan(' │'));
+    elizaLogger.log(chalk.cyan('├────────────────────────────────────────┤'));
+    elizaLogger.log(chalk.cyan('│') + chalk.white('  Initializing Akash Network Plugin...   ') + chalk.cyan('│'));
+    elizaLogger.log(chalk.cyan('│') + chalk.white('  Version: 0.1.1                         ') + chalk.cyan('│'));
+    elizaLogger.log(chalk.cyan('└────────────────────────────────────────┘'));
 
     // Stop the loader
     spinner.succeed(chalk.green('Akash Network Plugin initialized successfully!'));
@@ -76,7 +76,7 @@ if (AKASH_SPASH) {
     }
 
     // Display the action table
-    console.log(`\n${actionTable.toString()}`);
+    elizaLogger.log(`\n${actionTable.toString()}`);
 
     // Plugin status with a nice table
     const statusTable = new Table({
@@ -92,7 +92,7 @@ if (AKASH_SPASH) {
       [chalk.white('Status  : ') + chalk.green('Loaded & Ready')]
     );
 
-    console.log(`\n${statusTable.toString()}\n`);
+    elizaLogger.log(`\n${statusTable.toString()}\n`);
   } else {
     // Stop the loader silently if splash is disabled
     spinner.stop();

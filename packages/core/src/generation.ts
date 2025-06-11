@@ -77,7 +77,7 @@ type StepResult = AIStepResult<any>;
  *
  * @example
  * const trimmedText = await trimTokens("This is an example text", 50, runtime);
- * console.log(trimmedText); // Output will be a truncated version of the input text.
+ * elizaLogger.log(trimmedText); // Output will be a truncated version of the input text.
  */
 export async function trimTokens(
     context: string,
@@ -567,7 +567,7 @@ export async function generateText({
                 });
 
                 response = openaiResponse;
-                console.debug("Received response from OpenAI model.");
+                elizaLogger.debug("Received response from OpenAI model.");
                 break;
             }
 
@@ -1162,12 +1162,12 @@ export async function generateText({
                     maxTokens: max_response_length,
                 });
 
-                // console.warn("veniceResponse:")
-                // console.warn(veniceResponse)
+                // elizaLogger.warn("veniceResponse:")
+                // elizaLogger.warn(veniceResponse)
                 //rferrari: remove all text from <think> to </think>\n\n
                 response = veniceResponse
                     .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, '');
-                // console.warn(response)
+                // elizaLogger.warn(response)
 
                 // response = veniceResponse;
                 elizaLogger.debug("Received response from Venice model.");
@@ -1955,7 +1955,7 @@ export const generateImage = async (
                 }
                 const base64Images = await Promise.all(
                     result.images.map(async (image) => {
-                        console.log("imageUrl console log", image.url);
+                        elizaLogger.log("imageUrl console log", image.url);
                         let imageUrl;
                         if (image.url.includes("http")) {
                             imageUrl = image.url;
@@ -2548,7 +2548,7 @@ async function handleLivepeer({
     mode,
     modelOptions,
 }: ProviderOptions): Promise<GenerateObjectResult<unknown>> {
-    console.log("Livepeer provider api key:", apiKey);
+    elizaLogger.log("Livepeer provider api key:", apiKey);
     if (!apiKey) {
         throw new Error(
             "Livepeer provider requires LIVEPEER_GATEWAY_URL to be configured"

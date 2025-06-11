@@ -56,10 +56,10 @@ export async function loadWallet(
             const secretKey = bs58.decode(privateKeyString);
             return { signer: await createKeyPairSignerFromBytes(secretKey) };
         } catch (e) {
-            console.log("Error decoding base58 private key:", e);
+            elizaLogger.log("Error decoding base58 private key:", e);
             try {
                 // Then try base64
-                console.log("Try decoding base64 instead");
+                elizaLogger.log("Try decoding base64 instead");
                 const secretKey = Uint8Array.from(
                     Buffer.from(privateKeyString, "base64")
                 );

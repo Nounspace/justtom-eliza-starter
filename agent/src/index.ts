@@ -248,7 +248,7 @@ function isAllStrings(arr: unknown[]): boolean {
 export async function loadCharacterFromOnchain(): Promise<Character[]> {
     const jsonText = onchainJson;
 
-    console.log("JSON:", jsonText);
+    elizaLogger.log("JSON:", jsonText);
     if (!jsonText) return [];
     const loadedCharacters = [];
     try {

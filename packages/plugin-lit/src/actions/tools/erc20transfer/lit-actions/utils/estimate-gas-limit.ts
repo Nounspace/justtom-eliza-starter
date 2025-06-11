@@ -9,7 +9,7 @@ export const estimateGasLimit = async (
   amount: any,
   pkpEthAddress: string
 ) => {
-  console.log(`Estimating gas limit...`);
+  elizaLogger.log(`Estimating gas limit...`);
 
   const tokenInterface = new ethers.utils.Interface([
     'function transfer(address to, uint256 amount) external returns (bool)',
@@ -27,7 +27,7 @@ export const estimateGasLimit = async (
       amount,
       { from: pkpEthAddress }
     );
-    console.log('Estimated gas limit:', estimatedGas.toString());
+    elizaLogger.log('Estimated gas limit:', estimatedGas.toString());
     return estimatedGas.mul(120).div(100);
   } catch (error) {
     console.error(

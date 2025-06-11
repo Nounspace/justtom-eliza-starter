@@ -25,11 +25,11 @@ declare global {
 
 (async () => {
   try {
-    console.log(`Using Lit Network: ${LIT_NETWORK}`);
-    console.log(
+    elizaLogger.log(`Using Lit Network: ${LIT_NETWORK}`);
+    elizaLogger.log(
       `Using PKP Tool Registry Address: ${PKP_TOOL_REGISTRY_ADDRESS}`
     );
-    console.log(
+    elizaLogger.log(
       `Using Pubkey Router Address: ${
         NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG]
           .pubkeyRouterAddress
@@ -49,7 +49,7 @@ declare global {
       pkp.ethAddress
     );
 
-    console.log(`Token info: ${JSON.stringify(tokenInfo)}`);
+    elizaLogger.log(`Token info: ${JSON.stringify(tokenInfo)}`);
 
     const toolPolicy = await fetchToolPolicyFromRegistry(
       pkpToolRegistryContract,
@@ -63,7 +63,7 @@ declare global {
       toolPolicy.policyIpfsCid !== '0x' &&
       toolPolicy.policyIpfsCid !== ''
     ) {
-      console.log(`Executing policy ${toolPolicy.policyIpfsCid}`);
+      elizaLogger.log(`Executing policy ${toolPolicy.policyIpfsCid}`);
 
       const policyParams = {
         parentToolIpfsCid: toolIpfsCid,
@@ -77,7 +77,7 @@ declare global {
         },
       };
 
-      console.log(
+      elizaLogger.log(
         `Calling policy Lit Action with params: ${JSON.stringify(policyParams)}`
       );
 
@@ -86,7 +86,7 @@ declare global {
         params: policyParams,
       });
     } else {
-      console.log(
+      elizaLogger.log(
         `No policy found for tool ${toolIpfsCid} on PKP ${pkp.tokenId} for delegatee ${delegateeAddress}`
       );
     }

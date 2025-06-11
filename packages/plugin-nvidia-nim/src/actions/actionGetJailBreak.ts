@@ -16,7 +16,7 @@ const GRANULAR_LOG = config.NVIDIA_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.info(`[JailbreakDetection] ${message}`, data);
-        console.log(`[JailbreakDetection] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[JailbreakDetection] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -89,26 +89,26 @@ export const getJailBreakAction: Action = {
 
         try {
             const messageContent = message.content as JailbreakContent;
-            console.log("Debug - Message content:", {
+            elizaLogger.log("Debug - Message content:", {
                 hasText: !!messageContent?.text,
                 hasInputPrompt: !!messageContent?.inputPrompt
             });
 
             const config = await validateNvidiaNimConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasApiKey: !!config.NVIDIA_NIM_API_KEY,
                 env: config.NVIDIA_NIM_ENV
             });
 
             const networkConfig = getNetworkConfig(config.NVIDIA_NIM_ENV);
-            console.log("Debug - Network config:", {
+            elizaLogger.log("Debug - Network config:", {
                 hasBaseUrl: !!networkConfig?.baseUrl,
                 baseUrl: networkConfig?.baseUrl
             });
 
             // Parse the prompt using our helper
             const { inputPrompt } = parseJailbreakPrompt(messageContent.text);
-            console.log("Debug - Parsed content:", {
+            elizaLogger.log("Debug - Parsed content:", {
                 hasInputPrompt: !!inputPrompt,
                 promptLength: inputPrompt?.length
             });

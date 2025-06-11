@@ -217,10 +217,10 @@ try {
 
 // Listen for alerts
 monitor.on('alert', (alert: PerformanceAlert) => {
-    console.log(`Performance alert: ${alert.type} threshold exceeded for ${alert.operation}`);
+    elizaLogger.log(`Performance alert: ${alert.type} threshold exceeded for ${alert.operation}`);
 });
 
 // Get performance summary
 const summary = monitor.getPerformanceSummary();
-console.log('Performance summary:', summary);
+elizaLogger.log('Performance summary:', summary);
 */

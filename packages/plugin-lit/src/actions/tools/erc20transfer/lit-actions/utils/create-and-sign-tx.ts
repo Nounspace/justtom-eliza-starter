@@ -14,7 +14,7 @@ export const createAndSignTransaction = async (
   chainId: string,
   pkpPublicKey: string
 ) => {
-  console.log(`Creating and signing transaction...`);
+  elizaLogger.log(`Creating and signing transaction...`);
 
   const tokenInterface = new ethers.utils.Interface([
     'function transfer(address to, uint256 amount) external returns (bool)',
@@ -35,7 +35,7 @@ export const createAndSignTransaction = async (
     type: 2,
   };
 
-  console.log(`Signing transfer with PKP public key: ${pkpPublicKey}...`);
+  elizaLogger.log(`Signing transfer with PKP public key: ${pkpPublicKey}...`);
   const transferSig = await Lit.Actions.signAndCombineEcdsa({
     toSign: ethers.utils.arrayify(
       ethers.utils.keccak256(ethers.utils.serializeTransaction(transferTx))
@@ -46,7 +46,7 @@ export const createAndSignTransaction = async (
     sigName: 'erc20TransferSig',
   });
 
-  console.log(`Transaction signed`);
+  elizaLogger.log(`Transaction signed`);
 
   return ethers.utils.serializeTransaction(
     transferTx,

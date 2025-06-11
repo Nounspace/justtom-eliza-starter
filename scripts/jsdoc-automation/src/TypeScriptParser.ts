@@ -31,7 +31,7 @@ export class TypeScriptParser {
 
             const ast = parse(content, parserOptions);
             if (!ast || typeof ast !== "object") {
-                console.warn(`Warning: Invalid AST generated for file ${file}`);
+                elizaLogger.warn(`Warning: Invalid AST generated for file ${file}`);
                 return null;
             }
             return ast;
@@ -133,7 +133,7 @@ export class TypeScriptParser {
 
         // If we found a valid end line but no start line, use the action name line as fallback
         if (!startLine && actionNameStartLine && endLine) {
-            console.log("Using action name line as fallback");
+            elizaLogger.log("Using action name line as fallback");
             startLine = actionNameStartLine;
         }
 

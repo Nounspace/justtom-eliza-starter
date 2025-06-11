@@ -147,7 +147,7 @@ export const tokenSearchAddressAction = {
                 })
             );
 
-            console.log(results);
+            elizaLogger.log(results);
 
             const completeResults = `I performed a search for the token addresses you requested and found the following results:\n\n${results
                 .map(

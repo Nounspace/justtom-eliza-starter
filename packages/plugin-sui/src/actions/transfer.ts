@@ -28,7 +28,7 @@ export interface TransferContent extends Content {
 }
 
 function isTransferContent(content: Content): content is TransferContent {
-    console.log("Content for transfer", content);
+    elizaLogger.log("Content for transfer", content);
     return (
         typeof content.recipient === "string" &&
         (typeof content.amount === "string" ||
@@ -64,21 +64,21 @@ export default {
         "PAY",
     ],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
-        console.log("Validating sui transfer from user:", message.userId);
+        elizaLogger.log("Validating sui transfer from user:", message.userId);
         //add custom validate logic here
         /*
             const adminIds = runtime.getSetting("ADMIN_USER_IDS")?.split(",") || [];
-            //console.log("Admin IDs from settings:", adminIds);
+            //elizaLogger.log("Admin IDs from settings:", adminIds);
 
             const isAdmin = adminIds.includes(message.userId);
 
             if (isAdmin) {
-                //console.log(`Authorized transfer from user: ${message.userId}`);
+                //elizaLogger.log(`Authorized transfer from user: ${message.userId}`);
                 return true;
             }
             else
             {
-                //console.log(`Unauthorized transfer attempt from user: ${message.userId}`);
+                //elizaLogger.log(`Unauthorized transfer attempt from user: ${message.userId}`);
                 return false;
             }
             */
@@ -148,7 +148,7 @@ export default {
             const adjustedAmount = BigInt(
                 Number(transferContent.amount) * Math.pow(10, SUI_DECIMALS)
             );
-            console.log(
+            elizaLogger.log(
                 `Transferring: ${transferContent.amount} tokens (${adjustedAmount} base units)`
             );
             const tx = new Transaction();
@@ -160,7 +160,7 @@ export default {
                     transaction: tx,
                 });
 
-            console.log("Transfer successful:", executedTransaction.digest);
+            elizaLogger.log("Transfer successful:", executedTransaction.digest);
 
             if (callback) {
                 const suiService = runtime.getService<SuiService>(

@@ -370,7 +370,7 @@ export class DiscordClient extends EventEmitter {
     }
 
     private handleGuildCreate(guild: Guild) {
-        console.log(`Joined guild ${guild.name}`);
+        elizaLogger.log(`Joined guild ${guild.name}`);
         this.voiceManager.scanGuild(guild);
     }
 

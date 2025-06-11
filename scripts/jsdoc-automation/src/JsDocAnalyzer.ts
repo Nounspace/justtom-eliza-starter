@@ -741,7 +741,7 @@ export class JsDocAnalyzer {
                 return current.parent;
             }
             // Add logging to see what types we're encountering
-            console.log("Parent node type:", current.parent.type);
+            elizaLogger.log("Parent node type:", current.parent.type);
             current = current.parent;
         }
         return undefined;

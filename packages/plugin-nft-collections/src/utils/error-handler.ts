@@ -135,14 +135,14 @@ export class ErrorHandler {
     private handleRateLimitError(error: NFTError): void {
         if (error.retryable) {
             // Implement retry logic with exponential backoff
-            console.log("Rate limit error will be retried");
+            elizaLogger.log("Rate limit error will be retried");
         }
     }
 
     private handleNetworkError(error: NFTError): void {
         if (error.retryable) {
             // Implement network retry logic
-            console.log("Network error will be retried");
+            elizaLogger.log("Network error will be retried");
         }
     }
 

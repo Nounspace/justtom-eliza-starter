@@ -18,7 +18,7 @@ const GRANULAR_LOG = config.NVIDIA_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.info(`[CosmosVision] ${message}`, data);
-        console.log(`[CosmosVision] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[CosmosVision] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -171,7 +171,7 @@ export const getCosmosDescriptionAction: Action = {
                 isImage: parsedPrompt.isImage
             });
 
-            console.log("Debug - Network config", {
+            elizaLogger.log("Debug - Network config", {
                 baseVisionUrl: networkConfig.baseVisionUrl
             });
 

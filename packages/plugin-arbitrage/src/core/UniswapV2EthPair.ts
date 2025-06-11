@@ -183,7 +183,7 @@ async getReserves(tokenAddress: string): Promise<BigNumber> {
           if(Array.isArray(pairArray) && pairArray.length === 3) {
             const [token0, token1, pairAddress] = pairArray;
 
-            //console.log(`Processing pair: Token0: ${token0}, Token1: ${token1}, PairAddress: ${pairAddress}`);
+            //elizaLogger.log(`Processing pair: Token0: ${token0}, Token1: ${token1}, PairAddress: ${pairAddress}`);
 
             // Validate each address individually
             if (!isAddress(token0) || !isAddress(token1) || !isAddress(pairAddress)) {
@@ -196,7 +196,7 @@ async getReserves(tokenAddress: string): Promise<BigNumber> {
                 const marketPair = new UniswapV2EthPair(pairAddress, [token0, token1], 'UniswapV2', token0, provider); // Example processing
                 marketPairs.push(marketPair);
             } else {
-                //console.log(`Skipping blacklisted pair. Token0: ${token0}, Token1: ${token1}`);
+                //elizaLogger.log(`Skipping blacklisted pair. Token0: ${token0}, Token1: ${token1}`);
             }
           } else {
             // Handle unexpected format
@@ -259,8 +259,8 @@ static async getUniswapMarketsByToken(
         ) as { [token: string]: UniswapV2EthPair[] };
 
         // Logging market information
-        console.log(`Grouped markets by token:`, marketsByToken);
-        console.log(`Filtered pairs count:`, filteredPairs.length);
+        elizaLogger.log(`Grouped markets by token:`, marketsByToken);
+        elizaLogger.log(`Filtered pairs count:`, filteredPairs.length);
 
         // Add progress reporting
         let processedPairs = 0;
@@ -300,7 +300,7 @@ static async getUniswapMarketsByToken(
     }
 }
 static async updateReserves(provider: StaticJsonRpcProvider, pairsInArbitrage: UniswapV2EthPair[], WETH_ADDRESS: string) {
-  console.log(`Updating reserves for ${pairsInArbitrage.length} markets`);
+  elizaLogger.log(`Updating reserves for ${pairsInArbitrage.length} markets`);
   let filteredPairsInArbitrage = [];
 
   // Process in smaller batches
@@ -365,7 +365,7 @@ static async updateReserves(provider: StaticJsonRpcProvider, pairsInArbitrage: U
     }
   }
 
-  console.log(`Filtered pairs for arbitrage calculation: ${filteredPairsInArbitrage.length}`);
+  elizaLogger.log(`Filtered pairs for arbitrage calculation: ${filteredPairsInArbitrage.length}`);
   return filteredPairsInArbitrage;
 }
 // In UniswapV2EthPair getBalance method:
@@ -380,7 +380,7 @@ async getBalance(tokenAddress: string): Promise<BigNumber> {
 
   const balance = this._tokenBalances[tokenAddress];
   if (balance === undefined) {
-    console.warn(`Invalid or unrecognized token address: ${tokenAddress}`);
+    elizaLogger.warn(`Invalid or unrecognized token address: ${tokenAddress}`);
     return BigNumber.from(0);
   }
   return balance as BigNumber;  // Add type assertion if needed
@@ -462,7 +462,7 @@ async getBalance(tokenAddress: string): Promise<BigNumber> {
     provider: StaticJsonRpcProvider,
     pairs: UniswapV2EthPair[]
   ): Promise<UniswapV2EthPair[]> {
-    console.log('Attempting to update reserves in one or more multicall batches');
+    elizaLogger.log('Attempting to update reserves in one or more multicall batches');
     const MULTICALL2_ADDRESS = "0x5BA1e12693Dc8F9c48aAD8770482f4739bEeD696";
     const MULTICALL2_ABI = [
      "function aggregate(tuple(address target, bytes callData)[] calls) public returns (uint256 blockNumber, bytes[] returnData)"
@@ -520,7 +520,7 @@ async getBalance(tokenAddress: string): Promise<BigNumber> {
       }
     }
 
-    console.log(`Finished multicall update. Updated pairs: ${updatedPairs.length}`);
+    elizaLogger.log(`Finished multicall update. Updated pairs: ${updatedPairs.length}`);
     return updatedPairs;
   }
 }

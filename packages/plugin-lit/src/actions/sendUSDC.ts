@@ -107,13 +107,13 @@ export const sendUSDC: Action = {
       }
 
       if (!sendUsdcContent.amount) {
-        console.log("Amount is not provided, skipping transfer");
+        elizaLogger.log("Amount is not provided, skipping transfer");
         callback?.({ text: "The amount must be provided" });
         return false;
       }
 
       if (!sendUsdcContent.to) {
-        console.log("Destination address is not provided, skipping transfer");
+        elizaLogger.log("Destination address is not provided, skipping transfer");
         callback?.({ text: "The destination address must be provided" });
         return false;
       }

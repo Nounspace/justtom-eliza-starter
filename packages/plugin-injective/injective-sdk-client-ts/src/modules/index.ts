@@ -32,7 +32,7 @@ export class InjectiveGrpcClient extends InjectiveGrpcBase {
             throw new Error("Either eth or inj public key is required");
         }
         super(networkType, injectivePrivateKey, ethPublicKey, injPublicKey);
-        console.log("InjectiveGrpcClient constructor init");
+        elizaLogger.log("InjectiveGrpcClient constructor init");
     }
     // Auction endpoints
     public getAuctionModuleParams =

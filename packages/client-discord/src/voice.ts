@@ -69,7 +69,7 @@ export class AudioMonitor {
         this.readable = readable;
         this.maxSize = maxSize;
         this.readable.on("data", (chunk: Buffer) => {
-            //console.log('AudioMonitor got data');
+            //elizaLogger.log('AudioMonitor got data');
             if (this.lastFlagged < 0) {
                 this.lastFlagged = this.buffers.length;
             }
@@ -399,25 +399,25 @@ export class VoiceManager extends EventEmitter {
             opusDecoder as any,
             (err: Error | null) => {
                 if (err) {
-                    console.log(`Opus decoding pipeline error: ${err}`);
+                    elizaLogger.log(`Opus decoding pipeline error: ${err}`);
                 }
             }
         );
         this.streams.set(userId, opusDecoder);
         this.connections.set(userId, connection as VoiceConnection);
         opusDecoder.on("error", (err: any) => {
-            console.log(`Opus decoding error: ${err}`);
+            elizaLogger.log(`Opus decoding error: ${err}`);
         });
         const errorHandler = (err: any) => {
-            console.log(`Opus decoding error: ${err}`);
+            elizaLogger.log(`Opus decoding error: ${err}`);
         };
         const streamCloseHandler = () => {
-            console.log(`voice stream from ${member?.displayName} closed`);
+            elizaLogger.log(`voice stream from ${member?.displayName} closed`);
             this.streams.delete(userId);
             this.connections.delete(userId);
         };
         const closeHandler = () => {
-            console.log(`Opus decoder for ${member?.displayName} closed`);
+            elizaLogger.log(`Opus decoder for ${member?.displayName} closed`);
             opusDecoder.removeListener("error", errorHandler);
             opusDecoder.removeListener("close", closeHandler);
             receiveStream?.removeListener("close", streamCloseHandler);
@@ -453,7 +453,7 @@ export class VoiceManager extends EventEmitter {
             }
         }
 
-        console.log(`Left voice channel: ${channel.name} (${channel.id})`);
+        elizaLogger.log(`Left voice channel: ${channel.name} (${channel.id})`);
     }
 
     stopMonitoringMember(memberId: string) {
@@ -462,12 +462,12 @@ export class VoiceManager extends EventEmitter {
             monitorInfo.monitor.stop();
             this.activeMonitors.delete(memberId);
             this.streams.delete(memberId);
-            console.log(`Stopped monitoring user ${memberId}`);
+            elizaLogger.log(`Stopped monitoring user ${memberId}`);
         }
     }
 
     async handleGuildCreate(guild: Guild) {
-        console.log(`Joined guild ${guild.name}`);
+        elizaLogger.log(`Joined guild ${guild.name}`);
         // this.scanGuild(guild);
     }
 
@@ -524,7 +524,7 @@ export class VoiceManager extends EventEmitter {
         channel: BaseGuildVoiceChannel,
         audioStream: Readable
     ) {
-        console.log(`Starting audio monitor for user: ${userId}`);
+        elizaLogger.log(`Starting audio monitor for user: ${userId}`);
         if (!this.userStates.has(userId)) {
             this.userStates.set(userId, {
                 buffers: [],
@@ -589,7 +589,7 @@ export class VoiceManager extends EventEmitter {
             state.totalLength = 0;
             // Convert Opus to WAV
             const wavBuffer = await this.convertOpusToWav(inputBuffer);
-            console.log("Starting transcription...");
+            elizaLogger.log("Starting transcription...");
 
             const transcriptionText = await this.runtime
                 .getService<ITranscriptionService>(ServiceType.TRANSCRIPTION)
@@ -718,7 +718,7 @@ export class VoiceManager extends EventEmitter {
             );
 
             const callback: HandlerCallback = async (content: Content) => {
-                console.log("callback content: ", content);
+                elizaLogger.log("callback content: ", content);
                 const { roomId } = memory;
 
                 const responseMemory: Memory = {
@@ -757,7 +757,7 @@ export class VoiceManager extends EventEmitter {
 
                     await this.runtime.evaluate(memory, state);
                 } else {
-                    console.warn("Empty response, skipping");
+                    elizaLogger.warn("Empty response, skipping");
                 }
                 return [responseMemory];
             };
@@ -774,7 +774,7 @@ export class VoiceManager extends EventEmitter {
                 return null;
             }
 
-            console.log("responseMemories: ", responseMemories);
+            elizaLogger.log("responseMemories: ", responseMemories);
 
             await this.runtime.processActions(
                 memory,
@@ -896,7 +896,7 @@ export class VoiceManager extends EventEmitter {
     }
 
     private async _shouldIgnore(message: Memory): Promise<boolean> {
-        // console.log("message: ", message);
+        // elizaLogger.log("message: ", message);
         elizaLogger.debug("message.content: ", message.content);
         // if the message is 3 characters or less, ignore it
         if ((message.content as Content).text.length < 3) {
@@ -980,10 +980,10 @@ export class VoiceManager extends EventEmitter {
             }
 
             if (chosenChannel) {
-                console.log(`Joining channel: ${chosenChannel.name}`);
+                elizaLogger.log(`Joining channel: ${chosenChannel.name}`);
                 await this.joinChannel(chosenChannel);
             } else {
-                console.warn("No suitable voice channel found to join.");
+                elizaLogger.warn("No suitable voice channel found to join.");
             }
         } catch (error) {
             console.error("Error selecting or joining a voice channel:", error);
@@ -993,7 +993,7 @@ export class VoiceManager extends EventEmitter {
     async playAudioStream(userId: UUID, audioStream: Readable) {
         const connection = this.connections.get(userId);
         if (connection == null) {
-            console.log(`No connection for user ${userId}`);
+            elizaLogger.log(`No connection for user ${userId}`);
             return;
         }
         this.cleanupAudioPlayer(this.activeAudioPlayer);
@@ -1013,7 +1013,7 @@ export class VoiceManager extends EventEmitter {
         audioPlayer.play(resource);
 
         audioPlayer.on("error", (err: any) => {
-            console.log(`Audio player error: ${err}`);
+            elizaLogger.log(`Audio player error: ${err}`);
         });
 
         audioPlayer.on(
@@ -1021,7 +1021,7 @@ export class VoiceManager extends EventEmitter {
             (_oldState: any, newState: { status: string }) => {
                 if (newState.status == "idle") {
                     const idleTime = Date.now();
-                    console.log(
+                    elizaLogger.log(
                         `Audio playback took: ${idleTime - audioStartTime}ms`
                     );
                 }

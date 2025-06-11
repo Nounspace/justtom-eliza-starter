@@ -30,11 +30,11 @@ export class MessageManager {
     private processedMessages: Map<string, number> = new Map();
 
     constructor(client: WebClient, runtime: IAgentRuntime, botUserId: string) {
-        console.log("📱 Initializing MessageManager...");
+        elizaLogger.log("📱 Initializing MessageManager...");
         this.client = client;
         this.runtime = runtime;
         this.botUserId = botUserId;
-        console.log("MessageManager initialized with botUserId:", botUserId);
+        elizaLogger.log("MessageManager initialized with botUserId:", botUserId);
 
         // Clear old processed messages and events every hour
         setInterval(() => {
@@ -66,13 +66,13 @@ export class MessageManager {
         ].filter(Boolean); // Remove any undefined/null values
 
         const key = components.join("-");
-        console.log("\n=== EVENT DETAILS ===");
-        console.log("Event Type:", event.type);
-        console.log("Event TS:", event.ts);
-        console.log("Channel:", event.channel);
-        console.log("User:", event.user);
-        console.log("Thread TS:", event.thread_ts);
-        console.log("Generated Key:", key);
+        elizaLogger.log("\n=== EVENT DETAILS ===");
+        elizaLogger.log("Event Type:", event.type);
+        elizaLogger.log("Event TS:", event.ts);
+        elizaLogger.log("Channel:", event.channel);
+        elizaLogger.log("User:", event.user);
+        elizaLogger.log("Thread TS:", event.thread_ts);
+        elizaLogger.log("Generated Key:", key);
         return key;
     }
 
@@ -87,21 +87,21 @@ export class MessageManager {
     }
 
     private async _shouldRespond(message: any, state: State): Promise<boolean> {
-        console.log("\n=== SHOULD_RESPOND PHASE ===");
-        console.log("🔍 Step 1: Evaluating if should respond to message");
+        elizaLogger.log("\n=== SHOULD_RESPOND PHASE ===");
+        elizaLogger.log("🔍 Step 1: Evaluating if should respond to message");
 
         // Always respond to direct mentions
         if (
             message.type === "app_mention" ||
             message.text?.includes(`<@${this.botUserId}>`)
         ) {
-            console.log("✅ Direct mention detected - will respond");
+            elizaLogger.log("✅ Direct mention detected - will respond");
             return true;
         }
 
         // Always respond in direct messages
         if (message.channel_type === "im") {
-            console.log("✅ Direct message detected - will respond");
+            elizaLogger.log("✅ Direct message detected - will respond");
             return true;
         }
 
@@ -110,12 +110,12 @@ export class MessageManager {
             message.thread_ts &&
             state.recentMessages?.includes(this.runtime.agentId)
         ) {
-            console.log("✅ Active thread participant - will respond");
+            elizaLogger.log("✅ Active thread participant - will respond");
             return true;
         }
 
         // Only use LLM for ambiguous cases
-        console.log("🤔 Step 2: Using LLM to decide response");
+        elizaLogger.log("🤔 Step 2: Using LLM to decide response");
         const shouldRespondContext = composeContext({
             state,
             template:
@@ -124,14 +124,14 @@ export class MessageManager {
                 slackShouldRespondTemplate,
         });
 
-        console.log("🔄 Step 3: Calling generateShouldRespond");
+        elizaLogger.log("🔄 Step 3: Calling generateShouldRespond");
         const response = await generateShouldRespond({
             runtime: this.runtime,
             context: shouldRespondContext,
             modelClass: ModelClass.SMALL,
         });
 
-        console.log(`✅ Step 4: LLM decision received: ${response}`);
+        elizaLogger.log(`✅ Step 4: LLM decision received: ${response}`);
         return response === "RESPOND";
     }
 
@@ -140,17 +140,17 @@ export class MessageManager {
         state: State,
         context: string
     ): Promise<Content> {
-        console.log("\n=== GENERATE_RESPONSE PHASE ===");
-        console.log("🔍 Step 1: Starting response generation");
+        elizaLogger.log("\n=== GENERATE_RESPONSE PHASE ===");
+        elizaLogger.log("🔍 Step 1: Starting response generation");
 
         // Generate response only once
-        console.log("🔄 Step 2: Calling LLM for response");
+        elizaLogger.log("🔄 Step 2: Calling LLM for response");
         const response = await generateMessageResponse({
             runtime: this.runtime,
             context,
             modelClass: ModelClass.LARGE,
         });
-        console.log("✅ Step 3: LLM response received");
+        elizaLogger.log("✅ Step 3: LLM response received");
 
         if (!response) {
             console.error("❌ No response from generateMessageResponse");
@@ -167,13 +167,13 @@ export class MessageManager {
             !memory.content.text?.includes(`<@${this.botUserId}>`) &&
             !state.recentMessages?.includes(memory.id)
         ) {
-            console.log(
+            elizaLogger.log(
                 "⚠️ Step 4: Removing CONTINUE action - not a direct interaction"
             );
             delete response.action;
         }
 
-        console.log("✅ Step 5: Returning generated response");
+        elizaLogger.log("✅ Step 5: Returning generated response");
         return response;
     }
 
@@ -263,12 +263,12 @@ export class MessageManager {
     }
 
     public async handleMessage(event: any) {
-        console.log("\n=== MESSAGE_HANDLING PHASE ===");
-        console.log("🔍 Step 1: Received new message event");
+        elizaLogger.log("\n=== MESSAGE_HANDLING PHASE ===");
+        elizaLogger.log("🔍 Step 1: Received new message event");
 
         // Skip if no event data
         if (!event || !event.ts || !event.channel) {
-            console.log("⚠️ Invalid event data - skipping");
+            elizaLogger.log("⚠️ Invalid event data - skipping");
             return;
         }
 
@@ -277,16 +277,16 @@ export class MessageManager {
 
         // Check if we've already processed this event
         if (this.processedEvents.has(eventKey)) {
-            console.log("⚠️ Event already processed - skipping");
-            console.log("Existing event key:", eventKey);
-            console.log("Original event type:", event.type);
-            console.log("Duplicate prevention working as expected");
+            elizaLogger.log("⚠️ Event already processed - skipping");
+            elizaLogger.log("Existing event key:", eventKey);
+            elizaLogger.log("Original event type:", event.type);
+            elizaLogger.log("Duplicate prevention working as expected");
             return;
         }
 
         // Add to processed events immediately
-        console.log("✅ New event - processing:", eventKey);
-        console.log("Event type being processed:", event.type);
+        elizaLogger.log("✅ New event - processing:", eventKey);
+        elizaLogger.log("Event type being processed:", event.type);
         this.processedEvents.add(eventKey);
 
         // Generate message key for processing lock
@@ -296,33 +296,33 @@ export class MessageManager {
         try {
             // Check if message is currently being processed
             if (this.messageProcessingLock.has(messageKey)) {
-                console.log(
+                elizaLogger.log(
                     "⚠️ Message is currently being processed - skipping"
                 );
                 return;
             }
 
             // Add to processing lock
-            console.log("🔒 Step 2: Adding message to processing lock");
+            elizaLogger.log("🔒 Step 2: Adding message to processing lock");
             this.messageProcessingLock.add(messageKey);
 
             try {
                 // Ignore messages from bots (including ourselves)
                 if (event.bot_id || event.user === this.botUserId) {
-                    console.log("⚠️ Message from bot or self - skipping");
+                    elizaLogger.log("⚠️ Message from bot or self - skipping");
                     return;
                 }
 
                 // Clean the message text
-                console.log("🧹 Step 3: Cleaning message text");
+                elizaLogger.log("🧹 Step 3: Cleaning message text");
                 const cleanedText = this.cleanMessage(event.text || "");
                 if (!cleanedText) {
-                    console.log("⚠️ Empty message after cleaning - skipping");
+                    elizaLogger.log("⚠️ Empty message after cleaning - skipping");
                     return;
                 }
 
                 // Generate unique IDs
-                console.log("🔑 Step 4: Generating conversation IDs");
+                elizaLogger.log("🔑 Step 4: Generating conversation IDs");
                 const roomId = stringToUuid(
                     `${event.channel}-${this.runtime.agentId}`
                 );
@@ -343,7 +343,7 @@ export class MessageManager {
                 );
 
                 // Create initial memory
-                console.log("💾 Step 5: Creating initial memory");
+                elizaLogger.log("💾 Step 5: Creating initial memory");
 
                 // Download attachments if any
                 event = await this._downloadAttachments(event);
@@ -371,12 +371,12 @@ export class MessageManager {
 
                 // Add memory
                 if (content.text) {
-                    console.log("💾 Step 6: Saving initial memory");
+                    elizaLogger.log("💾 Step 6: Saving initial memory");
                     await this.runtime.messageManager.createMemory(memory);
                 }
 
                 // Initial state composition
-                console.log("🔄 Step 7: Composing initial state");
+                elizaLogger.log("🔄 Step 7: Composing initial state");
                 let state = await this.runtime.composeState(
                     { content, userId, agentId: this.runtime.agentId, roomId },
                     {
@@ -388,15 +388,15 @@ export class MessageManager {
                 );
 
                 // Update state with recent messages
-                console.log("🔄 Step 8: Updating state with recent messages");
+                elizaLogger.log("🔄 Step 8: Updating state with recent messages");
                 state = await this.runtime.updateRecentMessageState(state);
 
                 // Check if we should respond
-                console.log("🤔 Step 9: Checking if we should respond");
+                elizaLogger.log("🤔 Step 9: Checking if we should respond");
                 const shouldRespond = await this._shouldRespond(event, state);
 
                 if (shouldRespond) {
-                    console.log(
+                    elizaLogger.log(
                         "✅ Step 10: Should respond - generating response"
                     );
                     const context = composeContext({
@@ -414,7 +414,7 @@ export class MessageManager {
                     );
 
                     if (responseContent?.text) {
-                        console.log("📤 Step 11: Preparing to send response");
+                        elizaLogger.log("📤 Step 11: Preparing to send response");
 
                         const callback: HandlerCallback = async (
                             content: Content,
@@ -481,18 +481,18 @@ export class MessageManager {
                             }
                         };
 
-                        console.log("📤 Step 16: Sending initial response");
+                        elizaLogger.log("📤 Step 16: Sending initial response");
                         const responseMessages =
                             await callback(responseContent);
 
-                        console.log(
+                        elizaLogger.log(
                             "🔄 Step 17: Updating state after response"
                         );
                         state =
                             await this.runtime.updateRecentMessageState(state);
 
                         if (responseContent.action) {
-                            console.log("⚡ Step 18: Processing actions");
+                            elizaLogger.log("⚡ Step 18: Processing actions");
                             await this.runtime.processActions(
                                 memory,
                                 responseMessages,
@@ -502,11 +502,11 @@ export class MessageManager {
                         }
                     }
                 } else {
-                    console.log("⏭️ Should not respond - skipping");
+                    elizaLogger.log("⏭️ Should not respond - skipping");
                     this.processedMessages.set(messageKey, currentTime);
                 }
             } finally {
-                console.log(
+                elizaLogger.log(
                     "🔓 Final Step: Removing message from processing lock and deleting downloaded attachments"
                 );
                 this.messageProcessingLock.delete(messageKey);

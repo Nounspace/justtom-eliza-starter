@@ -174,7 +174,7 @@ ${mediaTranscript.trim()}
             callbackData.text = `I've attached the transcript as a text file.`;
             await callback(callbackData, [transcriptFilename]);
         } else {
-            console.warn("Empty response from transcribe media action");
+            elizaLogger.warn("Empty response from transcribe media action");
             await callback(callbackData);
         }
 

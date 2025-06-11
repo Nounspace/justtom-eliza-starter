@@ -17,7 +17,7 @@ const activeStreams = new Map<string, EventSource>();
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.info(`[PriceUpdatesStream] ${message}`, data);
-        console.log(`[PriceUpdatesStream] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[PriceUpdatesStream] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 

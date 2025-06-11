@@ -131,21 +131,21 @@ export function createGenericAction({
                     );
                 }
                 //Function that the LLM extracted
-                console.log(`wil pass these params ${JSON.stringify(params)}}`);
+                elizaLogger.log(`wil pass these params ${JSON.stringify(params)}}`);
 
                 //Need to standardize this context params
                 const response = await method(params);
-                console.log(
+                elizaLogger.log(
                     `Recieved a response from InjectiveGrpcClient , response: ${JSON.stringify(response)}, `
                 );
                 // Lets convert the result of the response into something that can be read
                 if (response.success) {
-                    console.log("Cleaning up the response");
+                    elizaLogger.log("Cleaning up the response");
                     const additionalTemplate = 'Extract the response from the following data, also make sure that you format the response into human readable format, make it the prettiest thing anyone can read basically a very nice comprehensive summary in a string format.';
                     const responseResult = JSON.stringify(response.result);
                     const newContext = `${additionalTemplate}\n${responseResult}`;
                     const totalContext = `Previous chat context:${context} \n New information : ${newContext}`;
-                    console.log(
+                    elizaLogger.log(
                         `Got context, now will pass it on to llm ${totalContext}`
                     );
                     const responseContent = await generateText({
@@ -154,7 +154,7 @@ export function createGenericAction({
                         modelClass: ModelClass.SMALL,
                     });
 
-                    console.log("Response content:", responseContent);
+                    elizaLogger.log("Response content:", responseContent);
                     if (callback)
                         callback({
                             text: `Operation ${name} succeeded, ${responseContent}.`,

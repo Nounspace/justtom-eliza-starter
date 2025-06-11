@@ -258,7 +258,7 @@ export class AssetManager {
             );
         }
 
-        console.log("Debug - AssetManager - Input paths:", {
+        elizaLogger.log("Debug - AssetManager - Input paths:", {
             uploadPath,
             targetDir,
             cwd: process.cwd()
@@ -275,7 +275,7 @@ export class AssetManager {
             ? targetDir
             : path.join(workspaceRoot, targetDir);
 
-        console.log("Debug - AssetManager - Resolved paths:", {
+        elizaLogger.log("Debug - AssetManager - Resolved paths:", {
             workspaceRoot,
             absoluteTargetDir
         });
@@ -291,7 +291,7 @@ export class AssetManager {
         const newFilename = `upload_${timestamp}${ext}`;
         const newPath = path.join(absoluteTargetDir, newFilename);
 
-        console.log("Debug - AssetManager - File paths:", {
+        elizaLogger.log("Debug - AssetManager - File paths:", {
             newFilename,
             newPath,
             exists: fs.existsSync(uploadPath)
@@ -300,7 +300,7 @@ export class AssetManager {
         // Copy the file
         try {
             await fs.promises.copyFile(uploadPath, newPath);
-            console.log("Debug - AssetManager - File copied successfully:", {
+            elizaLogger.log("Debug - AssetManager - File copied successfully:", {
                 from: uploadPath,
                 to: newPath
             });
@@ -320,7 +320,7 @@ export class AssetManager {
      * This includes validation, copying, and path management specific to Cosmos images
      */
     async handleImagesCosmos(uploadPath: string): Promise<string> {
-        console.log("Debug - AssetManager - Handling Cosmos image:", {
+        elizaLogger.log("Debug - AssetManager - Handling Cosmos image:", {
             uploadPath,
             type: 'image'
         });
@@ -368,7 +368,7 @@ export class AssetManager {
 
         try {
             await fs.promises.copyFile(uploadPath, newPath);
-            console.log("Debug - AssetManager - Cosmos image processed:", {
+            elizaLogger.log("Debug - AssetManager - Cosmos image processed:", {
                 from: uploadPath,
                 to: newPath,
                 size: fs.statSync(newPath).size
@@ -389,7 +389,7 @@ export class AssetManager {
      * This includes validation, copying, and path management specific to Cosmos videos
      */
     async handleVideosCosmos(uploadPath: string): Promise<string> {
-        console.log("Debug - AssetManager - Handling Cosmos video:", {
+        elizaLogger.log("Debug - AssetManager - Handling Cosmos video:", {
             uploadPath,
             type: 'video'
         });
@@ -437,7 +437,7 @@ export class AssetManager {
 
         try {
             await fs.promises.copyFile(uploadPath, newPath);
-            console.log("Debug - AssetManager - Cosmos video processed:", {
+            elizaLogger.log("Debug - AssetManager - Cosmos video processed:", {
                 from: uploadPath,
                 to: newPath,
                 size: fs.statSync(newPath).size
@@ -470,7 +470,7 @@ export class AssetManager {
         const isVideo = ['.mp4', '.avi', '.mov', '.webm'].includes(ext);
         const isImage = ['.jpg', '.jpeg', '.png', '.gif'].includes(ext);
 
-        console.log("Debug - AssetManager - Cosmos upload type:", {
+        elizaLogger.log("Debug - AssetManager - Cosmos upload type:", {
             path: uploadPath,
             extension: ext,
             isVideo,

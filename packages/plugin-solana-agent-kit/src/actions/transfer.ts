@@ -137,7 +137,7 @@ export default {
 
             const txId = await sak.transfer(recipientPubkey, Number(content.amount), mintPubkey)
 
-            console.log("Transfer successful:", txId);
+            elizaLogger.log("Transfer successful:", txId);
 
             if (callback) {
                 callback({

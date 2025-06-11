@@ -34,12 +34,12 @@ const HYPERBOLIC_SPASH = getConfig().HYPERBOLIC_SPASH;
 // Only show splash screen if NVIDIA_NIM_SPASH is true
 if (HYPERBOLIC_SPASH) {
     // Initial banner with chalk styling
-    console.log(`\n${chalk.cyan('┌────────────────────────────────────────┐')}`);
-    console.log(chalk.cyan('│') + chalk.yellow.bold('          HYPERBOLIC PLUGIN             ') + chalk.cyan(' │'));
-    console.log(chalk.cyan('├────────────────────────────────────────┤'));
-    console.log(chalk.cyan('│') + chalk.white('  Initializing HYPERBOLIC Services...    ') + chalk.cyan('│'));
-    console.log(chalk.cyan('│') + chalk.white('  Version: 1.0.0                        ') + chalk.cyan('│'));
-    console.log(chalk.cyan('└────────────────────────────────────────┘'));
+    elizaLogger.log(`\n${chalk.cyan('┌────────────────────────────────────────┐')}`);
+    elizaLogger.log(chalk.cyan('│') + chalk.yellow.bold('          HYPERBOLIC PLUGIN             ') + chalk.cyan(' │'));
+    elizaLogger.log(chalk.cyan('├────────────────────────────────────────┤'));
+    elizaLogger.log(chalk.cyan('│') + chalk.white('  Initializing HYPERBOLIC Services...    ') + chalk.cyan('│'));
+    elizaLogger.log(chalk.cyan('│') + chalk.white('  Version: 1.0.0                        ') + chalk.cyan('│'));
+    elizaLogger.log(chalk.cyan('└────────────────────────────────────────┘'));
 
     // Stop the loader
     spinner.succeed(chalk.green('HYPERBOLIC Plugin initialized successfully!'));
@@ -71,7 +71,7 @@ if (HYPERBOLIC_SPASH) {
     }
 
     // Display the action table
-    console.log(`\n${actionTable.toString()}`);
+    elizaLogger.log(`\n${actionTable.toString()}`);
 
     // Plugin status with a nice table
     const statusTable = new Table({
@@ -87,7 +87,7 @@ if (HYPERBOLIC_SPASH) {
       [chalk.white('Status  : ') + chalk.green('Loaded & Ready')]
     );
 
-    console.log(`\n${statusTable.toString()}\n`);
+    elizaLogger.log(`\n${statusTable.toString()}\n`);
   } else {
     // Stop the loader silently if splash is disabled
     spinner.stop();

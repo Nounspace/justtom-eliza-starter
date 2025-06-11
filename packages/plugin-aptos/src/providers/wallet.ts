@@ -129,10 +129,10 @@ export class WalletProvider {
                 await this.getCachedData<WalletPortfolio>(cacheKey);
 
             if (cachedValue) {
-                console.log("Cache hit for fetchPortfolioValue", cachedValue);
+                elizaLogger.log("Cache hit for fetchPortfolioValue", cachedValue);
                 return cachedValue;
             }
-            console.log("Cache miss for fetchPortfolioValue");
+            elizaLogger.log("Cache miss for fetchPortfolioValue");
 
             const prices = await this.fetchPrices().catch((error) => {
                 console.error("Error fetching APT price:", error);
@@ -157,7 +157,7 @@ export class WalletProvider {
                 totalApt: aptAmount.toString(),
             };
             this.setCachedData(cacheKey, portfolio);
-            console.log("Fetched portfolio:", portfolio);
+            elizaLogger.log("Fetched portfolio:", portfolio);
             return portfolio;
         } catch (error) {
             console.error("Error fetching portfolio:", error);
@@ -171,10 +171,10 @@ export class WalletProvider {
             const cachedValue = await this.getCachedData<Prices>(cacheKey);
 
             if (cachedValue) {
-                console.log("Cache hit for fetchPrices");
+                elizaLogger.log("Cache hit for fetchPrices");
                 return cachedValue;
             }
-            console.log("Cache miss for fetchPrices");
+            elizaLogger.log("Cache miss for fetchPrices");
 
             const aptPriceData = await this.fetchPricesWithRetry().catch(
                 (error) => {

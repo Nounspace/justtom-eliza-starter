@@ -52,9 +52,9 @@ export class TokenPriceAction implements Action {
             }
 
             // Get price data
-            console.log("Fetching price data...");
+            elizaLogger.log("Fetching price data...");
             const priceData = await provider.get(runtime, message, state);
-            console.log("Received price data:", priceData);
+            elizaLogger.log("Received price data:", priceData);
 
             if (priceData.includes("Error")) {
                 throw new Error(priceData);

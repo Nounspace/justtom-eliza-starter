@@ -25,7 +25,7 @@ export interface TransferContent extends Content {
 }
 
 function isTransferContent(content: Content): content is TransferContent {
-    console.log("Content for transfer", content);
+    elizaLogger.log("Content for transfer", content);
     return (
         typeof content.recipient === "string" &&
         (typeof content.amount === "string" ||
@@ -61,7 +61,7 @@ export default {
         "PAY",
     ],
     validate: async (_runtime: IAgentRuntime, message: Memory) => {
-        console.log("Validating mina transfer from user:", message.userId);
+        elizaLogger.log("Validating mina transfer from user:", message.userId);
         return true;
     },
     description: "Transfer tokens from the agent's wallet to another address",
@@ -146,10 +146,10 @@ export default {
             const pendingTx = await tx.sign([minaAccount]).send();
             await pendingTx.wait();
 
-            console.log(
+            elizaLogger.log(
                 `Transferring: ${transferContent.amount} tokens (${adjustedAmount} base units)`
             );
-            console.log("Transfer successful:", pendingTx.hash);
+            elizaLogger.log("Transfer successful:", pendingTx.hash);
 
             if (callback) {
                 callback({

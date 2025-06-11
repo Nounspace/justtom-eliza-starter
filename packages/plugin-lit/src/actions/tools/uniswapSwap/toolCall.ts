@@ -145,7 +145,7 @@ export const UNISWAP_SWAP_LIT_ACTION: Action = {
         },
       });
 
-      console.log("UniswapSwap Response:", response);
+      elizaLogger.log("UniswapSwap Response:", response);
 
       if (callback) {
         callback({

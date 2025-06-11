@@ -50,7 +50,7 @@ export const zerionProvider: ZerionProvider = {
             return { success: true, data: portfolioData };
 
         } catch (error) {
-            console.log("error fetching portfolio", error);
+            elizaLogger.log("error fetching portfolio", error);
             return { success: false, error: error instanceof Error ? error.message : "Failed to fetch portfolio data from zerion" };
         }
 

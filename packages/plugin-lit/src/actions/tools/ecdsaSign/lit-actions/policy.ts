@@ -69,5 +69,5 @@ declare global {
     );
   }
 
-  console.log('Message prefix validated successfully');
+  elizaLogger.log('Message prefix validated successfully');
 })();

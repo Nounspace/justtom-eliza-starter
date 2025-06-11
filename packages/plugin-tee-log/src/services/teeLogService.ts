@@ -39,7 +39,7 @@ export class TeeLogService extends Service implements ITeeLogService {
         }
         this.enableTeeLog = enableValues.includes(enableTeeLog.toLowerCase());
         if (!this.enableTeeLog) {
-            console.log("TEE log is not enabled.");
+            elizaLogger.log("TEE log is not enabled.");
             return;
         }
 

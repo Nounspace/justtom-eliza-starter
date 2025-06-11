@@ -61,7 +61,7 @@ export class ClientBase {
             body: JSON.stringify({ text, in_reply_to_id, author_type: "BOT" }),
         }).then((res) => res.json());
 
-        console.log(res);
+        elizaLogger.log(res);
         return res;
     }
 }

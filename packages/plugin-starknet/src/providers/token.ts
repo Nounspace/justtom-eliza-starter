@@ -144,7 +144,7 @@ export class TokenProvider {
             );
 
             if (!portfolioToken) {
-                console.warn(`Token with symbol ${tokenSymbol} not found in PORTFOLIO_TOKENS`);
+                elizaLogger.warn(`Token with symbol ${tokenSymbol} not found in PORTFOLIO_TOKENS`);
                 return null;
             }
 
@@ -158,7 +158,7 @@ export class TokenProvider {
                 return tokenAddress;
             }
             
-            console.warn(`Token with address ${tokenAddress} not found in wallet`);
+            elizaLogger.warn(`Token with address ${tokenAddress} not found in wallet`);
             return null;
         } catch (error) {
             console.error("Error checking token in wallet:", error);
@@ -171,7 +171,7 @@ export class TokenProvider {
             const cacheKey = "prices";
             const cachedData = this.cache.getCachedData<Prices>(cacheKey);
             if (cachedData) {
-                console.log("Returning cached prices.");
+                elizaLogger.log("Returning cached prices.");
                 return cachedData;
             }
 
@@ -194,7 +194,7 @@ export class TokenProvider {
 
             tokenResponses.forEach((tokenInfo: TokenInfo, index) => {
                 if (!tokenInfo.market) {
-                    console.warn(
+                    elizaLogger.warn(
                         `No price data available for token: ${tokens[index]}`
                     );
                     return;
@@ -275,7 +275,7 @@ export class TokenProvider {
         const cachedData =
             this.cache.getCachedData<TokenSecurityData>(cacheKey);
         if (cachedData) {
-            console.log(
+            elizaLogger.log(
                 `Returning cached token security data for ${this.tokenAddress}.`
             );
             return cachedData;
@@ -297,7 +297,7 @@ export class TokenProvider {
             top10HolderPercent: 0,
         };
         this.cache.setCachedData(cacheKey, security);
-        console.log(`Token security data cached for ${this.tokenAddress}.`);
+        elizaLogger.log(`Token security data cached for ${this.tokenAddress}.`);
 
         return security;
     }
@@ -307,7 +307,7 @@ export class TokenProvider {
         const cacheKey = `tokenTradeData_${this.tokenAddress}`;
         const cachedData = this.cache.getCachedData<TokenInfo>(cacheKey);
         if (cachedData) {
-            console.log(
+            elizaLogger.log(
                 `Returning cached token trade data for ${this.tokenAddress}.`
             );
             return cachedData;
@@ -372,13 +372,13 @@ export class TokenProvider {
         const cacheKey = `dexScreenerData_${this.tokenAddress}`;
         const cachedData = this.cache.getCachedData<DexScreenerData>(cacheKey);
         if (cachedData) {
-            console.log("Returning cached DexScreener data.");
+            elizaLogger.log("Returning cached DexScreener data.");
             return cachedData;
         }
 
         const url = `https://api.dexscreener.com/latest/dex/search?q=${this.tokenAddress}`;
         try {
-            console.log(
+            elizaLogger.log(
                 `Fetching DexScreener data for token: ${this.tokenAddress}`
             );
             const data = await fetch(url)
@@ -415,13 +415,13 @@ export class TokenProvider {
         const cacheKey = `dexScreenerData_search_${symbol}`;
         const cachedData = this.cache.getCachedData<DexScreenerData>(cacheKey);
         if (cachedData) {
-            console.log("Returning cached search DexScreener data.");
+            elizaLogger.log("Returning cached search DexScreener data.");
             return this.getHighestLiquidityPair(cachedData);
         }
 
         const url = `https://api.dexscreener.com/latest/dex/search?q=${symbol}`;
         try {
-            console.log(`Fetching DexScreener data for symbol: ${symbol}`);
+            elizaLogger.log(`Fetching DexScreener data for symbol: ${symbol}`);
             const data = await fetch(url)
                 .then((res) => res.json())
                 .catch((err) => {
@@ -516,7 +516,7 @@ export class TokenProvider {
         const cacheKey = `holderList_${this.tokenAddress}`;
         const cachedData = this.cache.getCachedData<HolderData[]>(cacheKey);
         if (cachedData) {
-            console.log("Returning cached holder list.");
+            elizaLogger.log("Returning cached holder list.");
             return cachedData;
         }
 
@@ -531,7 +531,7 @@ export class TokenProvider {
         const url = `https://mainnet.helius-rpc.com/?api-key=${
             settings.HELIUS_API_KEY || ""
         }`;
-        console.log({ url });
+        elizaLogger.log({ url });
 
         try {
             while (true) {
@@ -545,7 +545,7 @@ export class TokenProvider {
                 if (cursor !== undefined) {
                     params.cursor = cursor;
                 }
-                console.log(`Fetching holders - Page ${page}`);
+                elizaLogger.log(`Fetching holders - Page ${page}`);
                 if (page > 2) {
                     break;
                 }
@@ -570,7 +570,7 @@ export class TokenProvider {
                     !data.result.token_accounts ||
                     data.result.token_accounts.length === 0
                 ) {
-                    console.log(
+                    elizaLogger.log(
                         `No more holders found. Total pages fetched: ${
                             page - 1
                         }`
@@ -578,7 +578,7 @@ export class TokenProvider {
                     break;
                 }
 
-                console.log(
+                elizaLogger.log(
                     `Processing ${data.result.token_accounts.length} holders from page ${page}`
                 );
 
@@ -606,7 +606,7 @@ export class TokenProvider {
                 balance: balance.toString(),
             }));
 
-            console.log(`Total unique holders fetched: ${holders.length}`);
+            elizaLogger.log(`Total unique holders fetched: ${holders.length}`);
 
             // Cache the result
             this.cache.setCachedData(cacheKey, holders);
@@ -664,45 +664,45 @@ export class TokenProvider {
 
     async getProcessedTokenData(): Promise<ProcessedTokenData> {
         try {
-            console.log(
+            elizaLogger.log(
                 `Fetching security data for token: ${this.tokenAddress}`
             );
             const security = await this.fetchTokenSecurity();
 
-            console.log(`Fetching trade data for token: ${this.tokenAddress}`);
+            elizaLogger.log(`Fetching trade data for token: ${this.tokenAddress}`);
             const tradeData = await this.fetchTokenTradeData();
 
-            console.log(
+            elizaLogger.log(
                 `Fetching DexScreener data for token: ${this.tokenAddress}`
             );
             const dexData = await this.fetchDexScreenerData();
 
-            console.log(
+            elizaLogger.log(
                 `Analyzing holder distribution for token: ${this.tokenAddress}`
             );
             const holderDistributionTrend =
                 await this.analyzeHolderDistribution(tradeData);
 
-            console.log(
+            elizaLogger.log(
                 `Filtering high-value holders for token: ${this.tokenAddress}`
             );
             const highValueHolders =
                 await this.filterHighValueHolders(tradeData);
 
-            console.log(
+            elizaLogger.log(
                 `Checking recent trades for token: ${this.tokenAddress}`
             );
             const recentTrades = await this.checkRecentTrades(
                 num.toBigInt(tradeData.market.starknetTradingVolume24h)
             );
 
-            console.log(
+            elizaLogger.log(
                 `Counting high-supply holders for token: ${this.tokenAddress}`
             );
             const highSupplyHoldersCount =
                 await this.countHighSupplyHolders(security);
 
-            console.log(
+            elizaLogger.log(
                 `Determining DexScreener listing status for token: ${this.tokenAddress}`
             );
             const isDexScreenerListed = dexData.pairs.length > 0;
@@ -722,7 +722,7 @@ export class TokenProvider {
                 isDexScreenerPaid,
             };
 
-            // console.log("Processed token data:", processedData);
+            // elizaLogger.log("Processed token data:", processedData);
             return processedData;
         } catch (error) {
             console.error("Error processing token data:", error);
@@ -852,13 +852,13 @@ export class TokenProvider {
         }
         output += `\n`;
 
-        console.log("Formatted token data:", output);
+        elizaLogger.log("Formatted token data:", output);
         return output;
     }
 
     async getFormattedTokenReport(): Promise<string> {
         try {
-            console.log("Generating formatted token report...");
+            elizaLogger.log("Generating formatted token report...");
             const processedData = await this.getProcessedTokenData();
             return this.formatTokenData(processedData);
         } catch (error) {

@@ -111,7 +111,7 @@ export class WalletProvider {
             to: req.to ? (req.to as `0x${string}`) : undefined,
         };
         const tx = await this.walletClient.sendTransaction(txRequest);
-        console.log("sendTransaction txhash:", tx);
+        elizaLogger.log("sendTransaction txhash:", tx);
         return tx;
     }
 

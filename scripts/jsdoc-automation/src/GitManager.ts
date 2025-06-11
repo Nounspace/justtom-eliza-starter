@@ -116,7 +116,7 @@ export class GitManager {
             });
         } catch (error: any) {
             if (error.status === 404) {
-                console.log(
+                elizaLogger.log(
                     "404 - File doesn't exist in the target branch, creating a new file"
                 );
                 // File doesn't exist in the target branch, create a new file
@@ -173,7 +173,7 @@ export class GitManager {
                 });
             }
 
-            console.log(`Created PR #${pr.number}: ${pr.html_url}`);
+            elizaLogger.log(`Created PR #${pr.number}: ${pr.html_url}`);
         } catch (error) {
             console.error("Error creating pull request:", error);
             throw error;

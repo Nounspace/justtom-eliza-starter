@@ -123,7 +123,7 @@ export const blockchainChatAction: Action = {
                     const parsed = JSON.parse(cleanedText);
                     elizaLogger.log("Successfully parsed response:", parsed);
 
-                    console.log(parsed.message);
+                    elizaLogger.log(parsed.message);
 
                     await callback({ text: parsed.message });
 

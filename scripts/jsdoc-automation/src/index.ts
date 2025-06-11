@@ -27,7 +27,7 @@ async function main() {
             typeof configuration.repository.pullNumber === "number" &&
             !isNaN(configuration.repository.pullNumber)
         ) {
-            console.log(
+            elizaLogger.log(
                 "Pull Request Number: ",
                 configuration.repository.pullNumber
             );

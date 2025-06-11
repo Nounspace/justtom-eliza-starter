@@ -32,12 +32,12 @@ const NVIDIA_NIM_SPASH = getConfig().NVIDIA_NIM_SPASH;
 // Only show splash screen if NVIDIA_NIM_SPASH is true
 if (NVIDIA_NIM_SPASH) {
   // Initial banner with chalk styling
-  console.log('\n' + chalk.cyan('┌────────────────────────────────────────┐'));
-  console.log(chalk.cyan('│') + chalk.yellow.bold('          NVIDIA NIM PLUGIN             ') + chalk.cyan(' │'));
-  console.log(chalk.cyan('├────────────────────────────────────────┤'));
-  console.log(chalk.cyan('│') + chalk.white('  Initializing NVIDIA NIM Services...    ') + chalk.cyan('│'));
-  console.log(chalk.cyan('│') + chalk.white('  Version: 1.0.0                        ') + chalk.cyan('│'));
-  console.log(chalk.cyan('└────────────────────────────────────────┘'));
+  elizaLogger.log('\n' + chalk.cyan('┌────────────────────────────────────────┐'));
+  elizaLogger.log(chalk.cyan('│') + chalk.yellow.bold('          NVIDIA NIM PLUGIN             ') + chalk.cyan(' │'));
+  elizaLogger.log(chalk.cyan('├────────────────────────────────────────┤'));
+  elizaLogger.log(chalk.cyan('│') + chalk.white('  Initializing NVIDIA NIM Services...    ') + chalk.cyan('│'));
+  elizaLogger.log(chalk.cyan('│') + chalk.white('  Version: 1.0.0                        ') + chalk.cyan('│'));
+  elizaLogger.log(chalk.cyan('└────────────────────────────────────────┘'));
 
   // Stop the loader
   spinner.succeed(chalk.green('NVIDIA NIM Plugin initialized successfully!'));
@@ -69,7 +69,7 @@ if (NVIDIA_NIM_SPASH) {
   });
 
   // Display the action table
-  console.log('\n' + actionTable.toString());
+  elizaLogger.log('\n' + actionTable.toString());
 
   // Plugin status with a nice table
   const statusTable = new Table({
@@ -85,7 +85,7 @@ if (NVIDIA_NIM_SPASH) {
     [chalk.white('Status  : ') + chalk.green('Loaded & Ready')]
   );
 
-  console.log('\n' + statusTable.toString() + '\n');
+  elizaLogger.log('\n' + statusTable.toString() + '\n');
 } else {
   // Stop the loader silently if splash is disabled
   spinner.stop();

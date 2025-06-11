@@ -3,7 +3,7 @@
  * @returns {Promise<{ maxFeePerGas: string, maxPriorityFeePerGas: string, nonce: number }>} Gas data.
  */
 export const getGasData = async (provider: any, pkpEthAddress: string) => {
-  console.log(`Getting gas data...`);
+  elizaLogger.log(`Getting gas data...`);
 
   const gasData = await Lit.Actions.runOnce(
     { waitForResponse: true, name: 'gasPriceGetter' },
@@ -27,6 +27,6 @@ export const getGasData = async (provider: any, pkpEthAddress: string) => {
     }
   );
 
-  console.log(`Gas data: ${gasData}`);
+  elizaLogger.log(`Gas data: ${gasData}`);
   return JSON.parse(gasData);
 };

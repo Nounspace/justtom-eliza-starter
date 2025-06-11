@@ -35,22 +35,22 @@ runMain({
             const templateName = context.args.name || DEFAULT_TEMPLATE;
             const targetDir = context.args.dir || context.args._dir;
 
-            console.log(`Downloading template ${templateName}...`);
+            elizaLogger.log(`Downloading template ${templateName}...`);
 
             const res = await downloadTemplate(templateName, {
                 registry: context.args.registry,
                 dir: targetDir,
             });
 
-            console.log(`Downloaded template to ${res.dir} from ${res.source}`);
+            elizaLogger.log(`Downloaded template to ${res.dir} from ${res.source}`);
 
             // Print getting started instructions if using default template
             if (templateName === DEFAULT_TEMPLATE) {
-                console.log("\nGetting Started:");
-                console.log(`  cd ${res.dir}`);
-                console.log("  cp .env.example .env");
-                console.log("  pnpm install");
-                console.log("  pnpm start");
+                elizaLogger.log("\nGetting Started:");
+                elizaLogger.log(`  cd ${res.dir}`);
+                elizaLogger.log("  cp .env.example .env");
+                elizaLogger.log("  pnpm install");
+                elizaLogger.log("  pnpm start");
             }
         } catch (error: any) {
             console.error(

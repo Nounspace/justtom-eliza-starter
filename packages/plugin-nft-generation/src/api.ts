@@ -32,7 +32,7 @@ export function createNFTApiRouter(
                     data: collectionAddressRes,
                 });
             } catch (e: any) {
-                console.log(e);
+                elizaLogger.log(e);
                 res.json({
                     success: false,
                     data: JSON.stringify(e),
@@ -73,7 +73,7 @@ export function createNFTApiRouter(
                     },
                 });
             } catch (e: any) {
-                console.log(e);
+                elizaLogger.log(e);
                 res.json({
                     success: false,
                     data: JSON.stringify(e),
@@ -112,7 +112,7 @@ export function createNFTApiRouter(
                     data: nftRes,
                 });
             } catch (e: any) {
-                console.log(e);
+                elizaLogger.log(e);
                 res.json({
                     success: false,
                     data: JSON.stringify(e),
@@ -151,7 +151,7 @@ export function createNFTApiRouter(
                     data: success ? "verified" : "unverified",
                 });
             } catch (e: any) {
-                console.log(e);
+                elizaLogger.log(e);
                 res.json({
                     success: false,
                     data: JSON.stringify(e),

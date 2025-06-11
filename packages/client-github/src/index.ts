@@ -97,7 +97,7 @@ export class GitHubClient {
     }
 
     async createMemoriesFromFiles() {
-        console.log("Create memories");
+        elizaLogger.log("Create memories");
         const searchPath = this.config.path
             ? path.join(this.repoPath, this.config.path, "**/*")
             : path.join(this.repoPath, "**/*");
@@ -124,7 +124,7 @@ export class GitHubClient {
                 continue;
             }
 
-            console.log(
+            elizaLogger.log(
                 "Processing knowledge for ",
                 this.runtime.character.name,
                 " - ",

@@ -12,19 +12,19 @@ class RemoteAttestationProvider {
         switch (teeMode) {
             case TEEMode.LOCAL:
                 endpoint = "http://localhost:8090";
-                console.log(
+                elizaLogger.log(
                     "TEE: Connecting to local simulator at localhost:8090"
                 );
                 break;
             case TEEMode.DOCKER:
                 endpoint = "http://host.docker.internal:8090";
-                console.log(
+                elizaLogger.log(
                     "TEE: Connecting to simulator via Docker at host.docker.internal:8090"
                 );
                 break;
             case TEEMode.PRODUCTION:
                 endpoint = undefined;
-                console.log(
+                elizaLogger.log(
                     "TEE: Running in production mode without simulator"
                 );
                 break;
@@ -41,18 +41,18 @@ class RemoteAttestationProvider {
         reportData: string
     ): Promise<RemoteAttestationQuote> {
         try {
-            console.log("Generating attestation for: ", reportData);
+            elizaLogger.log("Generating attestation for: ", reportData);
             const tdxQuote: TdxQuoteResponse =
                 await this.client.tdxQuote(reportData);
             const rtmrs = tdxQuote.replayRtmrs();
-            console.log(
+            elizaLogger.log(
                 `rtmr0: ${rtmrs[0]}\nrtmr1: ${rtmrs[1]}\nrtmr2: ${rtmrs[2]}\nrtmr3: ${rtmrs[3]}f`
             );
             const quote: RemoteAttestationQuote = {
                 quote: tdxQuote.quote,
                 timestamp: Date.now(),
             };
-            console.log("Remote attestation quote: ", quote);
+            elizaLogger.log("Remote attestation quote: ", quote);
             return quote;
         } catch (error) {
             console.error("Error generating remote attestation:", error);
@@ -73,7 +73,7 @@ const remoteAttestationProvider: Provider = {
         const agentId = runtime.agentId;
 
         try {
-            console.log("Generating attestation for: ", agentId);
+            elizaLogger.log("Generating attestation for: ", agentId);
             const attestation = await provider.generateAttestation(agentId);
             return `Your Agent's remote attestation is: ${JSON.stringify(attestation)}`;
         } catch (error) {

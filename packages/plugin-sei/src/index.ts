@@ -3,7 +3,7 @@ import { evmWalletProvider } from "./providers/wallet.ts";
 
 import { transferAction } from "./actions/transfer";
 
-console.log("SEI IS BEING INITIALIZED")
+elizaLogger.log("SEI IS BEING INITIALIZED")
 
 export const seiPlugin: Plugin = {
     name: "sei",

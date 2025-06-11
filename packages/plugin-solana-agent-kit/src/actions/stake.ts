@@ -101,7 +101,7 @@ export default {
                 content.amount
             );
 
-            console.log("Stake result:", stakeResult);
+            elizaLogger.log("Stake result:", stakeResult);
 
             if (callback) {
                 callback({

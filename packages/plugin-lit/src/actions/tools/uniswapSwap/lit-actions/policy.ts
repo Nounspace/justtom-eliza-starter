@@ -45,7 +45,7 @@ declare global {
   let maxAmount: any;
   let allowedTokens: string[] = [];
 
-  console.log(
+  elizaLogger.log(
     `Retrieved policy parameters: ${JSON.stringify(policyParameters)}`
   );
 
@@ -55,21 +55,21 @@ declare global {
     switch (parameter.name) {
       case 'maxAmount':
         maxAmount = ethers.BigNumber.from(value);
-        console.log(`Formatted maxAmount: ${maxAmount.toString()}`);
+        elizaLogger.log(`Formatted maxAmount: ${maxAmount.toString()}`);
         break;
       case 'allowedTokens':
         allowedTokens = JSON.parse(value);
         allowedTokens = allowedTokens.map((addr: string) =>
           ethers.utils.getAddress(addr)
         );
-        console.log(`Formatted allowedTokens: ${allowedTokens.join(', ')}`);
+        elizaLogger.log(`Formatted allowedTokens: ${allowedTokens.join(', ')}`);
         break;
     }
   }
 
   // Convert string amount to BigNumber and compare
   const amountBN = ethers.BigNumber.from(toolParameters.amountIn);
-  console.log(
+  elizaLogger.log(
     `Checking if amount ${amountBN.toString()} exceeds maxAmount ${maxAmount.toString()}...`
   );
 
@@ -82,7 +82,7 @@ declare global {
   }
 
   if (allowedTokens.length > 0) {
-    console.log(`Checking if ${toolParameters.tokenIn} is an allowed token...`);
+    elizaLogger.log(`Checking if ${toolParameters.tokenIn} is an allowed token...`);
     if (
       !allowedTokens.includes(ethers.utils.getAddress(toolParameters.tokenIn))
     ) {
@@ -93,7 +93,7 @@ declare global {
       );
     }
 
-    console.log(
+    elizaLogger.log(
       `Checking if ${toolParameters.tokenOut} is an allowed token...`
     );
     if (
@@ -107,5 +107,5 @@ declare global {
     }
   }
 
-  console.log('Policy parameters validated');
+  elizaLogger.log('Policy parameters validated');
 })();

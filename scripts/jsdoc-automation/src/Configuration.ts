@@ -107,14 +107,14 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
             ? process.env.INPUT_README.toUpperCase() === "T"
             : true; // Default from workflow
 
-        console.log("Documentation flags:", {
+        elizaLogger.log("Documentation flags:", {
             generateJsDoc: this._generateJsDoc,
             generateReadme: this._generateReadme,
         });
 
         let inputs;
 
-        console.log("Environment variables:", {
+        elizaLogger.log("Environment variables:", {
             rootDirectory: process.env.INPUT_ROOT_DIRECTORY,
             pullNumber: process.env.INPUT_PULL_NUMBER,
             excludedDirs: process.env.INPUT_EXCLUDED_DIRECTORIES,
@@ -122,7 +122,7 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
         });
 
         if (rootDirectory) {
-            console.log(
+            elizaLogger.log(
                 "Using root directory from environment variable:",
                 rootDirectory
             );
@@ -131,7 +131,7 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
                 relative: rootDirectory.replace(/^\/+/, ""),
             };
         } else {
-            console.log("Falling back to workflow file configuration");
+            elizaLogger.log("Falling back to workflow file configuration");
             const workflowPath = join(
                 this.repoRoot,
                 ".github/workflows/jsdoc-automation.yml"
@@ -150,7 +150,7 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
             }
 
             const targetDir = inputs.root_directory.default;
-            console.log(
+            elizaLogger.log(
                 "Using default root directory from workflow:",
                 targetDir
             );
@@ -160,14 +160,14 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
             };
         }
 
-        console.log("Final root directory configuration:", {
+        elizaLogger.log("Final root directory configuration:", {
             absolute: this._rootDirectory.absolute,
             relative: this._rootDirectory.relative,
         });
 
         // Handle other inputs
         if (process.env.INPUT_PULL_NUMBER) {
-            console.log(
+            elizaLogger.log(
                 "Setting pull number from env:",
                 process.env.INPUT_PULL_NUMBER
             );
@@ -187,7 +187,7 @@ export class Configuration implements Omit<ConfigurationData, "rootDirectory"> {
         );
 
         this._branch = process.env.INPUT_BRANCH || "develop";
-        console.log("Using branch:", this._branch);
+        elizaLogger.log("Using branch:", this._branch);
     }
 
     private parseCommaSeparatedInput(

@@ -50,7 +50,7 @@ export const createIBCSwapAction = (pluginOptions: ICosmosPluginOptions) => ({
             fromTokenDenom: cosmosIBCSwapContent?.fromTokenDenom || undefined,
         };
 
-        console.log(
+        elizaLogger.log(
             "Parameters extracted from user prompt: ",
             JSON.stringify(paramOptions, null, 2)
         );

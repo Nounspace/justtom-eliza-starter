@@ -30,11 +30,11 @@ declare global {
 
 (async () => {
   try {
-    console.log(`Using Lit Network: ${LIT_NETWORK}`);
-    console.log(
+    elizaLogger.log(`Using Lit Network: ${LIT_NETWORK}`);
+    elizaLogger.log(
       `Using PKP Tool Registry Address: ${PKP_TOOL_REGISTRY_ADDRESS}`
     );
-    console.log(
+    elizaLogger.log(
       `Using Pubkey Router Address: ${
         NETWORK_CONFIG[LIT_NETWORK as keyof typeof NETWORK_CONFIG]
           .pubkeyRouterAddress
@@ -73,7 +73,7 @@ declare global {
       toolPolicy.policyIpfsCid !== '0x' &&
       toolPolicy.policyIpfsCid !== ''
     ) {
-      console.log(`Executing policy ${toolPolicy.policyIpfsCid}`);
+      elizaLogger.log(`Executing policy ${toolPolicy.policyIpfsCid}`);
 
       await Lit.Actions.call({
         ipfsId: toolPolicy.policyIpfsCid,
@@ -90,7 +90,7 @@ declare global {
         },
       });
     } else {
-      console.log(
+      elizaLogger.log(
         `No policy found for tool ${toolIpfsCid} on PKP ${pkp.tokenId} for delegatee ${delegateeAddress}`
       );
     }
@@ -131,10 +131,10 @@ declare global {
       'erc20ApprovalSig'
     );
     const approvalHash = await broadcastTransaction(provider, signedApprovalTx);
-    console.log('Approval transaction hash:', approvalHash);
+    elizaLogger.log('Approval transaction hash:', approvalHash);
 
     // Wait for approval confirmation
-    console.log('Waiting for approval confirmation...');
+    elizaLogger.log('Waiting for approval confirmation...');
     const approvalConfirmation = await provider.waitForTransaction(
       approvalHash,
       1
@@ -166,7 +166,7 @@ declare global {
 
     const signedSwapTx = await signTx(pkp.publicKey, swapTx, 'erc20SwapSig');
     const swapHash = await broadcastTransaction(provider, signedSwapTx);
-    console.log('Swap transaction hash:', swapHash);
+    elizaLogger.log('Swap transaction hash:', swapHash);
 
     Lit.Actions.setResponse({
       response: JSON.stringify({

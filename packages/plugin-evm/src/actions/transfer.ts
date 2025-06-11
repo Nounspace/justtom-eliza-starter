@@ -19,7 +19,7 @@ export class TransferAction {
     constructor(private walletProvider: WalletProvider) {}
 
     async transfer(params: TransferParams): Promise<Transaction> {
-        console.log(
+        elizaLogger.log(
             `Transferring: ${params.amount} tokens to (${params.toAddress} on ${params.fromChain})`
         );
 
@@ -115,7 +115,7 @@ export const transferAction: Action = {
             state = await runtime.updateRecentMessageState(state);
         }
 
-        console.log("Transfer action handler called");
+        elizaLogger.log("Transfer action handler called");
         const walletProvider = await initWalletProvider(runtime);
         const action = new TransferAction(walletProvider);
 

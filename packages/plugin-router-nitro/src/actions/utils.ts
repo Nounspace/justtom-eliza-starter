@@ -220,7 +220,7 @@ export async function fetchTokenConfig(chainId: number, token: string): Promise<
 
     // Check if the token config is already cached
     if (tokenCache[cacheKey]) {
-        console.log(`Cache hit for ${cacheKey}`);
+        elizaLogger.log(`Cache hit for ${cacheKey}`);
         return tokenCache[cacheKey];
     }
 
@@ -246,7 +246,7 @@ export async function fetchTokenConfig(chainId: number, token: string): Promise<
             const errorMessage = error instanceof Error 
                 ? error.message 
                 : 'Unknown error occurred';
-            console.warn(`Error with token symbol "${tokenSymbol}": ${errorMessage}`);
+            elizaLogger.warn(`Error with token symbol "${tokenSymbol}": ${errorMessage}`);
         }
     }
 

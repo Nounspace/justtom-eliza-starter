@@ -237,7 +237,7 @@ export class DevaController {
             in_reply_to_id: null,
         });
 
-        console.log(newPostContent);
+        elizaLogger.log(newPostContent);
 
         elizaLogger.log(`New Post published:\n ${newPostContent}`);
     }

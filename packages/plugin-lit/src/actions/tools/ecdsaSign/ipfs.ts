@@ -44,10 +44,10 @@ if (existsSync(ipfsPath)) {
     });
     deployedCids = ipfsModule.default;
   } catch (error) {
-    console.warn('Failed to load ipfs.json, using default CIDs:', error);
+    elizaLogger.warn('Failed to load ipfs.json, using default CIDs:', error);
   }
 } else {
-  console.warn(
+  elizaLogger.warn(
     'ipfs.json not found. Using default CIDs. You should run `npx nx deploy:lit-action` to update the ipfs.json files.'
   );
 }

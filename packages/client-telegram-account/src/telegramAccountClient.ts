@@ -70,7 +70,7 @@ export class TelegramAccountClient {
             phoneNumber: this.telegramAccountConfig.TELEGRAM_ACCOUNT_PHONE,
             password: null,
             phoneCode: async () => await input.text('Enter received Telegram code: '),
-            onError: (err) => console.log(err),
+            onError: (err) => elizaLogger.log(err),
         });
 
         this.client.session.save();

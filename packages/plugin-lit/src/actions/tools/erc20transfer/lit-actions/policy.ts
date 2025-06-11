@@ -46,7 +46,7 @@ declare global {
   let allowedTokens: string[] = [];
   let allowedRecipients: string[] = [];
 
-  console.log(
+  elizaLogger.log(
     `Retrieved policy parameters: ${JSON.stringify(policyParameters)}`
   );
 
@@ -56,21 +56,21 @@ declare global {
     switch (parameter.name) {
       case 'maxAmount':
         maxAmount = ethers.BigNumber.from(value);
-        console.log(`Formatted maxAmount: ${maxAmount.toString()}`);
+        elizaLogger.log(`Formatted maxAmount: ${maxAmount.toString()}`);
         break;
       case 'allowedTokens':
         allowedTokens = JSON.parse(value);
         allowedTokens = allowedTokens.map((addr: string) =>
           ethers.utils.getAddress(addr)
         );
-        console.log(`Formatted allowedTokens: ${allowedTokens.join(', ')}`);
+        elizaLogger.log(`Formatted allowedTokens: ${allowedTokens.join(', ')}`);
         break;
       case 'allowedRecipients':
         allowedRecipients = JSON.parse(value);
         allowedRecipients = allowedRecipients.map((addr: string) =>
           ethers.utils.getAddress(addr)
         );
-        console.log(
+        elizaLogger.log(
           `Formatted allowedRecipients: ${allowedRecipients.join(', ')}`
         );
         break;
@@ -79,7 +79,7 @@ declare global {
 
   // Convert string amount to BigNumber and compare
   const amountBN = ethers.BigNumber.from(tokenInfo.amount);
-  console.log(
+  elizaLogger.log(
     `Checking if amount ${amountBN.toString()} exceeds maxAmount ${maxAmount.toString()}...`
   );
 
@@ -92,7 +92,7 @@ declare global {
   }
 
   if (allowedTokens.length > 0) {
-    console.log(`Checking if ${tokenInfo.tokenAddress} is an allowed token...`);
+    elizaLogger.log(`Checking if ${tokenInfo.tokenAddress} is an allowed token...`);
 
     if (
       !allowedTokens.includes(ethers.utils.getAddress(tokenInfo.tokenAddress))
@@ -106,7 +106,7 @@ declare global {
   }
 
   if (allowedRecipients.length > 0) {
-    console.log(
+    elizaLogger.log(
       `Checking if ${tokenInfo.recipientAddress} is an allowed recipient...`
     );
 
@@ -123,5 +123,5 @@ declare global {
     }
   }
 
-  console.log('Policy parameters validated');
+  elizaLogger.log('Policy parameters validated');
 })();

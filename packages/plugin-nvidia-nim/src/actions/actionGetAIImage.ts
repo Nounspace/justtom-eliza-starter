@@ -17,7 +17,7 @@ const GRANULAR_LOG = config.NVIDIA_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.info(`[AIImageDetection] ${message}`, data);
-        console.log(`[AIImageDetection] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[AIImageDetection] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -104,7 +104,7 @@ export const getAIImageAction: Action = {
 
         try {
             const messageContent = message.content as AIImageContent;
-            console.log("Debug - Full message content:", {
+            elizaLogger.log("Debug - Full message content:", {
                 fullContent: message.content,
                 rawText: messageContent?.text,
                 type: message.content?.type,
@@ -112,7 +112,7 @@ export const getAIImageAction: Action = {
                 attachments: message.content?.attachments
             });
 
-            console.log("Debug - Message content details:", {
+            elizaLogger.log("Debug - Message content details:", {
                 hasText: !!messageContent?.text,
                 hasMediaFile: !!messageContent?.mediaFile,
                 hasAttachments: !!message.content?.attachments?.length,
@@ -125,19 +125,19 @@ export const getAIImageAction: Action = {
             });
 
             const config = await validateNvidiaNimConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasApiKey: !!config.NVIDIA_NIM_API_KEY,
                 env: config.NVIDIA_NIM_ENV
             });
 
             const networkConfig = getNetworkConfig(config.NVIDIA_NIM_ENV);
-            console.log("Debug - Network config:", {
+            elizaLogger.log("Debug - Network config:", {
                 hasBaseUrl: !!networkConfig?.baseUrl,
                 baseUrl: networkConfig?.baseUrl
             });
 
             // Parse the prompt using our helper
-            console.log("Debug - Raw prompt:", {
+            elizaLogger.log("Debug - Raw prompt:", {
                 text: messageContent.text,
                 hasMediaFile: !!messageContent.mediaFile,
                 mediaFile: messageContent.mediaFile,
@@ -150,7 +150,7 @@ export const getAIImageAction: Action = {
                 message.content?.attachments,
                 config.NVIDIA_NIM_API_KEY
             );
-            console.log("Debug - Parsed content:", {
+            elizaLogger.log("Debug - Parsed content:", {
                 hasMediaFile: !!parsedPrompt.mediaFile,
                 mediaPath: parsedPrompt.mediaFile,
                 mediaLength: parsedPrompt.mediaFile?.length,
@@ -165,7 +165,7 @@ export const getAIImageAction: Action = {
 
             if (parsedPrompt.isBase64) {
                 // Image is already in base64 format from chat
-                console.log("Debug - Using base64 image from chat");
+                elizaLogger.log("Debug - Using base64 image from chat");
                 imageB64 = parsedPrompt.mediaFile.split('base64,')[1]; // Remove the data:image/jpeg;base64, prefix
                 fileData = Buffer.from(imageB64, 'base64');
 
@@ -192,7 +192,7 @@ export const getAIImageAction: Action = {
                     workspaceRoot = path.dirname(workspaceRoot);
                 }
 
-                console.log("Debug - Workspace detection:", {
+                elizaLogger.log("Debug - Workspace detection:", {
                     workspaceRoot,
                     hasPackagesDir: fs.existsSync(path.join(workspaceRoot, 'packages'))
                 });
@@ -201,7 +201,7 @@ export const getAIImageAction: Action = {
                 mediaPath = path.join(aiImageDir, parsedPrompt.mediaFile);
                 const absolutePath = path.resolve(mediaPath);
 
-                console.log("Debug - File paths:", {
+                elizaLogger.log("Debug - File paths:", {
                     workspaceRoot,
                     aiImageDir,
                     mediaPath,
@@ -213,17 +213,17 @@ export const getAIImageAction: Action = {
 
                 // Ensure aiimage directory exists
                 if (!fs.existsSync(aiImageDir)) {
-                    console.log("Debug - Creating aiimage directory");
+                    elizaLogger.log("Debug - Creating aiimage directory");
                     fs.mkdirSync(aiImageDir, { recursive: true });
                 }
 
                 // Test file access
                 try {
                     await fs.promises.access(mediaPath, fs.constants.R_OK);
-                    console.log("Debug - File is readable at path:", mediaPath);
+                    elizaLogger.log("Debug - File is readable at path:", mediaPath);
 
                     const stats = await fs.promises.stat(mediaPath);
-                    console.log("Debug - File stats:", {
+                    elizaLogger.log("Debug - File stats:", {
                         size: stats.size,
                         isFile: stats.isFile(),
                         permissions: stats.mode
@@ -241,7 +241,7 @@ export const getAIImageAction: Action = {
                     // Try listing directory contents
                     try {
                         const dirContents = await fs.promises.readdir(path.dirname(mediaPath));
-                        console.log("Debug - Directory contents:", {
+                        elizaLogger.log("Debug - Directory contents:", {
                             path: path.dirname(mediaPath),
                             files: dirContents
                         });
@@ -256,7 +256,7 @@ export const getAIImageAction: Action = {
                 }
 
                 // Read the file
-                console.log("Debug - Reading file from path");
+                elizaLogger.log("Debug - Reading file from path");
                 fileData = fs.readFileSync(mediaPath);
                 imageB64 = fileData.toString('base64');
             }
@@ -319,7 +319,7 @@ export const getAIImageAction: Action = {
 
                 // Make the API request
                 const apiUrl = 'https://ai.api.nvidia.com/v1/cv/hive/ai-generated-image-detection';
-                console.log("Debug - Making API request:", {
+                elizaLogger.log("Debug - Making API request:", {
                     url: apiUrl,
                     payloadSize: JSON.stringify(payload).length,
                     hasAuth: !!headers.Authorization
@@ -335,7 +335,7 @@ export const getAIImageAction: Action = {
                     }
                 );
 
-                console.log("Debug - API Response received:", {
+                elizaLogger.log("Debug - API Response received:", {
                     status: 'success',
                     dataLength: JSON.stringify(response).length
                 });

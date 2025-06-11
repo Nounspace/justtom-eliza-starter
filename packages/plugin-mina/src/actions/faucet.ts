@@ -21,7 +21,7 @@ export interface FaucetContent extends Content {
 }
 
 function isFaucetContent(content: Content): content is FaucetContent {
-    console.log("Content for Faucet", content);
+    elizaLogger.log("Content for Faucet", content);
     return typeof content.recipient === "string";
 }
 
@@ -53,7 +53,7 @@ export default {
     name: "FAUCET",
     similes: ["FAUCET", "GET_TEST_TOKENS"],
     validate: async (_runtime: IAgentRuntime, message: Memory) => {
-        console.log("Validating mina Faucet from user:", message.userId);
+        elizaLogger.log("Validating mina Faucet from user:", message.userId);
         return true;
     },
     description: "Get test tokens from the faucet",
@@ -114,7 +114,7 @@ export default {
             await Mina.faucet(recipient, FaucetContent.network);
             const defaultAmount = 300;
 
-            console.log("Faucet successful");
+            elizaLogger.log("Faucet successful");
 
             if (callback) {
                 callback({

@@ -21,19 +21,19 @@ class DeriveKeyProvider {
         switch (teeMode) {
             case TEEMode.LOCAL:
                 endpoint = "http://localhost:8090";
-                console.log(
+                elizaLogger.log(
                     "TEE: Connecting to local simulator at localhost:8090"
                 );
                 break;
             case TEEMode.DOCKER:
                 endpoint = "http://host.docker.internal:8090";
-                console.log(
+                elizaLogger.log(
                     "TEE: Connecting to simulator via Docker at host.docker.internal:8090"
                 );
                 break;
             case TEEMode.PRODUCTION:
                 endpoint = undefined;
-                console.log(
+                elizaLogger.log(
                     "TEE: Running in production mode without simulator"
                 );
                 break;
@@ -56,9 +56,9 @@ class DeriveKeyProvider {
             publicKey,
         };
         const reportdata = JSON.stringify(deriveKeyData);
-        console.log("Generating Remote Attestation Quote for Derive Key...");
+        elizaLogger.log("Generating Remote Attestation Quote for Derive Key...");
         const quote = await this.raProvider.generateAttestation(reportdata);
-        console.log("Remote Attestation Quote generated successfully!");
+        elizaLogger.log("Remote Attestation Quote generated successfully!");
         return quote;
     }
 
@@ -74,7 +74,7 @@ class DeriveKeyProvider {
                 );
             }
 
-            console.log("Deriving Key in TEE...");
+            elizaLogger.log("Deriving Key in TEE...");
             const derivedKey = await this.client.deriveKey(path, subject);
             const uint8ArrayDerivedKey = derivedKey.asUint8Array();
 
@@ -89,7 +89,7 @@ class DeriveKeyProvider {
                 agentId,
                 keypair.address
             );
-            console.log("Key Derived Successfully!");
+            elizaLogger.log("Key Derived Successfully!");
 
             return { keypair, attestation };
         } catch (error) {

@@ -142,7 +142,7 @@ export const ECDSA_SIGN_LIT_ACTION: Action = {
         },
       });
 
-      console.log("ECDSA Sign Response:", response);
+      elizaLogger.log("ECDSA Sign Response:", response);
 
       if (callback) {
         callback({

@@ -115,17 +115,17 @@ export async function transferTokens(
         };
 
         // Send transaction
-        console.log(
+        elizaLogger.log(
             `Initiating transfer of ${amount} tokens to ${recipientAddress}...`
         );
         const transaction = await wallet.sendTransaction(tx);
 
         // Wait for transaction confirmation
-        console.log(`Transaction hash: ${transaction.hash}`);
+        elizaLogger.log(`Transaction hash: ${transaction.hash}`);
         const receipt = await transaction.wait();
 
-        console.log("Transfer completed successfully!");
-        console.log("Transaction receipt:", receipt);
+        elizaLogger.log("Transfer completed successfully!");
+        elizaLogger.log("Transaction receipt:", receipt);
 
         return transaction.hash;
     } catch (error) {

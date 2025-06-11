@@ -786,8 +786,8 @@ export class TwitterPostClient {
                             twitterActionTemplate,
                     });
 
-                    // console.warn("actionContext DEBUG");
-                    // console.log(actionContext);
+                    // elizaLogger.warn("actionContext DEBUG");
+                    // elizaLogger.log(actionContext);
 
                     const actionResponse = await generateTweetActions({
                         runtime: this.runtime,

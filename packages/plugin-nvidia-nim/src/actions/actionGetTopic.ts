@@ -15,7 +15,7 @@ const GRANULAR_LOG = config.NVIDIA_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.info(`[TopicControl] ${message}`, data);
-        console.log(`[TopicControl] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[TopicControl] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 // Action definition
@@ -84,19 +84,19 @@ export const getTopicAction: Action = {
 
         try {
             const messageContent = message.content as OffTopicContent;
-            console.log("Debug - Message content:", {
+            elizaLogger.log("Debug - Message content:", {
                 hasText: !!messageContent?.text,
                 hasUserMessage: !!messageContent?.userMessage
             });
 
             const config = await validateNvidiaNimConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasApiKey: !!config.NVIDIA_NIM_API_KEY,
                 env: config.NVIDIA_NIM_ENV
             });
 
             const networkConfig = getNetworkConfig(config.NVIDIA_NIM_ENV);
-            console.log("Debug - Network config:", {
+            elizaLogger.log("Debug - Network config:", {
                 hasBaseUrl: !!networkConfig?.baseUrl,
                 baseUrl: networkConfig?.baseUrl
             });
@@ -108,7 +108,7 @@ export const getTopicAction: Action = {
                 messageContent.userMessage || config.NVIDIA_OFFTOPIC_USER || ""
             );
 
-            console.log("Debug - Parsed content:", {
+            elizaLogger.log("Debug - Parsed content:", {
                 hasSystemContent: !!systemContent,
                 hasUserContent: !!userContent
             });

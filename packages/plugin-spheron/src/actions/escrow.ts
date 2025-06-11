@@ -20,7 +20,7 @@ import type { EscrowContent } from "../types/index.ts";
 import { SUPPORTED_TOKENS } from "../utils/constants.ts";
 
 // function isEscrowContent(content: any): content is EscrowContent {
-//     console.log("Content for escrow operation:", content);
+//     elizaLogger.log("Content for escrow operation:", content);
 //     return (
 //         typeof content.token === "string" &&
 //         (content.operation === "deposit" || content.operation === "withdraw"
@@ -33,7 +33,7 @@ import { SUPPORTED_TOKENS } from "../utils/constants.ts";
 // }
 
 function isEscrowContent(content: unknown): content is EscrowContent {
-    console.log("Content for escrow operation:", content);
+    elizaLogger.log("Content for escrow operation:", content);
 
     // First, check if content is an object
     if (typeof content !== 'object' || content === null) {

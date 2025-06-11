@@ -13,7 +13,7 @@ export const prepareAmbiguityErrorMessage = (
         (asset) => asset.symbol === coinSymbol
     );
 
-    console.log(
+    elizaLogger.log(
         `Ambiguous Assets found: ${JSON.stringify(ambiguousAssets, null, 2)}`
     );
 

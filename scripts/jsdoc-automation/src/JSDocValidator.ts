@@ -37,12 +37,12 @@ export class JSDocValidator {
         );
 
         if (this.isValidTypeScript(codeWithFixedComment)) {
-            console.log(
+            elizaLogger.log(
                 `✓ JSDoc comment in ${fileName} was fixed using regex patterns`
             );
             return fixedComment;
         } else {
-            console.log(
+            elizaLogger.log(
                 `❌JSDoc comment in ${fileName} regex patterns failed, making AI call for help`
             );
         }
@@ -56,7 +56,7 @@ export class JSDocValidator {
             );
 
             if (this.isValidTypeScript(codeWithRegeneratedComment)) {
-                console.log(
+                elizaLogger.log(
                     `✓ JSDoc comment in ${fileName} was regenerated using AI`
                 );
                 return regeneratedComment;
@@ -69,10 +69,10 @@ export class JSDocValidator {
         }
 
         // Instead of throwing, log the issue and return original
-        console.warn(
+        elizaLogger.warn(
             `⚠️ HUMAN INTERVENTION NEEDED - Invalid JSDoc in ${fileName}`
         );
-        console.warn("Original comment:", originalComment);
+        elizaLogger.warn("Original comment:", originalComment);
         return originalComment;
     }
 

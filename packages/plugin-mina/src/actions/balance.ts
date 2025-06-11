@@ -23,7 +23,7 @@ export interface BalanceContent extends Content {
 }
 
 function isBalanceContent(content: Content): content is BalanceContent {
-    console.log("Content for Balance", content);
+    elizaLogger.log("Content for Balance", content);
     return typeof content.address === "string";
 }
 
@@ -55,7 +55,7 @@ export default {
     name: "BALANCE",
     similes: ["BALANCE", "GET_BALANCE", "CHECK_BALANCE"],
     validate: async (_runtime: IAgentRuntime, message: Memory) => {
-        console.log("Validating mina Balance from user:", message.userId);
+        elizaLogger.log("Validating mina Balance from user:", message.userId);
         return true;
     },
     description: "Get test tokens from the Balance",
@@ -129,7 +129,7 @@ export default {
                 account.account.balance.toString()
             ).div(1e9).toFixed(2);
 
-            console.log("Balance successful: ", balance.toString());
+            elizaLogger.log("Balance successful: ", balance.toString());
 
             if (callback) {
                 if (!BalanceContent.token) {

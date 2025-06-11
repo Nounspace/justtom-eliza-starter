@@ -614,7 +614,7 @@ export class TrustScoreDatabase {
         // Retrieve current metrics
         const currentMetrics = this.getRecommenderMetrics(recommenderId);
         if (!currentMetrics) {
-            console.warn(
+            elizaLogger.warn(
                 `No metrics found for recommender ID: ${recommenderId}`
             );
             return;
@@ -663,7 +663,7 @@ export class TrustScoreDatabase {
                     history.consistencyScore,
                     history.recordedAt.toISOString()
                 );
-            console.log(
+            elizaLogger.log(
                 `Logged metrics history for recommender ID: ${recommenderId}`
             );
         } catch (error) {
@@ -702,7 +702,7 @@ export class TrustScoreDatabase {
                     metrics.consistencyScore,
                     metrics.recommenderId
                 );
-            console.log(
+            elizaLogger.log(
                 `Updated metrics for recommender ID: ${metrics.recommenderId}`
             );
         } catch (error) {
@@ -778,7 +778,7 @@ export class TrustScoreDatabase {
                 performance.initialMarketCap,
                 validationTrust
             );
-            console.log(
+            elizaLogger.log(
                 `Upserted token performance for ${performance.tokenAddress}`
             );
             return true;
@@ -799,7 +799,7 @@ export class TrustScoreDatabase {
         `;
         try {
             this.db.prepare(sql).run(balance, tokenAddress);
-            console.log(`Updated token balance for ${tokenAddress}`);
+            elizaLogger.log(`Updated token balance for ${tokenAddress}`);
             return true;
         } catch (error) {
             console.error("Error updating token balance:", error);
@@ -1139,7 +1139,7 @@ export class TrustScoreDatabase {
                     trade.last_updated || new Date().toISOString(),
                     trade.rapidDump ? 1 : 0
                 );
-            console.log(`Inserted trade into ${tableName}:`, trade);
+            elizaLogger.log(`Inserted trade into ${tableName}:`, trade);
             return true;
         } catch (error) {
             console.error(`Error inserting trade into ${tableName}:`, error);
@@ -1221,7 +1221,7 @@ export class TrustScoreDatabase {
             );
 
             if (result.changes === 0) {
-                console.warn(
+                elizaLogger.warn(
                     `No trade found to update in ${tableName} for token: ${tokenAddress}, recommender: ${recommenderId}, buyTimeStamp: ${buyTimeStamp}`
                 );
                 return false;

@@ -20,7 +20,7 @@ export async function validateRouterNitroConfig(
                 runtime.getSetting("ROUTER_NITRO_EVM_PRIVATE_KEY") ||
                 process.env.ROUTER_NITRO_EVM_PRIVATE_KEY,
         };
-        // console.log("Router Nitro config: ", config);
+        // elizaLogger.log("Router Nitro config: ", config);
 
         return routerNitroEnvSchema.parse(config);
     } catch (error) {

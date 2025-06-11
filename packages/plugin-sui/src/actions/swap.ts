@@ -23,7 +23,7 @@ export interface SwapPayload extends Content {
 }
 
 function isSwapContent(content: Content): content is SwapPayload {
-    console.log("Content for transfer", content);
+    elizaLogger.log("Content for transfer", content);
     return (
         typeof content.from_token === "string" &&
         typeof content.destination_token === "string" &&
@@ -57,7 +57,7 @@ export default {
     name: "SWAP_TOKEN",
     similes: ["SWAP_TOKENS", "SWAP_SUI"],
     validate: async (runtime: IAgentRuntime, message: Memory) => {
-        console.log("Validating sui transfer from user:", message.userId);
+        elizaLogger.log("Validating sui transfer from user:", message.userId);
         return true;
     },
     description: "Swap from any token in the agent's wallet to another token",
@@ -102,7 +102,7 @@ export default {
             modelClass: ModelClass.SMALL,
         });
 
-        console.log("Generated content:", content);
+        elizaLogger.log("Generated content:", content);
         const swapContent = content.object as SwapPayload;
         elizaLogger.info("Swap content:", swapContent);
 

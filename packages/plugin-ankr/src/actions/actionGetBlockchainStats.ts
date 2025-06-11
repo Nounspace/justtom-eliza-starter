@@ -21,7 +21,7 @@ const GRANULAR_LOG = config.ANKR_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.debug(`[GetBlockchainStats] ${message}`, data);
-        console.log(`[GetBlockchainStats] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[GetBlockchainStats] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 // ------------------------------------------------------------------------------------------------
@@ -145,14 +145,14 @@ export const actionGetBlockchainStats: Action = {
 
         try {
             const messageContent = message.content as GetBlockchainStatsContent;
-            console.log("Debug - Full message content:", {
+            elizaLogger.log("Debug - Full message content:", {
                 fullContent: message.content,
                 rawText: messageContent?.text,
                 type: message.content?.type,
                 allKeys: Object.keys(message.content || {})
             });
 
-            console.log("Debug - Message content details:", {
+            elizaLogger.log("Debug - Message content details:", {
                 hasText: !!messageContent?.text,
                 hasFilters: !!messageContent?.filters,
                 textContent: messageContent?.text,
@@ -160,7 +160,7 @@ export const actionGetBlockchainStats: Action = {
             });
 
             const config = await validateankrConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasWallet: !!config.ANKR_WALLET,
                 env: config.ANKR_ENV
             });
@@ -173,13 +173,13 @@ export const actionGetBlockchainStats: Action = {
             const endpoint = `https://rpc.ankr.com/multichain/${wallet}`;
 
             // Parse the prompt using our API content parser
-            console.log("Debug - Raw prompt:", {
+            elizaLogger.log("Debug - Raw prompt:", {
                 text: messageContent.text,
                 promptLength: messageContent.text?.length,
             });
 
             const parsedContent = parseAPIContent(messageContent.text);
-            console.log("Debug - Parsed API content:", {
+            elizaLogger.log("Debug - Parsed API content:", {
                 hasChain: !!parsedContent.chain,
                 chain: parsedContent.chain,
                 matches: parsedContent.raw.matches
@@ -193,7 +193,7 @@ export const actionGetBlockchainStats: Action = {
                 blockchain: parsedContent.chain  // Changed from array to string
             };
 
-            console.log("Debug - API request parameters:", {
+            elizaLogger.log("Debug - API request parameters:", {
                 params: requestParams,
                 endpoint: ANKR_ENDPOINTS.production.multichain
             });

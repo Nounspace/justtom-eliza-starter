@@ -8,7 +8,7 @@ import express from "express";
 
 // Load environment variables
 const envPath = resolve(__dirname, "../../../../.env");
-console.log("Loading environment from:", envPath);
+elizaLogger.log("Loading environment from:", envPath);
 config({ path: envPath });
 
 function validateEnvironment() {
@@ -29,14 +29,14 @@ function validateEnvironment() {
     }
 
     // Log masked versions of the tokens for debugging
-    console.log("Environment variables loaded:");
+    elizaLogger.log("Environment variables loaded:");
     requiredEnvVars.forEach((key) => {
         const value = process.env[key] || "";
         const maskedValue =
             value.length > 8
                 ? `${value.substring(0, 4)}...${value.substring(value.length - 4)}`
                 : "****";
-        console.log(`${key}: ${maskedValue}`);
+        elizaLogger.log(`${key}: ${maskedValue}`);
     });
 
     return true;
@@ -50,7 +50,7 @@ async function startServer(
         await new Promise<void>((resolve, reject) => {
             app.listen(port, () => resolve()).on("error", (err: any) => {
                 if (err.code === "EADDRINUSE") {
-                    console.log(`Port ${port} is busy, trying ${port + 1}...`);
+                    elizaLogger.log(`Port ${port} is busy, trying ${port + 1}...`);
                     resolve();
                 } else {
                     reject(err);
@@ -68,7 +68,7 @@ async function startServer(
 }
 
 async function runExample() {
-    console.log("\n=== Starting Slack Client Example ===\n");
+    elizaLogger.log("\n=== Starting Slack Client Example ===\n");
 
     if (!validateEnvironment()) {
         throw new Error("Environment validation failed");
@@ -85,20 +85,20 @@ async function runExample() {
         botId: process.env.SLACK_BOT_ID || "", // This will be updated automatically
     };
 
-    console.log("\nInitializing Slack client...");
+    elizaLogger.log("\nInitializing Slack client...");
     const slackProvider = new SlackClientProvider(slackConfig);
 
     try {
         // Validate the connection
-        console.log("\nValidating Slack connection...");
+        elizaLogger.log("\nValidating Slack connection...");
         const isConnected = await slackProvider.validateConnection();
         if (!isConnected) {
             throw new Error("Failed to connect to Slack");
         }
-        console.log("✓ Successfully connected to Slack");
+        elizaLogger.log("✓ Successfully connected to Slack");
 
         // Set up event handling
-        console.log("\nSetting up event handling...");
+        elizaLogger.log("\nSetting up event handling...");
         const eventHandler = new EventHandler(
             slackConfig,
             slackProvider.getContext().client
@@ -114,7 +114,7 @@ async function runExample() {
 
         // Send initial message
         const channelId = process.env.SLACK_CHANNEL_ID || "";
-        console.log(`\nSending initial message to channel: ${channelId}`);
+        elizaLogger.log(`\nSending initial message to channel: ${channelId}`);
 
         try {
             // Send text message
@@ -122,11 +122,11 @@ async function runExample() {
                 channelId,
                 "Hello! I am now active and ready to help. Here are my capabilities:"
             );
-            console.log("✓ Initial message sent:", messageResult);
+            elizaLogger.log("✓ Initial message sent:", messageResult);
 
             // Send message with image
             const imagePath = resolve(__dirname, "../tests/test_image.png");
-            console.log("\nSending message with image...");
+            elizaLogger.log("\nSending message with image...");
             const imageResult = await slackProvider
                 .getContext()
                 .client.files.uploadV2({
@@ -136,20 +136,20 @@ async function runExample() {
                     title: "Test Image",
                     initial_comment: "1. I can send messages with images 🖼️",
                 });
-            console.log("✓ Image message sent:", imageResult);
+            elizaLogger.log("✓ Image message sent:", imageResult);
 
             // Send message in thread
             if (messageResult.ts) {
-                console.log("\nSending message in thread...");
+                elizaLogger.log("\nSending message in thread...");
                 const threadResult = await slackProvider.replyInThread(
                     channelId,
                     messageResult.ts,
                     "2. I can reply in threads 🧵"
                 );
-                console.log("✓ Thread message sent:", threadResult);
+                elizaLogger.log("✓ Thread message sent:", threadResult);
 
                 // Send another image in the thread
-                console.log("\nSending image in thread...");
+                elizaLogger.log("\nSending image in thread...");
                 const threadImageResult = await slackProvider
                     .getContext()
                     .client.files.uploadV2({
@@ -161,33 +161,33 @@ async function runExample() {
                         initial_comment:
                             "3. I can also send images in threads! 🖼️🧵",
                     });
-                console.log("✓ Thread image sent:", threadImageResult);
+                elizaLogger.log("✓ Thread image sent:", threadImageResult);
             }
 
             // Start the server
             const port = await startServer(app, basePort);
-            console.log(`\n✓ Slack event server is running on port ${port}`);
-            console.log("\n=== Bot is ready to interact! ===");
-            console.log("\nCore functionalities demonstrated:");
-            console.log("1. Sending regular messages");
-            console.log("2. Sending images and attachments");
-            console.log("3. Replying in threads");
-            console.log("4. Sending images in threads");
-            console.log(
+            elizaLogger.log(`\n✓ Slack event server is running on port ${port}`);
+            elizaLogger.log("\n=== Bot is ready to interact! ===");
+            elizaLogger.log("\nCore functionalities demonstrated:");
+            elizaLogger.log("1. Sending regular messages");
+            elizaLogger.log("2. Sending images and attachments");
+            elizaLogger.log("3. Replying in threads");
+            elizaLogger.log("4. Sending images in threads");
+            elizaLogger.log(
                 "\nTry mentioning me with @eve_predict_client to interact!"
             );
 
             if (!process.env.SLACK_BOT_ID) {
-                console.log(`\nℹ️ Bot ID: ${slackConfig.botId}`);
+                elizaLogger.log(`\nℹ️ Bot ID: ${slackConfig.botId}`);
             }
         } catch (error) {
             console.error("\n❌ Error during initialization:", error);
             // Continue even if initial messages fail
-            console.log("\nStarting server despite initialization errors...");
+            elizaLogger.log("\nStarting server despite initialization errors...");
 
             const port = await startServer(app, basePort);
-            console.log(`\n✓ Slack event server is running on port ${port}`);
-            console.log("\n=== Bot is ready to interact! ===");
+            elizaLogger.log(`\n✓ Slack event server is running on port ${port}`);
+            elizaLogger.log("\n=== Bot is ready to interact! ===");
         }
     } catch (error) {
         console.error("\n❌ Error in Slack client example:");

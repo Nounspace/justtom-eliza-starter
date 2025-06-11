@@ -9,7 +9,7 @@ export const signTx = async (
   tx: any,
   sigName: string
 ) => {
-  console.log(`Signing TX: ${sigName}`);
+  elizaLogger.log(`Signing TX: ${sigName}`);
   const pkForLit = pkpPublicKey.startsWith('0x')
     ? pkpPublicKey.slice(2)
     : pkpPublicKey;

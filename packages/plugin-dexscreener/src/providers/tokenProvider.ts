@@ -58,7 +58,7 @@ export class TokenPriceProvider implements Provider {
                 throw new Error("Could not identify token in message");
             }
 
-            console.log(`Fetching price for token: ${tokenIdentifier}`);
+            elizaLogger.log(`Fetching price for token: ${tokenIdentifier}`);
 
             // Make API request
             const isAddress =

@@ -64,7 +64,7 @@ class SpamFilterManager {
                 count: user.count
             }));
 
-            console.warn(`Spam Filter report ${this.blockedUsersCount}: ${JSON.stringify(filteredReport)}`);
+            elizaLogger.warn(`Spam Filter report ${this.blockedUsersCount}: ${JSON.stringify(filteredReport)}`);
             this.lastReportedCount = this.blockedUsersCount;
             this.lastReportedTimestamp = now;
         }

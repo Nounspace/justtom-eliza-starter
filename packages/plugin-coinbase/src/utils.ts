@@ -319,7 +319,7 @@ export async function updateCharacterSecrets(
             "utf-8"
         );
 
-        console.log(
+        elizaLogger.log(
             `Updated ${key} in character.settings.secrets for ${characterFilePath}.`
         );
     } catch (error) {

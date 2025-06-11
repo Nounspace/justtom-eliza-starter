@@ -12,7 +12,7 @@ export function bigNumberToDecimal(value: BigNumber, base = 18): number {
 
 // Authentication utilities
 export const getDefaultRelaySigningKey = (): string => {
-    console.warn(
+    elizaLogger.warn(
         "No FLASHBOTS_RELAY_SIGNING_KEY specified. Creating temporary key..."
     );
     return Wallet.createRandom().privateKey;

@@ -3,12 +3,12 @@ import { walletProvider, getClient } from "./provider";
 import { getAgentKitActions } from "./actions";
 
 // Initial banner
-console.log("\n┌════════════════════════════════════════┐");
-console.log("│          AGENTKIT PLUGIN               │");
-console.log("├────────────────────────────────────────┤");
-console.log("│  Initializing AgentKit Plugin...       │");
-console.log("│  Version: 0.0.1                        │");
-console.log("└════════════════════════════════════════┘");
+elizaLogger.log("\n┌════════════════════════════════════════┐");
+elizaLogger.log("│          AGENTKIT PLUGIN               │");
+elizaLogger.log("├────────────────────────────────────────┤");
+elizaLogger.log("│  Initializing AgentKit Plugin...       │");
+elizaLogger.log("│  Version: 0.0.1                        │");
+elizaLogger.log("└════════════════════════════════════════┘");
 
 const initializeActions = async () => {
     try {
@@ -17,14 +17,14 @@ const initializeActions = async () => {
         const apiKeyPrivateKey = process.env.CDP_API_KEY_PRIVATE_KEY;
 
         if (!apiKeyName || !apiKeyPrivateKey) {
-            console.warn("⚠️ Missing CDP API credentials - AgentKit actions will not be available");
+            elizaLogger.warn("⚠️ Missing CDP API credentials - AgentKit actions will not be available");
             return [];
         }
 
         const actions = await getAgentKitActions({
             getClient,
         });
-        console.log("✔ AgentKit actions initialized successfully.");
+        elizaLogger.log("✔ AgentKit actions initialized successfully.");
         return actions;
     } catch (error) {
         console.error("❌ Failed to initialize AgentKit actions:", error);

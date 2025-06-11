@@ -23,7 +23,7 @@ export class LitConfigManager {
 
   constructor() {
     this.configPath = path.join(process.cwd(), "lit-config.json");
-    console.log("LitConfigManager initialized with path:", this.configPath);
+    elizaLogger.log("LitConfigManager initialized with path:", this.configPath);
   }
 
   loadConfig(): LitConfig | null {

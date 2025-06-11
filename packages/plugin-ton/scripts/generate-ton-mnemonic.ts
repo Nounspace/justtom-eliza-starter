@@ -15,10 +15,10 @@ async function start() {
     return { mnemonic: mnemonics.join(' '), address: formattedAddress, version: 'v4', publicKeyHash: pair.publicKey.toString('hex') };
   }));
 
-  console.log(keyPairs)
-  console.log(new Date().toISOString());
+  elizaLogger.log(keyPairs)
+  elizaLogger.log(new Date().toISOString());
 }
 
 start()
-  .then(() => console.log("Done"))
+  .then(() => elizaLogger.log("Done"))
   .catch((err) => console.error(err));

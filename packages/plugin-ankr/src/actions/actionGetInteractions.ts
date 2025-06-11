@@ -21,7 +21,7 @@ const GRANULAR_LOG = config.ANKR_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.debug(`[GetInteractions] ${message}`, data);
-        console.log(`[GetInteractions] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[GetInteractions] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 // ------------------------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ export const actionGetInteractions: Action = {
             validateRequiredFields(parsedContent, ['wallet']);
 
             const config = await validateankrConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasWallet: !!config.ANKR_WALLET,
                 env: config.ANKR_ENV
             });

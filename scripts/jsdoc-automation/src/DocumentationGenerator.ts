@@ -125,7 +125,7 @@ export class DocumentationGenerator {
 
             // Load and store file content
             if (fileChange.status === "added" && "contents_url" in fileChange) {
-                console.log("Getting file content from GitHub API");
+                elizaLogger.log("Getting file content from GitHub API");
                 const fileContent = await this.getFileContent(
                     fileChange.contents_url
                 );
@@ -137,7 +137,7 @@ export class DocumentationGenerator {
 
             const ast = this.typeScriptParser.parse(filePath);
             if (!ast || !ast.body) {
-                console.log("Invalid AST found for file", filePath);
+                elizaLogger.log("Invalid AST found for file", filePath);
                 continue;
             }
 

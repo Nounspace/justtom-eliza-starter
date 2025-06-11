@@ -21,7 +21,7 @@ const GRANULAR_LOG = config.ANKR_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.debug(`[GetNFTHolders] ${message}`, data);
-        console.log(`[GetNFTHolders] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[GetNFTHolders] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 // ------------------------------------------------------------------------------------------------
@@ -153,7 +153,7 @@ export const actionGetNFTHolders: Action = {
 
         try {
             const messageContent = message.content as GetNFTHoldersContent;
-            console.log("Debug - Full message content:", {
+            elizaLogger.log("Debug - Full message content:", {
                 fullContent: message.content,
                 rawText: messageContent?.text,
                 type: message.content?.type,
@@ -161,7 +161,7 @@ export const actionGetNFTHolders: Action = {
             });
 
             const config = await validateankrConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasWallet: !!config.ANKR_WALLET,
                 env: config.ANKR_ENV
             });
@@ -174,13 +174,13 @@ export const actionGetNFTHolders: Action = {
             const endpoint = `https://rpc.ankr.com/multichain/${wallet}`;
 
             // Parse the prompt using our API content parser
-            console.log("Debug - Raw prompt:", {
+            elizaLogger.log("Debug - Raw prompt:", {
                 text: messageContent.text,
                 promptLength: messageContent.text?.length,
             });
 
             const parsedContent = parseAPIContent(messageContent.text);
-            console.log("Debug - Parsed API content:", {
+            elizaLogger.log("Debug - Parsed API content:", {
                 hasContract: !!parsedContent.contract,
                 hasToken: !!parsedContent.token,
                 hasChain: !!parsedContent.chain,
@@ -200,7 +200,7 @@ export const actionGetNFTHolders: Action = {
                 pageToken: messageContent.filters?.pageToken
             };
 
-            console.log("Debug - API request parameters:", {
+            elizaLogger.log("Debug - API request parameters:", {
                 params: requestParams,
                 endpoint: endpoint
             });

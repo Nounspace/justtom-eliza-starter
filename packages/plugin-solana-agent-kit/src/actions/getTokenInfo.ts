@@ -102,7 +102,7 @@ export default {
 
             const tokenData = await sak.getTokenDataByAddress(content.tokenAddress)
 
-            console.log("Token data:", tokenData);
+            elizaLogger.log("Token data:", tokenData);
 
             if (callback) {
                 callback({

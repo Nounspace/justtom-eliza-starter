@@ -153,7 +153,7 @@ export const WALLET_TRANSFER_LIT_ACTION: Action = {
                 },
             });
 
-            console.log("ERC20Transfer Response:", response);
+            elizaLogger.log("ERC20Transfer Response:", response);
 
             if (callback) {
                 callback({

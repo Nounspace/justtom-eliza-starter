@@ -200,7 +200,7 @@ export default {
             const adjustedAmount = BigInt(
                 Number(content.amount) * 10 ** MOVE_DECIMALS
             );
-            console.log(
+            elizaLogger.log(
                 `Transferring: ${content.amount} tokens (${adjustedAmount} base units)`
             );
 

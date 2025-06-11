@@ -119,7 +119,7 @@ export class SqliteDatabaseAdapter
                 );
             return true;
         } catch (error) {
-            console.log("Error creating account", error);
+            elizaLogger.log("Error creating account", error);
             return false;
         }
     }
@@ -628,7 +628,7 @@ export class SqliteDatabaseAdapter
             const sql = "INSERT INTO rooms (id) VALUES (?)";
             this.db.prepare(sql).run(roomId ?? (v4() as UUID));
         } catch (error) {
-            console.log("Error creating room", error);
+            elizaLogger.log("Error creating room", error);
         }
         return roomId as UUID;
     }
@@ -664,7 +664,7 @@ export class SqliteDatabaseAdapter
             this.db.prepare(sql).run(v4(), userId, roomId);
             return true;
         } catch (error) {
-            console.log("Error adding participant", error);
+            elizaLogger.log("Error adding participant", error);
             return false;
         }
     }
@@ -676,7 +676,7 @@ export class SqliteDatabaseAdapter
             this.db.prepare(sql).run(userId, roomId);
             return true;
         } catch (error) {
-            console.log("Error removing participant", error);
+            elizaLogger.log("Error removing participant", error);
             return false;
         }
     }
@@ -754,7 +754,7 @@ export class SqliteDatabaseAdapter
             this.db.prepare(sql).run(params.key, params.agentId);
             return true;
         } catch (error) {
-            console.log("Error removing cache", error);
+            elizaLogger.log("Error removing cache", error);
             return false;
         }
     }

@@ -14,7 +14,7 @@ const GRANULAR_LOG = config.PYTH_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.info(`[PriceUpdates] ${message}`, data);
-        console.log(`[PriceUpdates] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[PriceUpdates] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 

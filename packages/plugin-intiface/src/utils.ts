@@ -49,7 +49,7 @@ export async function startIntifaceEngine(): Promise<void> {
         child.unref();
         intifaceProcess = child;
         await new Promise((resolve) => setTimeout(resolve, 5000));
-        console.log("[utils] Intiface Engine started");
+        elizaLogger.log("[utils] Intiface Engine started");
     } catch (error) {
         throw new Error(`Failed to start Intiface Engine: ${error}`);
     }
@@ -57,7 +57,7 @@ export async function startIntifaceEngine(): Promise<void> {
 
 async function cleanup() {
     if (intifaceProcess) {
-        console.log("[utils] Shutting down Intiface Engine...");
+        elizaLogger.log("[utils] Shutting down Intiface Engine...");
         try {
             // Try graceful shutdown first
             intifaceProcess.kill("SIGTERM");

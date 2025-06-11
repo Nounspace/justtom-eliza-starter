@@ -68,7 +68,7 @@ export async function validateNvidiaNimConfig(
         );
 
         // Add debug logging
-        console.log("Debug - API Key sources:", {
+        elizaLogger.log("Debug - API Key sources:", {
             env: process.env.NVIDIA_NIM_API_KEY ? "present" : "missing",
             runtime: runtime.getSetting("NVIDIA_NIM_API_KEY") ? "present" : "missing",
             envConfig: envConfig.NVIDIA_NIM_API_KEY ? "present" : "missing"
@@ -92,7 +92,7 @@ export async function validateNvidiaNimConfig(
         };
 
         // Add validation logging
-        console.log("Debug - Final config:", {
+        elizaLogger.log("Debug - Final config:", {
             env: config.NVIDIA_NIM_ENV,
             hasApiKey: !!config.NVIDIA_NIM_API_KEY,
             apiKeyLength: config.NVIDIA_NIM_API_KEY.length

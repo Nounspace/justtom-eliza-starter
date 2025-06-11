@@ -15,7 +15,7 @@ const GRANULAR_LOG = config.NVIDIA_GRANULAR_LOG;
 const logGranular = (message: string, data?: unknown) => {
     if (GRANULAR_LOG) {
         elizaLogger.info(`[ContentSafety] ${message}`, data);
-        console.log(`[ContentSafety] ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        elizaLogger.log(`[ContentSafety] ${message}`, data ? JSON.stringify(data, null, 2) : '');
     }
 };
 
@@ -89,27 +89,27 @@ export const getSafetyAction: Action = {
 
         try {
             const messageContent = message.content as SafetyContent;
-            console.log("Debug - Message content:", {
+            elizaLogger.log("Debug - Message content:", {
                 hasText: !!messageContent?.text,
                 hasUserMessage: !!messageContent?.userMessage,
                 hasAssistantMessage: !!messageContent?.assistantMessage
             });
 
             const config = await validateNvidiaNimConfig(runtime);
-            console.log("Debug - Config validated:", {
+            elizaLogger.log("Debug - Config validated:", {
                 hasApiKey: !!config.NVIDIA_NIM_API_KEY,
                 env: config.NVIDIA_NIM_ENV
             });
 
             const networkConfig = getNetworkConfig(config.NVIDIA_NIM_ENV);
-            console.log("Debug - Network config:", {
+            elizaLogger.log("Debug - Network config:", {
                 hasBaseUrl: !!networkConfig?.baseUrl,
                 baseUrl: networkConfig?.baseUrl
             });
 
             // Parse the prompt using our helper
             const { userMessage, assistantMessage } = parseSafetyPrompt(messageContent.text);
-            console.log("Debug - Parsed content:", {
+            elizaLogger.log("Debug - Parsed content:", {
                 hasUserMessage: !!userMessage,
                 hasAssistantMessage: !!assistantMessage,
                 userMessageLength: userMessage?.length,

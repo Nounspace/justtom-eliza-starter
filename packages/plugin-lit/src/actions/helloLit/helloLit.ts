@@ -38,11 +38,11 @@ export const HELLO_LIT_ACTION: Action = {
             });
 
             await litNodeClient.connect();
-            console.log("Connected to Lit Network");
+            elizaLogger.log("Connected to Lit Network");
 
             const privateKey = runtime.getSetting("EVM_PRIVATE_KEY");
             const ethersWallet = new ethers.Wallet(privateKey);
-            console.log("Wallet Address:", ethersWallet.address);
+            elizaLogger.log("Wallet Address:", ethersWallet.address);
 
             const sessionSignatures = await litNodeClient.getSessionSigs({
                 chain: "ethereum",
@@ -83,7 +83,7 @@ export const HELLO_LIT_ACTION: Action = {
                 },
             });
 
-            console.log("Lit Action Response:", response);
+            elizaLogger.log("Lit Action Response:", response);
 
             // Use the callback (if provided) to send the response to the chat UI
             if (callback) {

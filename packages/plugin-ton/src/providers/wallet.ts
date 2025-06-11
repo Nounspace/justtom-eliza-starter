@@ -143,10 +143,10 @@ export class WalletProvider {
             const cachedValue = await this.getCachedData<Prices>(cacheKey);
 
             if (cachedValue) {
-                console.log("Cache hit for fetchPrices");
+                elizaLogger.log("Cache hit for fetchPrices");
                 return cachedValue;
             }
-            console.log("Cache miss for fetchPrices");
+            elizaLogger.log("Cache miss for fetchPrices");
 
             const priceData = await this.fetchPricesWithRetry().catch(
                 (error) => {
@@ -192,10 +192,10 @@ export class WalletProvider {
                 await this.getCachedData<WalletPortfolio>(cacheKey);
 
             if (cachedValue) {
-                console.log("Cache hit for fetchPortfolioValue", cachedValue);
+                elizaLogger.log("Cache hit for fetchPortfolioValue", cachedValue);
                 return cachedValue;
             }
-            console.log("Cache miss for fetchPortfolioValue");
+            elizaLogger.log("Cache miss for fetchPortfolioValue");
 
             const prices = await this.fetchPrices().catch((error) => {
                 console.error(
@@ -316,7 +316,7 @@ export const nativeWalletProvider: Provider = {
             const walletProvider = await initWalletProvider(runtime);
             const formattedPortfolio =
                 await walletProvider.getFormattedPortfolio(runtime);
-            console.log(formattedPortfolio);
+            elizaLogger.log(formattedPortfolio);
             return formattedPortfolio;
         } catch (error) {
             console.error(

@@ -66,7 +66,7 @@ export class IBCSwapAction implements ICosmosActionService {
             throw new Error(`Cannot find destination token denom for symbol: ${params.toTokenSymbol}`);
         }
 
-        console.log(
+        elizaLogger.log(
             `Swap data: Swapping token ${denomFrom} with exponent ${exponentFrom} to token ${denomTo}`
         );
 
@@ -115,7 +115,7 @@ export class IBCSwapAction implements ICosmosActionService {
             route,
             userAddresses,
             onTransactionCompleted: async (_chainID, txHash, status) => {
-                console.log(
+                elizaLogger.log(
                     `Route completed with tx hash: ${txHash} & status: ${status.state}`
                 );
 

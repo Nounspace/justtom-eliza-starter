@@ -57,7 +57,7 @@ const getAttachmentIds = async (
             context,
             modelClass: ModelClass.SMALL,
         });
-        console.log("response", response);
+        elizaLogger.log("response", response);
         // try parsing to a json object
         const parsedResponse = parseJSONObjectFromText(response) as {
             objective: string;
@@ -234,7 +234,7 @@ ${currentSummary.trim()}
 
             try {
                 // Debug: Log before file operations
-                console.log("Creating summary file:", {
+                elizaLogger.log("Creating summary file:", {
                     filename: summaryFilename,
                     summaryLength: currentSummary.length,
                 });
@@ -245,11 +245,11 @@ ${currentSummary.trim()}
                     currentSummary,
                     "utf8"
                 );
-                console.log("File written successfully");
+                elizaLogger.log("File written successfully");
 
                 // Then cache it
                 await runtime.cacheManager.set(summaryFilename, currentSummary);
-                console.log("Cache set operation completed");
+                elizaLogger.log("Cache set operation completed");
 
                 await callback(
                     {
@@ -258,13 +258,13 @@ ${currentSummary.trim()}
                     },
                     [summaryFilename]
                 );
-                console.log("Callback completed with summary file");
+                elizaLogger.log("Callback completed with summary file");
             } catch (error) {
                 console.error("Error in file/cache process:", error);
                 throw error;
             }
         } else {
-            console.warn(
+            elizaLogger.warn(
                 "Empty response from chat with attachments action, skipping"
             );
         }

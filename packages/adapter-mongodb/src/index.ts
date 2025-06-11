@@ -71,7 +71,7 @@ export class MongoDBDatabaseAdapter
         for (const collectionName of collections) {
             try {
                 await this.database.createCollection(collectionName);
-                console.log(`Collection ${collectionName} created or already exists`);
+                elizaLogger.log(`Collection ${collectionName} created or already exists`);
             } catch (error) {
                 if ((error as any).code !== 48) { // 48 is "collection already exists"
                     console.error(`Error creating collection ${collectionName}:`, error);
@@ -122,10 +122,10 @@ export class MongoDBDatabaseAdapter
                 );
 
                 if (!indexExists) {
-                    console.log(`Creating index for ${collectionName}:`, index.key);
+                    elizaLogger.log(`Creating index for ${collectionName}:`, index.key);
                     await collection.createIndex(index.key, index.options || {});
                 } else {
-                    console.log(`Index already exists for ${collectionName}:`, index.key);
+                    elizaLogger.log(`Index already exists for ${collectionName}:`, index.key);
                 }
             }
         }));
@@ -160,7 +160,7 @@ export class MongoDBDatabaseAdapter
                     }
 
                     this.hasVectorSearch = true;
-                    console.log("Vector search capabilities are available and enabled");
+                    elizaLogger.log("Vector search capabilities are available and enabled");
 
                     // Check sharding status
                     const dbInfo = await this.database.admin().command({ listDatabases: 1, nameOnly: true });
@@ -172,19 +172,19 @@ export class MongoDBDatabaseAdapter
                         await this.createStandardEmbeddingIndexes();
                     }
                 } catch (error) {
-                    console.log("Vector search initialization failed, falling back to standard search", error);
+                    elizaLogger.log("Vector search initialization failed, falling back to standard search", error);
                     this.isVectorSearchIndexComputable = false;
                     this.hasVectorSearch = false;
                     await this.createStandardEmbeddingIndexes();
                 }
             } else {
-                console.log("Vector search not supported, using standard search");
+                elizaLogger.log("Vector search not supported, using standard search");
                 this.isVectorSearchIndexComputable = false;
                 this.hasVectorSearch = false;
                 await this.createStandardEmbeddingIndexes();
             }
         } catch (error) {
-            console.log("Error checking vector search capability, defaulting to standard search", error);
+            elizaLogger.log("Error checking vector search capability, defaulting to standard search", error);
             this.isVectorSearchIndexComputable = false;
             this.hasVectorSearch = false;
             await this.createStandardEmbeddingIndexes();
@@ -196,7 +196,7 @@ export class MongoDBDatabaseAdapter
             for (const collection of ['memories', 'knowledge']) {
                 await this.database.collection(collection).createIndex({ embedding: 1 });
             }
-            console.log("Standard embedding indexes created successfully");
+            elizaLogger.log("Standard embedding indexes created successfully");
         } catch (error) {
             console.error("Failed to create standard embedding indexes:", error);
         }
@@ -225,7 +225,7 @@ export class MongoDBDatabaseAdapter
                     key: { roomId: "hashed" }
                 });
             } catch (error) {
-                console.log("Sharding may already be enabled or insufficient permissions", error);
+                elizaLogger.log("Sharding may already be enabled or insufficient permissions", error);
             }
 
             this.isConnected = true;
@@ -526,7 +526,7 @@ export class MongoDBDatabaseAdapter
                         JSON.parse(memory.content) : memory.content
                 }));
             } catch (error) {
-                console.log("Vector search failed, falling back to standard search", error);
+                elizaLogger.log("Vector search failed, falling back to standard search", error);
                 return this.searchMemoriesFallback({
                     embedding: params.embedding,
                     query,
@@ -640,7 +640,7 @@ export class MongoDBDatabaseAdapter
                                 )
                             };
                         } catch (error) {
-                            console.warn(`Error processing memory document: ${error}`);
+                            elizaLogger.warn(`Error processing memory document: ${error}`);
                             return null;
                         }
                     })
@@ -653,7 +653,7 @@ export class MongoDBDatabaseAdapter
 
                 // Log progress for long operations
                 if (totalCount > BATCH_SIZE) {
-                    console.log(`Processed ${processed}/${totalCount} documents`);
+                    elizaLogger.log(`Processed ${processed}/${totalCount} documents`);
                 }
             }
 
@@ -662,7 +662,7 @@ export class MongoDBDatabaseAdapter
         } catch (error) {
             console.error("Error in getCachedEmbeddings:", error);
             if (results.length > 0) {
-                console.log("Returning partial results");
+                elizaLogger.log("Returning partial results");
                 return results;
             }
             return [];
@@ -999,7 +999,7 @@ export class MongoDBDatabaseAdapter
             });
             return true;
         } catch (error) {
-            console.log("Error adding participant", error);
+            elizaLogger.log("Error adding participant", error);
             return false;
         }
     }
@@ -1013,7 +1013,7 @@ export class MongoDBDatabaseAdapter
             });
             return true;
         } catch (error) {
-            console.log("Error removing participant", error);
+            elizaLogger.log("Error removing participant", error);
             return false;
         }
     }
@@ -1037,7 +1037,7 @@ export class MongoDBDatabaseAdapter
             });
             return true;
         } catch (error) {
-            console.log("Error creating relationship", error);
+            elizaLogger.log("Error creating relationship", error);
             return false;
         }
     }
@@ -1101,7 +1101,7 @@ export class MongoDBDatabaseAdapter
             );
             return true;
         } catch (error) {
-            console.log("Error setting cache", error);
+            elizaLogger.log("Error setting cache", error);
             return false;
         }
     }
@@ -1118,7 +1118,7 @@ export class MongoDBDatabaseAdapter
             });
             return true;
         } catch (error) {
-            console.log("Error removing cache", error);
+            elizaLogger.log("Error removing cache", error);
             return false;
         }
     }
@@ -1182,7 +1182,7 @@ export class MongoDBDatabaseAdapter
                 try {
                     results = await this.vectorSearchKnowledge(params);
                 } catch (error) {
-                    console.log("Vector search failed, falling back to standard search", error);
+                    elizaLogger.log("Vector search failed, falling back to standard search", error);
                     results = await this.fallbackSearchKnowledge(params);
                 }
             } else {

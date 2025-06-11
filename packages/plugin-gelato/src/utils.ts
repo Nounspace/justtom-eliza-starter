@@ -56,7 +56,7 @@ export async function executeSponsoredCall(
 
         // Generate the task status URL
         const taskLink = `https://relay.gelato.digital/tasks/status/${response.taskId}`;
-        console.log(`Task created successfully. Track here: ${taskLink}`);
+        elizaLogger.log(`Task created successfully. Track here: ${taskLink}`);
 
         // Return response with task link
         return {
@@ -114,7 +114,7 @@ export async function executeSponsoredCallERC2771(
 
         // Generate the task status URL
         const taskLink = `https://relay.gelato.digital/tasks/status/${response.taskId}`;
-        console.log(`Task created successfully. Track here: ${taskLink}`);
+        elizaLogger.log(`Task created successfully. Track here: ${taskLink}`);
 
         // Return response with task link
         return { ...response, taskLink };

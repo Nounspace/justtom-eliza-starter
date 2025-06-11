@@ -10,7 +10,7 @@ export class RESTBase {
 
     constructor(key?: string, secret?: string) {
         if (!key || !secret) {
-            console.log(
+            elizaLogger.log(
                 'Could not authenticate. Only public endpoints accessible.'
             );
         }
