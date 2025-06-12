@@ -272,7 +272,7 @@ export class FarcasterInteractionManager {
         });
 
         elizaLogger.warn(
-            `Farcaster: Engagement/Context Filter: ${cast.profile.name} said: ${cast.text} | Result: ${shouldRespondResponse}`
+            `Farcaster: Engagement/Context Filter: Result: ${shouldRespondResponse} | ${cast.profile.name} said: ${cast.text}`
         );
 
         if (
