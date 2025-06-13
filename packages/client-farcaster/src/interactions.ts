@@ -86,9 +86,9 @@ export class FarcasterInteractionManager {
         const lastEntry = characterFeeds.get("dailyCheck");
 
         for (const [character, feedMap] of this.lastFetchFeeds.entries()) {
-            elizaLogger.debug(`Farcaster Reed Feeds: Character: ${character}`);
+            elizaLogger.debug(`Farcaster Read Feeds: Character: ${character}`);
             for (const [key, value] of feedMap.entries()) {
-                elizaLogger.debug(`Farcaster Reed Feeds:  ${key}: ${value.timestamp.toISOString()}`);
+                elizaLogger.debug(`Farcaster Read Feeds:  ${key}: ${value.timestamp.toISOString()}`);
             }
         }
 
