@@ -1318,7 +1318,7 @@ export class FarcasterHubClient {
         const username = deployerInfo.username;
         const bio = deployerInfo.profile.bio.text;
         const nounspacePage = `https://nounspace.com/t/base/${contractAddress}
-        
+
         `;// try new lines after the link to see if neynar embbed it.const thread_hash = CastConversation.conversation.cast.thread_hash;
         const CLANKER_REPLY_PROMPT = CLANKER_PROMPT + `
 <about_token>
