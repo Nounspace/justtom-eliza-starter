@@ -1,3 +1,5 @@
+// Importing necessary types
+import type { PostCastReqBodyEmbeds } from '@neynar/nodejs-sdk/build/api/models/post-cast-req-body-embeds';
 const FID_CLANKER = 874542;
 
 const USE_GROQ_VISION = true;
@@ -686,6 +688,9 @@ export class FarcasterHubClient {
                     channelId: options.channelId,
                     parentAuthorFid: options.parent_author_fid,
                     parent: options.replyTo,
+                    embeds: [{
+                        url: options.nounspacePage
+                    }] as PostCastReqBodyEmbeds[] // Casted to the correct type
                 })
                 .then(response_data => {
                     elizaLogger.info(`Farcaster: Clanker: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
@@ -1318,9 +1323,7 @@ export class FarcasterHubClient {
         const username = deployerInfo.username;
         const bio = deployerInfo.profile.bio.text;
         
-        const nounspacePage = `https://nounspace.com/t/base/${contractAddress}
-
-        `;// try new lines after the link to see if neynar embbed it.
+        const nounspacePage = `https://nounspace.com/t/base/${contractAddress}`;
         const thread_hash = CastConversation.conversation.cast.thread_hash;
         const CLANKER_REPLY_PROMPT = CLANKER_PROMPT + `
 <about_token>
@@ -1386,6 +1389,7 @@ export class FarcasterHubClient {
         const options = {
             replyTo: thread_hash,
             parent_author_fid: deployerInfo.fid,
+            nounspacePage: nounspacePage
         }
 
         elizaLogger.debug("Farcaster: Reply: " + theTokenReply);
