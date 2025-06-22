@@ -73,7 +73,7 @@ export class FarcasterInteractionManager {
         const now = new Date();
 
         if (typeof agentFid !== 'number') {
-            elizaLogger.info(`${agentName} No FID found, skipping interactions`);
+            elizaLogger.info(`Farcaster: ${agentName} No FID found, skipping interactions`);
             return;
         }
 
@@ -86,14 +86,14 @@ export class FarcasterInteractionManager {
         const lastEntry = characterFeeds.get("dailyCheck");
 
         for (const [character, feedMap] of this.lastFetchFeeds.entries()) {
-            elizaLogger.debug(`Farcaster Read Feeds: Character: ${character}`);
+            elizaLogger.debug(`Farcaster: Read Feeds: Character: ${character}`);
             for (const [key, value] of feedMap.entries()) {
-                elizaLogger.debug(`Farcaster Read Feeds:  ${key}: ${value.timestamp.toISOString()}`);
+                elizaLogger.debug(`Farcaster: Read Feeds:  ${key}: ${value.timestamp.toISOString()}`);
             }
         }
 
         if (lastEntry && (now.getTime() - lastEntry.timestamp.getTime()) < 24 * 60 * 60 * 1000) {
-            elizaLogger.log(`${agentName} has already read the feeds today. Last read time: ${lastEntry.timestamp.toISOString()}`);
+            elizaLogger.log(`Farcaster: ${agentName} has already read the feeds today. Last read time: ${lastEntry.timestamp.toISOString()}`);
         } else {
             // Run the once-per-day logic
             await this.fetchGlobalTrending();
@@ -177,12 +177,12 @@ export class FarcasterInteractionManager {
         thread: Cast[];
     }) {
         if (cast.profile.fid === agent.fid) {
-            elizaLogger.info("skipping cast from bot itself", cast.hash);
+            elizaLogger.info("Farcaster: skipping cast from bot itself", cast.hash);
             return;
         }
 
         if (!memory.content.text) {
-            elizaLogger.info("skipping cast with no text", cast.hash);
+            elizaLogger.info("Farcaster: skipping cast with no text", cast.hash);
             return { text: "", action: "IGNORE" };
         }
 
@@ -356,7 +356,7 @@ export class FarcasterInteractionManager {
                 }
                 return results.map((result) => result.memory);
             } catch (error) {
-                elizaLogger.error("Error sending response cast:", error);
+                elizaLogger.error("Farcaster: Error sending response cast:", error);
                 return [];
             }
         };
@@ -377,7 +377,7 @@ export class FarcasterInteractionManager {
     // Method to fetch global trending topics
     private async fetchGlobalTrending() {
         const response = await this.client.getFeed();
-        elizaLogger.debug("fetchGlobalTrending");
+        elizaLogger.debug("Farcaster: fetch Global Trending");
 
         const casts = response.timeline.casts;
 
@@ -392,7 +392,7 @@ export class FarcasterInteractionManager {
 
             if (castMemory) {
                 // Log that the cast is being removed
-                elizaLogger.debug(`Removing processed cast: ${cast.author.username}`);
+                elizaLogger.debug(`Farcaster: Removing processed cast: ${memoryId} ${cast.author.username}`);
                 return null; // Exclude this cast from the new array
             }
 
@@ -412,7 +412,7 @@ export class FarcasterInteractionManager {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         const response = await this.client.getFeed(agentFid);
 
-        elizaLogger.debug("getFeed response for you");
+        elizaLogger.debug("Farcaster: getFeed for you");
 
         const casts = response.timeline.casts;
 
@@ -427,7 +427,7 @@ export class FarcasterInteractionManager {
 
             if (castMemory) {
                 // Log that the cast is being removed
-                elizaLogger.debug(`Removing processed cast: ${cast.author.username}`);
+                elizaLogger.debug(`Farcaster: Removing processed cast: ${cast.author.username}`);
                 return null; // Exclude this cast from the new array
             }
 
