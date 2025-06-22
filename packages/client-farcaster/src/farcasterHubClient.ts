@@ -751,7 +751,7 @@ export class FarcasterHubClient {
         // Using the neynarClient to publish the cast.
         const options = {
             replyTo: parentHash,
-            parent_author_fid: parentAuthorFid,
+            parent_author_fid: 456830,//parentAuthorFid,
         }
 
         // Wait for a random time between 1 and 2 minutes before publishing
@@ -1388,7 +1388,7 @@ export class FarcasterHubClient {
 
         const options = {
             replyTo: thread_hash,
-            parent_author_fid: deployerInfo.fid,
+            parent_author_fid: 456830,//deployerInfo.fid,
             nounspacePage: nounspacePage
         }
 
