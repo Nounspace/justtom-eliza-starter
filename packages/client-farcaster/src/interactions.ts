@@ -374,49 +374,10 @@ export class FarcasterInteractionManager {
     }
 
 
-    // Method to fetch global trending topics
-    private async fetchGlobalTrending() {
-        const response = await this.client.getFeed();
-        elizaLogger.debug("Farcaster: fetch Global Trending");
-
-        const casts = response.timeline.casts;
-
-        // Use Promise.all to await all asynchronous operations
-        const filteredCasts = await Promise.all(casts.map(async cast => {
-            const memoryId = castUuid({
-                agentId: this.runtime.agentId,
-                hash: cast.hash,
-            });
-
-            const castMemory = await this.runtime.messageManager.getMemoryById(memoryId);
-
-            if (castMemory) {
-                // Log that the cast is being removed
-                elizaLogger.debug(`Farcaster: Removing processed cast: ${memoryId} ${cast.author.username}`);
-                return null; // Exclude this cast from the new array
-            }
-
-            return cast; // Include this cast in the new array
-        }));
-
-        // Filter out null values
-        response.timeline.casts = filteredCasts.filter(cast => cast !== null);
-
-        // Process the response to handle the ForYou feed
-        await this.processAgentFeed(response.timeline);
-    }
-
-
-    // Method to fetch ForYou feed
-    private async fetchForYouFeed() {
-        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+    private async fetchAndFilterCasts(agentFid?: number) {
         const response = await this.client.getFeed(agentFid);
-
-        elizaLogger.debug("Farcaster: getFeed for you");
-
         const casts = response.timeline.casts;
 
-        // Use Promise.all to await all asynchronous operations
         const filteredCasts = await Promise.all(casts.map(async cast => {
             const memoryId = castUuid({
                 agentId: this.runtime.agentId,
@@ -424,22 +385,97 @@ export class FarcasterInteractionManager {
             });
 
             const castMemory = await this.runtime.messageManager.getMemoryById(memoryId);
-
             if (castMemory) {
-                // Log that the cast is being removed
                 elizaLogger.debug(`Farcaster: Removing processed cast: ${cast.author.username}`);
                 return null; // Exclude this cast from the new array
             }
-
             return cast; // Include this cast in the new array
         }));
 
-        // Filter out null values
         response.timeline.casts = filteredCasts.filter(cast => cast !== null);
+        return response;
+    }
 
-        // Process the response to handle the ForYou feed
+    private async fetchGlobalTrending() {
+        elizaLogger.debug("Farcaster: fetch Global Trending");
+        const response = await this.fetchAndFilterCasts();
         await this.processAgentFeed(response.timeline);
     }
+
+    private async fetchForYouFeed() {
+        const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+        elizaLogger.debug("Farcaster: getFeed for you");
+        const response = await this.fetchAndFilterCasts(agentFid);
+        await this.processAgentFeed(response.timeline);
+    }
+
+
+    // // Method to fetch global trending topics
+    // private async fetchGlobalTrending() {
+    //     const response = await this.client.getFeed();
+    //     elizaLogger.debug("Farcaster: fetch Global Trending");
+
+    //     const casts = response.timeline.casts;
+
+    //     // Use Promise.all to await all asynchronous operations
+    //     const filteredCasts = await Promise.all(casts.map(async cast => {
+    //         const memoryId = castUuid({
+    //             agentId: this.runtime.agentId,
+    //             hash: cast.hash,
+    //         });
+
+    //         const castMemory = await this.runtime.messageManager.getMemoryById(memoryId);
+
+    //         if (castMemory) {
+    //             // Log that the cast is being removed
+    //             elizaLogger.debug(`Farcaster: Removing processed cast: ${memoryId} ${cast.author.username}`);
+    //             return null; // Exclude this cast from the new array
+    //         }
+
+    //         return cast; // Include this cast in the new array
+    //     }));
+
+    //     // Filter out null values
+    //     response.timeline.casts = filteredCasts.filter(cast => cast !== null);
+
+    //     // Process the response to handle the ForYou feed
+    //     await this.processAgentFeed(response.timeline);
+    // }
+
+
+    // // Method to fetch ForYou feed
+    // private async fetchForYouFeed() {
+    //     const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
+    //     const response = await this.client.getFeed(agentFid);
+
+    //     elizaLogger.debug("Farcaster: getFeed for you");
+
+    //     const casts = response.timeline.casts;
+
+    //     // Use Promise.all to await all asynchronous operations
+    //     const filteredCasts = await Promise.all(casts.map(async cast => {
+    //         const memoryId = castUuid({
+    //             agentId: this.runtime.agentId,
+    //             hash: cast.hash,
+    //         });
+
+    //         const castMemory = await this.runtime.messageManager.getMemoryById(memoryId);
+
+    //         if (castMemory) {
+    //             // Log that the cast is being removed
+    //             elizaLogger.debug(`Farcaster: Removing processed cast: ${cast.author.username}`);
+    //             return null; // Exclude this cast from the new array
+    //         }
+
+    //         return cast; // Include this cast in the new array
+    //     }));
+
+    //     // Filter out null values
+    //     response.timeline.casts = filteredCasts.filter(cast => cast !== null);
+
+    //     // Process the response to handle the ForYou feed
+    //     await this.processAgentFeed(response.timeline);
+    // }
 
 
     private async processAgentFeed(timeline: FeedResponse) {
