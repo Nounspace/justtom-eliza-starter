@@ -686,7 +686,7 @@ export class FarcasterHubClient {
                     signerUuid: this.signerUuid,
                     text: msg,
                     channelId: options.channelId,
-                    parentAuthorFid: options.parent_author_fid,
+                    // parentAuthorFid: options.parent_author_fid,
                     parent: options.replyTo,
                     embeds: [{
                         url: options.nounspacePage
