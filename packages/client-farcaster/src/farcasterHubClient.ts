@@ -115,6 +115,7 @@ import { FarcasterClient } from './client';
 import { Cast, Profile } from "./types";
 import { buildConversationThread, createCastMemory } from "./memory";
 import SpamFilterManager from "./spamFilterManager";
+import { Conversation } from '@neynar/nodejs-sdk/build/api';
 
 // import { BulkUsersResponse, CastWithInteractions, Conversation, UserResponse } from '@neynar/nodejs-sdk/build/neynar-api/v2';
 
@@ -1287,7 +1288,7 @@ export class FarcasterHubClient {
         }
 
         const senderId = stringToUuid(cast.authorFid.toString());
-        if(this.spamFilterManager.isUserBlocked(senderId)) {
+        if (this.spamFilterManager.isUserBlocked(senderId)) {
             this.spamFilterManager.addUserToBlockList(deployerInfo.username, senderId);
             elizaLogger.warn(
                 `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${deployerInfo.username}`
@@ -1297,18 +1298,28 @@ export class FarcasterHubClient {
 
         elizaLogger.debug(`Farcaster: Processing Clanker cast for ${deployerInfo.username}`);
 
-        const CastConversation = await this.client.neynar.lookupCastConversation({
-            identifier: cast.hash,
-            type: 'hash',
-            replyDepth: 2,
-            includeChronologicalParentCasts: true,
-            viewerFid: this.client.farcasterConfig.FARCASTER_FID,
-            limit: this.client.farcasterConfig.LAST_CONVERSATION_LIMIT
-            // limit: 10,
-            // cursor: "nextPageCursor" // Omit this parameter for the initial request
-        })
+        let CastConversation: Conversation | undefined;
+        let historyConversation = ""
+        let imageUrls = ""
+        try {
+            CastConversation = await this.client.neynar.lookupCastConversation({
+                identifier: cast.hash,
+                type: 'hash',
+                replyDepth: 2,
+                includeChronologicalParentCasts: true,
+                viewerFid: this.client.farcasterConfig.FARCASTER_FID,
+                limit: this.client.farcasterConfig.LAST_CONVERSATION_LIMIT
+                // limit: 10,
+                // cursor: "nextPageCursor" // Omit this parameter for the initial request
+            })
+            // { historyConversation, imageUrls } = await this.extractConversationDetails(CastConversation);
+            const extracted = await this.extractConversationDetails(CastConversation);
+            historyConversation = extracted.historyConversation;
+            imageUrls = extracted.imageUrls;
+        } catch (error) {
+            elizaLogger.error(error)
 
-        const { historyConversation, imageUrls } = await this.extractConversationDetails(CastConversation);
+        }
 
         let image_description: { description: string } = { description: "" };
         if (imageUrls.length > 0) {
@@ -1322,9 +1333,13 @@ export class FarcasterHubClient {
 
         const username = deployerInfo.username;
         const bio = deployerInfo.profile.bio.text;
-        
+
         const nounspacePage = `https://nounspace.com/t/base/${contractAddress}`;
-        const thread_hash = CastConversation.conversation.cast.thread_hash;
+        // const thread_hash = CastConversation.conversation.cast.thread_hash;
+        // const thread_hash = CastConversation?.conversation.cast.thread_hash || cast.hash || "";
+        const thread_hash = CastConversation?.conversation.cast.thread_hash ?? cast.hash ?? "";
+
+
         const CLANKER_REPLY_PROMPT = CLANKER_PROMPT + `
 <about_token>
   username: @${username}
