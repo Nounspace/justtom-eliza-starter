@@ -7,8 +7,8 @@ const VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
 const VISION_TEMPERATURE = 0.5;
 const VISION_MAX_TOKENS = 300;
 
-const CLANKER_MODEL = "gemma2-9b-it";
-const CLANKER_BACKUP_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+const CLANKER_MODEL = "llama-3.3-70b-versatile";
+const CLANKER_BACKUP_MODEL = "llama-3.1-8b-instant";
 const CLANKER_TEMPERATURE = 0.5;
 const CLANKER_MAX_TOKENS = 1024;
 
