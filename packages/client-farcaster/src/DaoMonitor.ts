@@ -322,6 +322,11 @@ export class DaoMonitor {
 
         elizaLogger.info(`DAO: Generated cast for proposal #${values.id}: ${castText}`);
 
+        if (this.config.DAOMONITOR_DRY_RUN) {
+            elizaLogger.info(`[DRY RUN] Would cast for proposal #${values.id}: ${castText}`);
+            return;
+        }
+
         try {
             const agentProfile = await this.client.getProfile(this.client.farcasterConfig.FARCASTER_FID);
             const roomId = stringToUuid("nouns-dao-events") as UUID;
