@@ -24,7 +24,8 @@
 		"neverthrow": "^8.1.1",
 		"@elizaos/core": "workspace:*",
 		"@neynar/nodejs-sdk": "^2.0.3",
-		"groq-sdk": "^0.7.0"
+		"groq-sdk": "^0.7.0",
+		"ethers": "^6.15.0"
 	},
 	"devDependencies": {
 		"tsup": "^8.3.5",

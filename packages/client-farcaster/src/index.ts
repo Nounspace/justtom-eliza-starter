@@ -5,6 +5,7 @@ import { FarcasterInteractionManager } from "./interactions";
 import { Configuration, NeynarAPIClient } from "@neynar/nodejs-sdk";
 import { validateFarcasterConfig, type FarcasterConfig } from "./environment";
 import { FarcasterHubClient } from "./farcasterHubClient"
+import { DaoMonitor } from "./DaoMonitor"
 
 /**
  * A manager that orchestrates all Farcaster operations:
@@ -17,6 +18,7 @@ class FarcasterManager {
     posts: FarcasterPostManager;
     interactions: FarcasterInteractionManager;
     hubClient: FarcasterHubClient;
+    daoMonitor: DaoMonitor;
     private signerUuid: string;
 
     constructor(runtime: IAgentRuntime, farcasterConfig: FarcasterConfig) {
@@ -63,10 +65,16 @@ class FarcasterManager {
             neynarConfig,
             cache
         );
+
+        this.daoMonitor = new DaoMonitor(
+            this.client,
+            runtime,
+        );
     }
 
     async start() {
         this.hubClient.start();
+        this.daoMonitor.start();
 
         await Promise.all([
             this.posts.start(),
@@ -75,7 +83,8 @@ class FarcasterManager {
     }
 
     async stop() {
-        this.hubClient.stop()
+        this.hubClient.stop();
+        this.daoMonitor.stop();
 
         await Promise.all([
             this.posts.stop(),

@@ -61,7 +61,7 @@
       "@coral-xyz/anchor": "0.28.0"
     },
     "patchedDependencies": {
-      "@solana-developers/helpers": "patches/@solana-developers__helpers.patch"
+      
     }
   },
   "engines": {

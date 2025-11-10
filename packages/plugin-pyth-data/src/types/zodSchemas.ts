@@ -8,6 +8,9 @@ const AssetType = z.enum([
   "metal",
   "rates",
   "crypto_redemption_rate",
+  "commodities",
+  "crypto_index",
+  "crypto_nav",
 ]);
 const asset_type = AssetType.nullish();
 const RpcPriceIdentifier = z.string();
