@@ -1,7 +1,19 @@
 import {
     IAgentRuntime,
     elizaLogger,
+    stringToUuid,
+    composeContext,
+    generateText,
+    cleanJsonResponse,
+    truncateToCompleteSentence,
+    getEmbeddingZeroVector,
+    ModelClass,
+    State,
+    Memory,
+    UUID,
 } from "@elizaos/core";
+import { getTweetCreateProposalEventTemplate } from "./DaoMonitor-templates";
+import { sendChannelCast } from "./actions";
 
 import { z, ZodError } from "zod";
 import { ethers } from "ethers";
@@ -50,18 +62,12 @@ export class DaoMonitor {
     private config: NounsDaoAccountConfig;
     private provider!: ethers.WebSocketProvider;
     private iface!: ethers.Interface;
-    
-
-    private proposals: Proposal[] = [];
-    private votes: Vote[] = [];
 
     constructor(
         public client: FarcasterClient,
-        runtime: IAgentRuntime, 
-        // config: NounsDaoAccountConfig, 
+        runtime: IAgentRuntime,
     ) {
         this.runtime = runtime;
-        // this.config = config;
         this.provider = null!;
         this.iface = null!;
 
@@ -69,7 +75,7 @@ export class DaoMonitor {
             DAOMONITOR_ETHERSCAN_API_KEY: "VR9GQU1CQGZVCFR5TXREMWMWRVFDRU59D5",
             DAOMONITOR_WSS_MAINNET_ENDPOINT: "wss://eth-mainnet.g.alchemy.com/v2/vDrmuZIY16ReNE7ikolCvZDK49xJBJD6",
             DAOMONITOR_CONTRACT_ADDRESS: "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
-            DAOMONITOR_DRY_RUN: true,
+            DAOMONITOR_DRY_RUN: false,
         }
     }
 
@@ -99,18 +105,6 @@ export class DaoMonitor {
     public async stop(): Promise<void> {
         await this.provider?.destroy();
         elizaLogger.info("DAO: Nouns DAO Monitor stopped");
-    }
-
-    public getNewProposals(): Proposal[] {
-        const newProposals = [...this.proposals];
-        this.proposals = [];
-        return newProposals;
-    }
-
-    public getNewVotes(): Vote[] {
-        const newVotes = [...this.votes];
-        this.votes = [];
-        return newVotes;
     }
 
     /* ------------------------------------------------------------------ */
@@ -296,40 +290,99 @@ export class DaoMonitor {
         const values = this.extractValues(parsed);
         elizaLogger.warn(`DAO: Proposal Created: #${values.id} by ${values.proposer}`);
 
-        const proposal: Proposal = {
-            id: values.id,
-            proposer: values.proposer,
-            description: values.description,
-            targets: values.targets ? values.targets.split(',') : [],
-            values: values.values ? values.values.split(',') : [],
-            signatures: values.signatures ? values.signatures.split(',') : [],
-            calldatas: values.calldatas ? values.calldatas.split(',') : [],
-            startBlock: values.startBlock,
-            endBlock: values.endBlock,
-            votes: [],
+        if (this.config.DAOMONITOR_DRY_RUN) {
+            elizaLogger.info(`[DRY RUN] Would cast for proposal #${values.id}`);
+            return;
+        }
+
+        const announcementId: UUID = stringToUuid(`nouns-proposal-announcement-${values.id}`) as UUID;
+        const existingMemory = await this.runtime.messageManager.getMemoryById(announcementId);
+
+        if (existingMemory) {
+            elizaLogger.info(`DAO: Already announced proposal #${values.id}. Skipping.`);
+            return;
+        }
+
+        const state = await this.buildProposalState(announcementId, values);
+        const context = composeContext({ state, template: getTweetCreateProposalEventTemplate });
+
+        const castTextRaw = await generateText({
+            runtime: this.runtime,
+            context,
+            modelClass: ModelClass.SMALL,
+        });
+        if (!castTextRaw?.trim()) {
+            elizaLogger.error(`DAO: Failed to generate cast text for proposal #${values.id}`);
+            return;
+        }
+
+        let castText = cleanJsonResponse(castTextRaw).trim();
+        castText = truncateToCompleteSentence(castText, 280);
+        castText = castText.replace(/^["']|["']$/g, "");
+
+        elizaLogger.info(`DAO: Generated cast for proposal #${values.id}: ${castText}`);
+
+        try {
+            const agentProfile = await this.client.getProfile(this.client.farcasterConfig.FARCASTER_FID);
+            const roomId = stringToUuid("nouns-dao-events") as UUID;
+
+            await sendChannelCast({
+                client: this.client,
+                runtime: this.runtime,
+                content: { text: castText },
+                roomId,
+                signerUuid: this.client.signerUuid,
+                profile: agentProfile,
+            });
+
+            elizaLogger.info(`DAO: Successfully cast for proposal #${values.id}`);
+
+            const announcementMemory: Memory = {
+                id: announcementId,
+                agentId: this.runtime.agentId,
+                userId: stringToUuid("nouns-dao") as UUID,
+                roomId,
+                content: {
+                    text: `Announcement cast for proposal ${values.id}`,
+                    source: "nouns-dao-monitor",
+                },
+                createdAt: Date.now(),
+                embedding: getEmbeddingZeroVector(),
+            };
+            await this.runtime.messageManager.createMemory(announcementMemory);
+
+        } catch (error) {
+            elizaLogger.error(`DAO: Failed to cast for proposal #${values.id}`, error);
+        }
+    }
+
+    private async buildProposalState(announcementId: UUID, values: Record<string, string>): Promise<State> {
+        const dummyMemory: Memory = {
+            id: announcementId,
+            agentId: this.runtime.agentId,
+            userId: stringToUuid("nouns-dao") as UUID,
+            roomId: stringToUuid("nouns-dao-events") as UUID,
+            content: {
+                text: `Proposal ${values.id} created`,
+                source: "nouns-dao-monitor",
+            },
+            createdAt: Date.now(),
+            embedding: getEmbeddingZeroVector(),
         };
 
-        this.proposals.push(proposal);
+        return this.runtime.composeState(dummyMemory, {
+            agentName: this.runtime.character.name || "Tom",
+            twitterUserName: this.client.farcasterConfig.FARCASTER_USERNAME || "nounspaceTom",
+            id: values.id, // Use the actual proposal ID here, not the announcementId
+            proposer: values.proposer,
+            title: values.description.split("\n")[0],
+            descriptionPreview: values.description.split("\n").slice(1, 4).join(" "),
+        });
     }
 
     private async handleVoteCast(parsed: ParsedLog, _log: ethers.Log): Promise<void> {
         const { voter, proposalId, support, votes, reason } = parsed.args;
         elizaLogger.warn(`DAO: Vote Cast: voter=${voter} prop=${proposalId} support=${support} votes=${votes} reason=${reason}`);
-
-        const vote: Vote = {
-            proposalId: proposalId.toString(),
-            voter: voter.toString(),
-            support: support.toString(),
-            votes: votes.toString(),
-            reason: reason.toString(),
-        };
-
-        this.votes.push(vote);
-
-        const proposal = this.proposals.find(p => p.id === vote.proposalId);
-        if (proposal) {
-            proposal.votes.push(vote);
-        }
     }
 
     private async handleProposalExecuted(parsed: ParsedLog, _log: ethers.Log): Promise<void> {
