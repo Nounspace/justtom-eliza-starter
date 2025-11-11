@@ -1,7 +1,6 @@
 {
     "name": "Tom",
     "clients": [
-        "twitter",
         "discord",
         "telegram",
         "farcaster"
