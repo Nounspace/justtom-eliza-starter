@@ -23,7 +23,8 @@ import { EventFragment } from "ethers";
 import { formatValue } from "./DaoMonitor-utils";
 import { FarcasterClient } from "./client";
 
-const DRY_RUN_BLOCKS_RANGE = [23722846, 23646051];
+// const DRY_RUN_BLOCKS_RANGE = [23758603, 23719731];
+const DRY_RUN_BLOCKS_RANGE = [23737013, 23645555];
 
 type ParsedLog = ethers.LogDescription & { fragment: ethers.EventFragment };
 
@@ -115,7 +116,15 @@ export class DaoMonitor {
 
         const abi = await this.fetchAbi();
         const extraEvents = this.getExtraEvents();
-        this.iface = new ethers.Interface([...abi, ...extraEvents]);
+
+        // De-duplicate ABI by letting extraEvents override the fetched ABI
+        const extraEventNames = new Set(extraEvents.map(e => e.name));
+        const filteredAbi = abi.filter(fragment => {
+            return fragment.type !== 'event' || !extraEventNames.has(fragment.name);
+        });
+
+        const combinedAbi = [...filteredAbi, ...extraEvents];
+        this.iface = new ethers.Interface(combinedAbi);
 
         const eventNames = this.iface.fragments
             .filter((f): f is EventFragment => f.type === "event")
@@ -224,9 +233,10 @@ export class DaoMonitor {
                 }
             }
 
-            if (block < toBlock) {
-                await this.sleep(1500);
-            }
+            // if (block < toBlock) {
+                // await this.sleep(100);
+                // console.log(block)
+            // }
         }
 
         const total = Array.from(eventCounter.values()).reduce((a, b) => a + b, 0);
@@ -274,6 +284,7 @@ export class DaoMonitor {
     private getHandler(eventName: string): ((p: ParsedLog, l: ethers.Log) => Promise<void>) | null {
         const map: Record<string, (p: ParsedLog, l: ethers.Log) => Promise<void>> = {
             ProposalCreated: this.handleProposalCreated.bind(this),
+            // ProposalCreatedWithRequirements: this.handleProposalCreated.bind(this),
             VoteCast: this.handleVoteCast.bind(this),
             ProposalExecuted: this.handleProposalExecuted.bind(this),
             ProposalCanceled: this.handleProposalCanceled.bind(this),
@@ -289,11 +300,6 @@ export class DaoMonitor {
     private async handleProposalCreated(parsed: ParsedLog, log: ethers.Log): Promise<void> {
         const values = this.extractValues(parsed);
         elizaLogger.warn(`DAO: Proposal Created: #${values.id} by ${values.proposer}`);
-
-        if (this.config.DAOMONITOR_DRY_RUN) {
-            elizaLogger.info(`[DRY RUN] Would cast for proposal #${values.id}`);
-            return;
-        }
 
         const announcementId: UUID = stringToUuid(`nouns-proposal-announcement-${values.id}`) as UUID;
         const existingMemory = await this.runtime.messageManager.getMemoryById(announcementId);
@@ -334,7 +340,10 @@ export class DaoMonitor {
             await sendChannelCast({
                 client: this.client,
                 runtime: this.runtime,
-                content: { text: castText },
+                content: {
+                    text: castText,
+                    url: `https://www.nounspace.com/p/${values.id}`
+                },
                 roomId,
                 signerUuid: this.client.signerUuid,
                 profile: agentProfile,
