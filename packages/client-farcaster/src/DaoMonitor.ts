@@ -72,10 +72,17 @@ export class DaoMonitor {
         this.provider = null!;
         this.iface = null!;
 
+        const CONTRACT_ADDRESS = process.env.DAOMONITOR_CONTRACT_ADDRESS || "0x000";
+        const WSS_MAINNET_ENDPOINT = process.env.DAOMONITOR_WSS_MAINNET_ENDPOINT || "wss://ethereum-rpc.publicnode.com"
+        const ETHERSCAN_API_KEY = process.env.DAOMONITOR_ETHERSCAN_API_KEY || ""
+        if (ETHERSCAN_API_KEY == "") {
+            elizaLogger.error(`Missing ETHERSCAN_API_KEY.`)
+        }
+
         this.config = {
-            DAOMONITOR_ETHERSCAN_API_KEY: "VR9GQU1CQGZVCFR5TXREMWMWRVFDRU59D5",
-            DAOMONITOR_WSS_MAINNET_ENDPOINT: "wss://eth-mainnet.g.alchemy.com/v2/vDrmuZIY16ReNE7ikolCvZDK49xJBJD6",
-            DAOMONITOR_CONTRACT_ADDRESS: "0x6f3E6272A167e8AcCb32072d08E0957F9c79223d",
+            DAOMONITOR_ETHERSCAN_API_KEY: ETHERSCAN_API_KEY,
+            DAOMONITOR_WSS_MAINNET_ENDPOINT: WSS_MAINNET_ENDPOINT,
+            DAOMONITOR_CONTRACT_ADDRESS: CONTRACT_ADDRESS,
             DAOMONITOR_DRY_RUN: false,
         }
     }
@@ -86,11 +93,11 @@ export class DaoMonitor {
     public async start(): Promise<void> {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         if (!agentFid) {
-            elizaLogger.info(`Farcaster: DaoMonitor: No FID found, skipping interactions`);
+            elizaLogger.info(`DAO: Farcaster: No FID found, skipping interactions`);
             return;
         }
         if (agentFid !== 527313) {
-            elizaLogger.info(`Farcaster: DaoMonitor: ${agentFid} Not Tom, skipping start`);
+            elizaLogger.info(`DAO: Farcaster: ${agentFid} Not Tom, skipping start`);
             return;
         }
 
@@ -129,7 +136,7 @@ export class DaoMonitor {
         const eventNames = this.iface.fragments
             .filter((f): f is EventFragment => f.type === "event")
             .map(f => f.name);
-        elizaLogger.log("Loaded events:", eventNames.join(", "));
+        elizaLogger.info("DAO: Loaded events:", eventNames.join(", "));
     }
 
     private async fetchAbi(): Promise<any[]> {
@@ -146,6 +153,19 @@ export class DaoMonitor {
 
     private getExtraEvents() {
         return [
+            {
+                type: "event",
+                name: "ProposalCreatedWithRequirements",
+                anonymous: false,
+                inputs: [
+                    { name: "id", type: "uint256", indexed: false },
+                    { name: "signers", type: "address[]", indexed: false },
+                    { name: "updatePeriodEndBlock", type: "uint256", indexed: false },
+                    { name: "proposalThreshold", type: "uint256", indexed: false },
+                    { name: "quorumVotes", type: "uint256", indexed: false },
+                    { name: "clientId", type: "uint32", indexed: true },
+                ],
+            },
             {
                 type: "event",
                 name: "ProposalCreated",
@@ -201,9 +221,9 @@ export class DaoMonitor {
     /*  Listeners                                                          */
     /* ------------------------------------------------------------------ */
     private setupEventListeners(): void {
-        this.provider.on(
-            { address: this.config.DAOMONITOR_CONTRACT_ADDRESS },
-            log => this.handleLog(log)
+        this.provider.on({ 
+            address: this.config.DAOMONITOR_CONTRACT_ADDRESS 
+            }, log => this.handleLog(log)
         );
         elizaLogger.info("DAO: Listening for all DAO events...");
     }
@@ -266,25 +286,30 @@ export class DaoMonitor {
     /* ------------------------------------------------------------------ */
     private async handleLog(log: ethers.Log): Promise<void> {
         let parsed: ParsedLog | null = null;
+        
         try {
             parsed = this.iface.parseLog(log) as ParsedLog;
-        } catch {
+        } catch (err) {
+            // Skip this log only — provider will call handleLog() again for the next log
+            elizaLogger.debug(`DAO: Failed to parse log, skipping. Topic0=${log.topics[0]}`);
             return;
         }
-        if (!parsed) return;
+        if (!parsed) {
+            return;
+        }
 
         const handler = this.getHandler(parsed.name);
         if (handler) {
             await handler(parsed, log);
         } else {
-            elizaLogger.debug(`Unhandled event: ${parsed.name}`);
+            elizaLogger.debug(`DAO: Unhandled event: ${parsed.name}`);
         }
     }
 
     private getHandler(eventName: string): ((p: ParsedLog, l: ethers.Log) => Promise<void>) | null {
         const map: Record<string, (p: ParsedLog, l: ethers.Log) => Promise<void>> = {
             ProposalCreated: this.handleProposalCreated.bind(this),
-            // ProposalCreatedWithRequirements: this.handleProposalCreated.bind(this),
+            ProposalCreatedWithRequirements: this.handleProposalCreated.bind(this),
             VoteCast: this.handleVoteCast.bind(this),
             ProposalExecuted: this.handleProposalExecuted.bind(this),
             ProposalCanceled: this.handleProposalCanceled.bind(this),
@@ -329,7 +354,7 @@ export class DaoMonitor {
         elizaLogger.info(`DAO: Generated cast for proposal #${values.id}: ${castText}`);
 
         if (this.config.DAOMONITOR_DRY_RUN) {
-            elizaLogger.info(`[DRY RUN] Would cast for proposal #${values.id}: ${castText}`);
+            elizaLogger.info(`DAO: [DRY RUN] Would cast for proposal #${values.id}: ${castText}`);
             return;
         }
 
