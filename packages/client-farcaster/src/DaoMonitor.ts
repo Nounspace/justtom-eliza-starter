@@ -122,27 +122,36 @@ export class DaoMonitor {
         this.provider = new ethers.WebSocketProvider(this.config.DAOMONITOR_WSS_MAINNET_ENDPOINT);
 
         const abi = await this.fetchAbi();
-        const extraEvents = this.getExtraEvents();
 
-        // De-duplicate ABI by letting extraEvents override the fetched ABI
-        const extraEventNames = new Set(extraEvents.map(e => e.name));
-        const filteredAbi = abi.filter(fragment => {
-            return fragment.type !== 'event' || !extraEventNames.has(fragment.name);
-        });
+        // Remove all events from etherscan ABI
+        // const filteredAbi = abi.filter(f => f.type !== "event");
 
-        const combinedAbi = [...filteredAbi, ...extraEvents];
-        this.iface = new ethers.Interface(combinedAbi);
+        // // Add only the events YOU want
+        // const extraEvents = this.getExtraEvents();
 
+        // // Build final ABI
+        // const combinedAbi = [
+        //     ...filteredAbi,  // functions, errors, etc
+        //     ...extraEvents   // your chosen events
+        // ];
+
+        // this.iface = new ethers.Interface(combinedAbi);
+        this.iface = new ethers.Interface(abi);
+
+        // Log loaded events
         const eventNames = this.iface.fragments
             .filter((f): f is EventFragment => f.type === "event")
             .map(f => f.name);
+
         elizaLogger.info("DAO: Loaded events:", eventNames.join(", "));
+
     }
 
     private async fetchAbi(): Promise<any[]> {
         if (!this.config.DAOMONITOR_ETHERSCAN_API_KEY) throw new Error("ETHERSCAN_API_KEY required");
+        const DAO_CHAIN_ID = process.env.DAOMONITOR_DAO_CHAIN_ID;
 
-        const getabi_url = `https://api.etherscan.io/v2/api?chainid=1&module=contract&action=getabi`;
+        const getabi_url = `https://api.etherscan.io/v2/api?chainid=${DAO_CHAIN_ID || '1'}&module=contract&action=getabi`;
         const res = await fetch(
             `${getabi_url}&address=${this.config.DAOMONITOR_CONTRACT_ADDRESS}&apikey=${this.config.DAOMONITOR_ETHERSCAN_API_KEY}`
         );
@@ -286,17 +295,21 @@ export class DaoMonitor {
     /* ------------------------------------------------------------------ */
     private async handleLog(log: ethers.Log): Promise<void> {
         let parsed: ParsedLog | null = null;
-        
+
         try {
             parsed = this.iface.parseLog(log) as ParsedLog;
         } catch (err) {
-            // Skip this log only — provider will call handleLog() again for the next log
             elizaLogger.debug(`DAO: Failed to parse log, skipping. Topic0=${log.topics[0]}`);
             return;
         }
-        if (!parsed) {
-            return;
-        }
+
+        // -------------- 🔥 NEW: UNIVERSAL EVENT LOGGING ----------------
+        elizaLogger.info(
+            `DAO: Event captured: ${parsed.name} ` +
+            `(block=${log.blockNumber}, tx=${log.transactionHash})`
+        );
+        elizaLogger.debug(`DAO: Event args: ${JSON.stringify(parsed.args, null, 2)}`);
+        // ----------------------------------------------------------------
 
         const handler = this.getHandler(parsed.name);
         if (handler) {
@@ -305,6 +318,28 @@ export class DaoMonitor {
             elizaLogger.debug(`DAO: Unhandled event: ${parsed.name}`);
         }
     }
+
+    // private async handleLog(log: ethers.Log): Promise<void> {
+    //     let parsed: ParsedLog | null = null;
+        
+    //     try {
+    //         parsed = this.iface.parseLog(log) as ParsedLog;
+    //     } catch (err) {
+    //         // Skip this log only — provider will call handleLog() again for the next log
+    //         elizaLogger.debug(`DAO: Failed to parse log, skipping. Topic0=${log.topics[0]}`);
+    //         return;
+    //     }
+    //     if (!parsed) {
+    //         return;
+    //     }
+
+    //     const handler = this.getHandler(parsed.name);
+    //     if (handler) {
+    //         await handler(parsed, log);
+    //     } else {
+    //         elizaLogger.debug(`DAO: Unhandled event: ${parsed.name}`);
+    //     }
+    // }
 
     private getHandler(eventName: string): ((p: ParsedLog, l: ethers.Log) => Promise<void>) | null {
         const map: Record<string, (p: ParsedLog, l: ethers.Log) => Promise<void>> = {
