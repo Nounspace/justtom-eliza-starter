@@ -1,3 +1,20 @@
+/* DaoMonitor.ts
+ *
+ * Updated to be proxy-aware and to automatically fetch & merge
+ * proxy ABI + implementation ABI (Etherscan / BaseScan).
+ *
+ * Requirements:
+ *  - ethers v6
+ *  - Node with global fetch or polyfill (your original code used fetch)
+ *
+ * Environment variables used:
+ *  - DAOMONITOR_ETHERSCAN_API_KEY  (required to fetch ABI)
+ *  - DAOMONITOR_WSS_MAINNET_ENDPOINT
+ *  - DAOMONITOR_CONTRACT_ADDRESS
+ *  - DAOMONITOR_DRY_RUN (optional)
+ *  - DAOMONITOR_DAO_CHAIN_ID (optional, default "1"). Use "8453" for Base.
+ */
+
 import {
     IAgentRuntime,
     elizaLogger,
@@ -49,18 +66,19 @@ export interface Vote {
     reason: string;
 }
 
-export const nounsDaoAccountEnvSchema = z.object({
+export const DaoMonitorAccountEnvSchema = z.object({
     DAOMONITOR_ETHERSCAN_API_KEY: z.string(),
     DAOMONITOR_WSS_MAINNET_ENDPOINT: z.string(),
     DAOMONITOR_CONTRACT_ADDRESS: z.string(),
     DAOMONITOR_DRY_RUN: z.boolean().optional(),
+    TEST_DAOMONITOR: z.boolean().optional(),
 });
 
-export type NounsDaoAccountConfig = z.infer<typeof nounsDaoAccountEnvSchema>;
+export type DaoMonitorAccountConfig = z.infer<typeof DaoMonitorAccountEnvSchema>;
 
 export class DaoMonitor {
     private runtime: IAgentRuntime;
-    private config: NounsDaoAccountConfig;
+    private config: DaoMonitorAccountConfig;
     private provider!: ethers.WebSocketProvider;
     private iface!: ethers.Interface;
 
@@ -72,18 +90,21 @@ export class DaoMonitor {
         this.provider = null!;
         this.iface = null!;
 
+        const DAOMONITOR_DRY_RUN = process.env.DAOMONITOR_DRY_RUN === "true" || false;
         const CONTRACT_ADDRESS = process.env.DAOMONITOR_CONTRACT_ADDRESS || "0x000";
         const WSS_MAINNET_ENDPOINT = process.env.DAOMONITOR_WSS_MAINNET_ENDPOINT || "wss://ethereum-rpc.publicnode.com"
         const ETHERSCAN_API_KEY = process.env.DAOMONITOR_ETHERSCAN_API_KEY || ""
-        if (ETHERSCAN_API_KEY == "") {
-            elizaLogger.error(`Missing ETHERSCAN_API_KEY.`)
+
+        if (ETHERSCAN_API_KEY === "") {
+            elizaLogger.error(`Missing ETHERSCAN_API_KEY.`);
         }
 
         this.config = {
             DAOMONITOR_ETHERSCAN_API_KEY: ETHERSCAN_API_KEY,
             DAOMONITOR_WSS_MAINNET_ENDPOINT: WSS_MAINNET_ENDPOINT,
             DAOMONITOR_CONTRACT_ADDRESS: CONTRACT_ADDRESS,
-            DAOMONITOR_DRY_RUN: false,
+            DAOMONITOR_DRY_RUN: DAOMONITOR_DRY_RUN,
+            TEST_DAOMONITOR: false,
         }
     }
 
@@ -101,9 +122,9 @@ export class DaoMonitor {
             return;
         }
 
-        elizaLogger.info("DAO: Starting Nouns DAO Monitor...");
+        elizaLogger.info("DAO: Starting DAO Monitor...");
         await this.initializeProvider();
-        if (this.config.DAOMONITOR_DRY_RUN) {
+        if (this.config.TEST_DAOMONITOR) {
             await this.dryRun();
         } else {
             this.setupEventListeners();
@@ -112,31 +133,19 @@ export class DaoMonitor {
 
     public async stop(): Promise<void> {
         await this.provider?.destroy();
-        elizaLogger.info("DAO: Nouns DAO Monitor stopped");
+        elizaLogger.info("DAO: DAO Monitor stopped");
     }
 
     /* ------------------------------------------------------------------ */
     /*  Provider & ABI                                                     */
     /* ------------------------------------------------------------------ */
     private async initializeProvider(): Promise<void> {
+        // Create provider (websocket used for live events)
         this.provider = new ethers.WebSocketProvider(this.config.DAOMONITOR_WSS_MAINNET_ENDPOINT);
 
-        const abi = await this.fetchAbi();
-
-        // Remove all events from etherscan ABI
-        // const filteredAbi = abi.filter(f => f.type !== "event");
-
-        // // Add only the events YOU want
-        // const extraEvents = this.getExtraEvents();
-
-        // // Build final ABI
-        // const combinedAbi = [
-        //     ...filteredAbi,  // functions, errors, etc
-        //     ...extraEvents   // your chosen events
-        // ];
-
-        // this.iface = new ethers.Interface(combinedAbi);
-        this.iface = new ethers.Interface(abi);
+        // Load combined interface (proxy ABI + implementation ABI)
+        const combinedInterface = await this.loadCombinedInterface(this.config.DAOMONITOR_CONTRACT_ADDRESS);
+        this.iface = combinedInterface;
 
         // Log loaded events
         const eventNames = this.iface.fragments
@@ -144,20 +153,120 @@ export class DaoMonitor {
             .map(f => f.name);
 
         elizaLogger.info("DAO: Loaded events:", eventNames.join(", "));
-
     }
 
-    private async fetchAbi(): Promise<any[]> {
-        if (!this.config.DAOMONITOR_ETHERSCAN_API_KEY) throw new Error("ETHERSCAN_API_KEY required");
-        const DAO_CHAIN_ID = process.env.DAOMONITOR_DAO_CHAIN_ID;
+    /**
+     * Loads ABI for the proxy address and, if found, the implementation's ABI.
+     * Merges them (avoids duplicates) and returns an ethers.Interface.
+     *
+     * Uses process.env.DAOMONITOR_DAO_CHAIN_ID to pick explorer:
+     *  - '8453' -> BaseScan (api.basescan.org)
+     *  - otherwise -> Etherscan (api.etherscan.io)
+     */
+    private async loadCombinedInterface(proxyAddress: string): Promise<ethers.Interface> {
+        const chainId = process.env.DAOMONITOR_DAO_CHAIN_ID || "1";
+        const explorer = (chainId === "8453") ? "base" : "etherscan";
 
-        const getabi_url = `https://api.etherscan.io/v2/api?chainid=${DAO_CHAIN_ID || '1'}&module=contract&action=getabi`;
-        const res = await fetch(
-            `${getabi_url}&address=${this.config.DAOMONITOR_CONTRACT_ADDRESS}&apikey=${this.config.DAOMONITOR_ETHERSCAN_API_KEY}`
-        );
+        // Fetch proxy ABI (the address you listen to emits events)
+        const proxyAbi = await this.fetchAbiForExplorer(proxyAddress, explorer);
+        elizaLogger.info(`DAO: Fetched proxy ABI (fragments=${proxyAbi.length}) from ${explorer}`);
+
+        // Attempt to read implementation address from standard ERC-1967 slot
+        const implAddress = await this.getImplementationAddress(proxyAddress);
+        if (!implAddress) {
+            elizaLogger.warn("DAO: No implementation address detected; using proxy ABI only.");
+            // Optionally merge extra events if you want them present
+            const extraEvents = this.getExtraEvents();
+            const combined = [
+                ...proxyAbi,
+                ...extraEvents.filter(ev => !proxyAbi.some(p => p.type === ev.type && p.name === ev.name))
+            ];
+            return new ethers.Interface(combined);
+        }
+
+        // Fetch implementation ABI from corresponding explorer (same explorer; but impl might be on same chain)
+        const implAbi = await this.fetchAbiForExplorer(implAddress, explorer);
+        elizaLogger.info(`DAO: Fetched implementation ABI (fragments=${implAbi.length}) from ${explorer} for ${implAddress}`);
+
+        // Merge ABIs - keep proxy fragments, then add implementation fragments not already present
+        const merged: any[] = [
+            ...proxyAbi,
+            ...implAbi.filter(frag => {
+                // if proxy contains same type+name, skip to avoid duplicates
+                return !(proxyAbi.some(p => (p.type === frag.type) && (p.name === frag.name)));
+            })
+        ];
+
+        // Add extra events only if they don't exist already
+        const extraEvents = this.getExtraEvents();
+        for (const ev of extraEvents) {
+            if (!merged.some(m => m.type === ev.type && m.name === ev.name)) {
+                merged.push(ev);
+            }
+        }
+
+        return new ethers.Interface(merged);
+    }
+
+    /**
+     * Fetch ABI for a given address using the correct explorer API.
+     * explorer: 'etherscan' | 'base'
+     */
+    private async fetchAbiForExplorer(address: string, explorer: "etherscan" | "base"): Promise<any[]> {
+        if (!this.config.DAOMONITOR_ETHERSCAN_API_KEY) throw new Error("ETHERSCAN_API_KEY required");
+
+        const chainId = process.env.DAOMONITOR_DAO_CHAIN_ID || "1";
+
+        // Choose the proper base URL
+        let apiurl: string;
+        if (explorer === "base") {
+            // apiurl = "https://api.basescan.org/v2/api";
+            apiurl = "https://api.etherscan.io/v2/api";
+        } else {
+            apiurl = "https://api.etherscan.io/v2/api";
+        }
+
+        // Etherscan / BaseScan parameter names differ slightly in your earlier code.
+        // Both support module=contract&action=getabi
+        const url = `${apiurl}?chainid=${chainId}&module=contract&action=getabi&address=${address}&apikey=${this.config.DAOMONITOR_ETHERSCAN_API_KEY}`;
+
+        // Use global fetch (your environment already used fetch elsewhere); fallback will throw if not available.
+        const res = await fetch(url);
+        if (!res.ok) {
+            throw new Error(`Failed to fetch ABI: ${res.status} ${res.statusText}`);
+        }
         const data: any = await res.json();
-        if (data.status !== "1") throw new Error(`Etherscan: ${data.result}`);
+        if (data.status !== "1") {
+            // some explorers return status "0" with message in result
+            throw new Error(`Explorer ABI fetch error: ${data.result || JSON.stringify(data)}`);
+        }
         return JSON.parse(data.result);
+    }
+
+    /**
+     * Reads the ERC-1967 implementation slot for a given proxy address.
+     * Returns implementation address or null.
+     */
+    private async getImplementationAddress(proxyAddress: string): Promise<string | null> {
+        // Standard ERC-1967 implementation storage slot (bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1))
+        // It's the known constant:
+        const IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+
+        try {
+            // Use the same provider (WebSocketProvider) — it supports getStorageAt
+            const raw = await this.provider.getStorage(proxyAddress, IMPLEMENTATION_SLOT);
+            // raw is 32 bytes hex; last 20 bytes are address
+            if (!raw || raw === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+                return null;
+            }
+            const impl = "0x" + raw.slice(26);
+            // basic zero check
+            if (impl === "0x0000000000000000000000000000000000000000") return null;
+            return ethers.getAddress(impl);
+        } catch (err) {
+            elizaLogger.debug("DAO: getImplementationAddress error:", err);
+            return null;
+        }
     }
 
     private getExtraEvents() {
@@ -196,33 +305,13 @@ export class DaoMonitor {
                 name: "VoteCast",
                 anonymous: false,
                 inputs: [
-                  {
-                    indexed: true,
-                    name: "voter",
-                    type: "address"
-                  },
-                  {
-                    indexed: false,
-                    name: "proposalId",
-                    type: "uint256"
-                  },
-                  {
-                    indexed: false,
-                    name: "support",
-                    type: "uint8"
-                  },
-                  {
-                    indexed: false,
-                    name: "votes",
-                    type: "uint256"
-                  },
-                  {
-                    indexed: false,
-                    name: "reason",
-                    type: "string"
-                  }
+                    { indexed: true, name: "voter", type: "address" },
+                    { indexed: false, name: "proposalId", type: "uint256" },
+                    { indexed: false, name: "support", type: "uint8" },
+                    { indexed: false, name: "votes", type: "uint256" },
+                    { indexed: false, name: "reason", type: "string" }
                 ]
-              }
+            }
         ];
     }
 
@@ -230,10 +319,9 @@ export class DaoMonitor {
     /*  Listeners                                                          */
     /* ------------------------------------------------------------------ */
     private setupEventListeners(): void {
-        this.provider.on({ 
-            address: this.config.DAOMONITOR_CONTRACT_ADDRESS 
-            }, log => this.handleLog(log)
-        );
+        this.provider.on({
+            address: this.config.DAOMONITOR_CONTRACT_ADDRESS
+        }, log => this.handleLog(log));
         elizaLogger.info("DAO: Listening for all DAO events...");
     }
 
@@ -261,11 +349,6 @@ export class DaoMonitor {
                     eventCounter.set(parsed.name, (eventCounter.get(parsed.name) ?? 0) + 1);
                 }
             }
-
-            // if (block < toBlock) {
-                // await this.sleep(100);
-                // console.log(block)
-            // }
         }
 
         const total = Array.from(eventCounter.values()).reduce((a, b) => a + b, 0);
@@ -303,12 +386,25 @@ export class DaoMonitor {
             return;
         }
 
-        // -------------- 🔥 NEW: UNIVERSAL EVENT LOGGING ----------------
+        // -------------- 🔥 UNIVERSAL EVENT LOGGING ----------------
         elizaLogger.info(
             `DAO: Event captured: ${parsed.name} ` +
             `(block=${log.blockNumber}, tx=${log.transactionHash})`
         );
-        elizaLogger.debug(`DAO: Event args: ${JSON.stringify(parsed.args, null, 2)}`);
+        try {
+            // parsed.args can contain non-serializable BigInt / BigNumber; format loosely
+            const simpleArgs: Record<string, any> = {};
+            for (const k of Object.keys(parsed.args)) {
+                // ethers LogDescription.args behaves like an array + object; skip numeric keys
+                if (/^\d+$/.test(k)) continue;
+                const v = (parsed as any).args[k];
+                // convert BigNumber -> string for JSON safety
+                simpleArgs[k] = v;
+            }
+            elizaLogger.debug(`DAO: Event args: ${JSON.stringify(simpleArgs, null, 2)}`);
+        } catch (err) {
+            elizaLogger.debug("DAO: Failed to stringify event args:", err);
+        }
         // ----------------------------------------------------------------
 
         const handler = this.getHandler(parsed.name);
@@ -318,28 +414,6 @@ export class DaoMonitor {
             elizaLogger.debug(`DAO: Unhandled event: ${parsed.name}`);
         }
     }
-
-    // private async handleLog(log: ethers.Log): Promise<void> {
-    //     let parsed: ParsedLog | null = null;
-        
-    //     try {
-    //         parsed = this.iface.parseLog(log) as ParsedLog;
-    //     } catch (err) {
-    //         // Skip this log only — provider will call handleLog() again for the next log
-    //         elizaLogger.debug(`DAO: Failed to parse log, skipping. Topic0=${log.topics[0]}`);
-    //         return;
-    //     }
-    //     if (!parsed) {
-    //         return;
-    //     }
-
-    //     const handler = this.getHandler(parsed.name);
-    //     if (handler) {
-    //         await handler(parsed, log);
-    //     } else {
-    //         elizaLogger.debug(`DAO: Unhandled event: ${parsed.name}`);
-    //     }
-    // }
 
     private getHandler(eventName: string): ((p: ParsedLog, l: ethers.Log) => Promise<void>) | null {
         const map: Record<string, (p: ParsedLog, l: ethers.Log) => Promise<void>> = {
@@ -361,7 +435,7 @@ export class DaoMonitor {
         const values = this.extractValues(parsed);
         elizaLogger.warn(`DAO: Proposal Created: #${values.id} by ${values.proposer}`);
 
-        const announcementId: UUID = stringToUuid(`nouns-proposal-announcement-${values.id}`) as UUID;
+        const announcementId: UUID = stringToUuid(`dao-proposal-announcement-${values.id}`) as UUID;
         const existingMemory = await this.runtime.messageManager.getMemoryById(announcementId);
 
         if (existingMemory) {
@@ -395,7 +469,7 @@ export class DaoMonitor {
 
         try {
             const agentProfile = await this.client.getProfile(this.client.farcasterConfig.FARCASTER_FID);
-            const roomId = stringToUuid("nouns-dao-events") as UUID;
+            const roomId = stringToUuid("dao-monitor-events") as UUID;
 
             await sendChannelCast({
                 client: this.client,
@@ -414,11 +488,11 @@ export class DaoMonitor {
             const announcementMemory: Memory = {
                 id: announcementId,
                 agentId: this.runtime.agentId,
-                userId: stringToUuid("nouns-dao") as UUID,
+                userId: stringToUuid("dao-monitor") as UUID,
                 roomId,
                 content: {
                     text: `Announcement cast for proposal ${values.id}`,
-                    source: "nouns-dao-monitor",
+                    source: "dao-monitor",
                 },
                 createdAt: Date.now(),
                 embedding: getEmbeddingZeroVector(),
@@ -434,11 +508,11 @@ export class DaoMonitor {
         const dummyMemory: Memory = {
             id: announcementId,
             agentId: this.runtime.agentId,
-            userId: stringToUuid("nouns-dao") as UUID,
-            roomId: stringToUuid("nouns-dao-events") as UUID,
+            userId: stringToUuid("dao-monitor") as UUID,
+            roomId: stringToUuid("dao-monitor-events") as UUID,
             content: {
                 text: `Proposal ${values.id} created`,
-                source: "nouns-dao-monitor",
+                source: "dao-monitor",
             },
             createdAt: Date.now(),
             embedding: getEmbeddingZeroVector(),
