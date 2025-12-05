@@ -105,7 +105,7 @@ export class DaoMonitor {
             DAOMONITOR_WSS_MAINNET_ENDPOINT: WSS_MAINNET_ENDPOINT,
             DAOMONITOR_CONTRACT_ADDRESS: CONTRACT_ADDRESS,
             DAOMONITOR_DRY_RUN: DAOMONITOR_DRY_RUN,
-            TEST_DAOMONITOR: true,
+            TEST_DAOMONITOR: false,
         }
     }
 
