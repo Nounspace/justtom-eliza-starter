@@ -40,10 +40,11 @@ import { EventFragment } from "ethers";
 import { formatValue } from "./DaoMonitor-utils";
 import { FarcasterClient } from "./client";
 
-// const DRY_RUN_BLOCKS_RANGE = [23758603, 23719731];
-const DRY_RUN_BLOCKS_RANGE = [23737013, 23645555];
-
 type ParsedLog = ethers.LogDescription & { fragment: ethers.EventFragment };
+
+const TEST_RUN_BLOCKS_RANGE = [23939000, 23938900];
+const STANDARD_IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+const NOUNS_DAO_IMPLEMENTATION_SLOT = "0x0"; // Slot 0 for Nouns DAO custom proxy
 
 export interface Proposal {
     id: string;
@@ -104,7 +105,7 @@ export class DaoMonitor {
             DAOMONITOR_WSS_MAINNET_ENDPOINT: WSS_MAINNET_ENDPOINT,
             DAOMONITOR_CONTRACT_ADDRESS: CONTRACT_ADDRESS,
             DAOMONITOR_DRY_RUN: DAOMONITOR_DRY_RUN,
-            TEST_DAOMONITOR: false,
+            TEST_DAOMONITOR: true,
         }
     }
 
@@ -125,7 +126,7 @@ export class DaoMonitor {
         elizaLogger.info("DAO: Starting DAO Monitor...");
         await this.initializeProvider();
         if (this.config.TEST_DAOMONITOR) {
-            await this.dryRun();
+            await this.testBlocksRange();
         } else {
             this.setupEventListeners();
         }
@@ -248,20 +249,24 @@ export class DaoMonitor {
      * Returns implementation address or null.
      */
     private async getImplementationAddress(proxyAddress: string): Promise<string | null> {
-        // Standard ERC-1967 implementation storage slot (bytes32(uint256(keccak256('eip1967.proxy.implementation')) - 1))
-        // It's the known constant:
-        const IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
-
         try {
-            // Use the same provider (WebSocketProvider) — it supports getStorageAt
-            const raw = await this.provider.getStorage(proxyAddress, IMPLEMENTATION_SLOT);
-            // raw is 32 bytes hex; last 20 bytes are address
+            // First, check the standard ERC-1967 slot
+            let raw = await this.provider.getStorage(proxyAddress, STANDARD_IMPLEMENTATION_SLOT);
+
+            // If the standard slot is empty, check the custom Nouns DAO slot
+            if (!raw || raw === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+                elizaLogger.debug("DAO: Standard implementation slot is empty, checking custom Nouns DAO slot 0.");
+                raw = await this.provider.getStorage(proxyAddress, NOUNS_DAO_IMPLEMENTATION_SLOT);
+            }
+
+            // If still no value, return null
             if (!raw || raw === "0x0000000000000000000000000000000000000000000000000000000000000000") {
                 return null;
             }
+
             const impl = "0x" + raw.slice(26);
-            // basic zero check
             if (impl === "0x0000000000000000000000000000000000000000") return null;
+
             return ethers.getAddress(impl);
         } catch (err) {
             elizaLogger.debug("DAO: getImplementationAddress error:", err);
@@ -325,8 +330,8 @@ export class DaoMonitor {
         elizaLogger.info("DAO: Listening for all DAO events...");
     }
 
-    private async dryRun(): Promise<void> {
-        const [fromBlock, toBlock] = DRY_RUN_BLOCKS_RANGE;
+    private async testBlocksRange(): Promise<void> {
+        const [fromBlock, toBlock] = TEST_RUN_BLOCKS_RANGE;
 
         elizaLogger.warn(
             `DAO: DRY RUN: Scanning blocks ${fromBlock} → ${toBlock} ` +
@@ -336,6 +341,9 @@ export class DaoMonitor {
         const eventCounter = new Map<string, number>();
 
         for (let block = fromBlock; block >= toBlock; block--) {
+            console.log(`DAO: Scanning block ${block}...`);
+            await this.sleep(100); // avoid rate limits
+
             const logs = await this.provider.getLogs({
                 address: this.config.DAOMONITOR_CONTRACT_ADDRESS,
                 fromBlock: block,
@@ -352,7 +360,7 @@ export class DaoMonitor {
         }
 
         const total = Array.from(eventCounter.values()).reduce((a, b) => a + b, 0);
-        elizaLogger.log(`DAO: Dry-run complete – ${total} events processed`);
+        elizaLogger.log(`DAO: Test Blocks Range complete – ${total} events processed`);
         for (const [name, count] of eventCounter) {
             elizaLogger.log(`  ${name}: ${count}`);
         }
@@ -383,6 +391,10 @@ export class DaoMonitor {
             parsed = this.iface.parseLog(log) as ParsedLog;
         } catch (err) {
             elizaLogger.debug(`DAO: Failed to parse log, skipping. Topic0=${log.topics[0]}`);
+            return;
+        }
+
+        if (!parsed) {
             return;
         }
 
