@@ -105,7 +105,7 @@ export class DaoMonitor {
             DAOMONITOR_WSS_MAINNET_ENDPOINT: WSS_MAINNET_ENDPOINT,
             DAOMONITOR_CONTRACT_ADDRESS: CONTRACT_ADDRESS,
             DAOMONITOR_DRY_RUN: DAOMONITOR_DRY_RUN,
-            TEST_DAOMONITOR: false,
+            TEST_DAOMONITOR: true,
         }
     }
 
@@ -549,7 +549,7 @@ export class DaoMonitor {
             id: values.id, // Use the actual proposal ID here, not the announcementId
             proposer: values.proposer,
             title,
-            descriptionPreview: truncateToCompleteSentence(descriptionBody, 1024),
+            descriptionPreview: truncateToCompleteSentence(descriptionBody, 3000),
         });
     }
 
