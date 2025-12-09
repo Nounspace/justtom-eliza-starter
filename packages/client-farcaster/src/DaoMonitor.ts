@@ -533,13 +533,23 @@ export class DaoMonitor {
             embedding: getEmbeddingZeroVector(),
         };
 
+        const { character } = this.runtime;
+
+        const descriptionLines = values.description.split('\n');
+        const title = descriptionLines[0] || '';
+        const descriptionBody = descriptionLines.slice(1).join('\n');
+
         return this.runtime.composeState(dummyMemory, {
-            agentName: this.runtime.character.name || "Tom",
-            twitterUserName: this.client.farcasterConfig.FARCASTER_USERNAME || "nounspaceTom",
+            agentName: character.name || "Tom",
+            farcasterUsername: this.client.farcasterConfig.FARCASTER_USERNAME || "nounspaceTom",
+            bio: character.bio,
+            lore: character.lore,
+            postDirections: this.runtime.character.style.post.join("\n- "),
+            // characterPostExamples: character.postExamples,
             id: values.id, // Use the actual proposal ID here, not the announcementId
             proposer: values.proposer,
-            title: values.description.split("\n")[0],
-            descriptionPreview: values.description.split("\n").slice(1, 4).join(" "),
+            title,
+            descriptionPreview: truncateToCompleteSentence(descriptionBody, 1024),
         });
     }
 

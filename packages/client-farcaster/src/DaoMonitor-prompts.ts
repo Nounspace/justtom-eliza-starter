@@ -39,15 +39,18 @@ export const headerTemplate = `
 About {{agentName}} (@{{farcasterUsername}}):
 {{bio}}
 {{lore}}
-{{postDirections}}
 
-{{characterPostExamples}}`;
+Post style and directions:
+- {{postDirections}}
+
+`;
 
 export const getCreateProposalEventPrompt =
     headerTemplate + `
 
 <PROPOSAL>
-# PROPOSAL {{id}} by: {{proposer}}
+Title: {{title}}
+#{{id}} by: {{proposer}}
 
 {{descriptionPreview}}
 </PROPOSAL>
