@@ -3,6 +3,7 @@ import type { Content, IAgentRuntime, Memory, UUID } from "@elizaos/core";
 import type { Cast, CastId, Profile } from "./types";
 import { createCastMemory } from "./memory";
 import { splitPostContent } from "./utils";
+import { PostCastReqBodyEmbeds } from "@neynar/nodejs-sdk/build/api";
 
 export async function sendCast({
     client,
@@ -83,7 +84,11 @@ export async function sendChannelCast({
         if(!channelId){
             throw new Error("Farcaster Action: FARCASTER_TARGET_CHANNEL is missing or undefined");
         }
-        const neynarCast = await client.publishChannelCast(chunk, parentCastId, channelId);
+        const embeds: PostCastReqBodyEmbeds[] = [];
+        if (content.url) {
+            embeds.push({ url: content.url as string });
+        }
+        const neynarCast = await client.publishChannelCast(chunk, parentCastId, channelId, embeds);
 
         if (neynarCast) {
             const cast: Cast = {

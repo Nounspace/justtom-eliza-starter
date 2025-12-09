@@ -2,7 +2,7 @@ import { type IAgentRuntime, elizaLogger } from "@elizaos/core";
 import { type NeynarAPIClient, isApiErrorResponse } from "@neynar/nodejs-sdk";
 import type { NeynarCastResponse, Cast, Profile, FidRequest, CastId } from "./types";
 import type { FarcasterConfig } from "./environment";
-import { FeedResponse, FeedType, FilterType } from "@neynar/nodejs-sdk/build/api";
+import { FeedResponse, FeedType, FilterType, PostCastReqBodyEmbeds } from "@neynar/nodejs-sdk/build/api";
 
 export class FarcasterClient {
     runtime: IAgentRuntime;
@@ -82,6 +82,7 @@ export class FarcasterClient {
         cast: string,
         parentCastId: CastId | undefined,
         channelId: string,
+        embeds: PostCastReqBodyEmbeds[] = [],
         // eslint-disable-next-line
         retryTimes?: number,
     ): Promise<NeynarCastResponse | undefined> {
@@ -90,7 +91,8 @@ export class FarcasterClient {
                 signerUuid: this.signerUuid,
                 text: cast,
                 parent: parentCastId?.hash,
-                channelId
+                channelId,
+                embeds
             });
             if (result.success) {
                 return {
