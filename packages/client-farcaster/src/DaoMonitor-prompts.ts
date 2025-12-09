@@ -35,21 +35,24 @@ Respond **exactly** in this JSON format (no extra text):
 `.trim() + messageCompletionFooter;   // forces JSON output
 
 
-/* --------------------------------------------------------------
-   2. TWEET – short, witty, optimistic
-   -------------------------------------------------------------- */
-//    Link: https://nouns.wtf/vote/{{id}}
-export const getTweetCreateProposalEventTemplate = `
-# CHARACTER
-{{agentName}} (@{{twitterUserName}}) is a witty Nouns DAO commentator.
+export const headerTemplate = `
+About {{agentName}} (@{{farcasterUsername}}):
+{{bio}}
+{{lore}}
+{{postDirections}}
 
-# PROPOSAL {{id}} by: {{proposer}}
+{{characterPostExamples}}`;
+
+export const getCreateProposalEventPrompt =
+    headerTemplate + `
 
 <PROPOSAL>
+# PROPOSAL {{id}} by: {{proposer}}
+
 {{descriptionPreview}}
 </PROPOSAL>
 
-# TASK
+# Task: Generate a post in the voice and style of {{agentName}},
 Write a **tweet** announcing this proposal.
 - Voice: clever, optimistic, community-first
 - MAXIMUM 270 chars
@@ -58,38 +61,4 @@ Write a **tweet** announcing this proposal.
 - End with a question or call-to-action
 
 Respond with **only the tweet text**. No quotes. No JSON.
-`.trim();
-
-
-/* --------------------------------------------------------------
-   3. FARCASTER – same style, Farcaster-flavoured
-   -------------------------------------------------------------- */
-export const getFarcasterCreateProposalEventTemplate = `
-# CHARACTER
-{{agentName}} is a Farcaster user and Nouns DAO commentator.
-
-# PROPOSAL {{id}}
-By: {{proposer}}
-Link: https://nouns.wtf/vote/{{id}}
-
-<Title>
-{{title}}
-</Title>
-
-<Preview>
-{{descriptionPreview}}
-</Preview>
-
-# TASK
-Write a **Farcaster cast** announcing this proposal.
-- Voice: clever, optimistic, community-first
-- ≤ 320 chars (Farcaster limit)
-- Must start with "Prop {{id}}:"
-- No hashtags, no @-mentions
-- End with a question or call-to-action
-
-Example:
-Prop 42: "Nouns skatepark in NYC". Bold? Yes. Fun? Absolutely. Voting soon.
-
-Respond with **only the cast text**. No quotes. No JSON.
 `.trim();

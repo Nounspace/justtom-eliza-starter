@@ -29,7 +29,7 @@ import {
     Memory,
     UUID,
 } from "@elizaos/core";
-import { getTweetCreateProposalEventTemplate } from "./DaoMonitor-templates";
+import { getCreateProposalEventPrompt } from "./DaoMonitor-prompts";
 import { sendChannelCast } from "./actions";
 
 import { z, ZodError } from "zod";
@@ -456,7 +456,9 @@ export class DaoMonitor {
         }
 
         const state = await this.buildProposalState(announcementId, values);
-        const context = composeContext({ state, template: getTweetCreateProposalEventTemplate });
+        const context = composeContext({ state, template: getCreateProposalEventPrompt });
+
+        elizaLogger.warn(`DAO: Context for proposal #${values.id}: ${context}`);
 
         const castTextRaw = await generateText({
             runtime: this.runtime,
@@ -471,6 +473,7 @@ export class DaoMonitor {
         let castText = cleanJsonResponse(castTextRaw).trim();
         castText = truncateToCompleteSentence(castText, 280);
         castText = castText.replace(/^["']|["']$/g, "");
+        // castText = castText + `\n\nhttps://www.nounspace.com/p/${values.id}`;
 
         elizaLogger.info(`DAO: Generated cast for proposal #${values.id}: ${castText}`);
 
