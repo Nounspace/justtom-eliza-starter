@@ -404,18 +404,17 @@ export class DaoMonitor {
             `(block=${log.blockNumber}, tx=${log.transactionHash})`
         );
         try {
-            // parsed.args can contain non-serializable BigInt / BigNumber; format loosely
             const simpleArgs: Record<string, any> = {};
-            for (const k of Object.keys(parsed.args)) {
-                // ethers LogDescription.args behaves like an array + object; skip numeric keys
-                if (/^\d+$/.test(k)) continue;
-                const v = (parsed as any).args[k];
-                // convert BigNumber -> string for JSON safety
-                simpleArgs[k] = v;
+            if (parsed.fragment?.inputs) {
+                parsed.fragment.inputs.forEach(input => {
+                    const value = parsed.args[input.name];
+                    simpleArgs[input.name] = value;
+                });
             }
-            elizaLogger.debug(`DAO: Event args: ${JSON.stringify(simpleArgs, null, 2)}`);
+            const replacer = (key, value) => typeof value === 'bigint' ? value.toString() : value;
+            elizaLogger.debug(`DAO: Event args: ${JSON.stringify(simpleArgs, replacer, 2)}`);
         } catch (err) {
-            elizaLogger.debug("DAO: Failed to stringify event args:", err);
+            elizaLogger.debug(`DAO: Failed to stringify event args:`, err);
         }
         // ----------------------------------------------------------------
 
@@ -498,8 +497,6 @@ export class DaoMonitor {
                 profile: agentProfile,
             });
 
-            elizaLogger.info(`DAO: Successfully cast for proposal #${values.id}`);
-
             const announcementMemory: Memory = {
                 id: announcementId,
                 agentId: this.runtime.agentId,
@@ -513,9 +510,11 @@ export class DaoMonitor {
                 embedding: getEmbeddingZeroVector(),
             };
             await this.runtime.messageManager.createMemory(announcementMemory);
+            elizaLogger.info(`DAO: Successfully announced and recorded proposal #${values.id}`);
 
         } catch (error) {
-            elizaLogger.error(`DAO: Failed to cast for proposal #${values.id}`, error);
+            const err = error instanceof Error ? error.stack : String(error)
+            elizaLogger.error(`DAO: Failed to announce proposal #${values.id}. Error: ${err}`);
         }
     }
 
