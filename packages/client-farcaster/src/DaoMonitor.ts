@@ -42,7 +42,8 @@ import { FarcasterClient } from "./client";
 
 type ParsedLog = ethers.LogDescription & { fragment: ethers.EventFragment };
 
-const TEST_RUN_BLOCKS_RANGE = [23939000, 23938900];
+const TEST_RUN_BLOCKS_RANGE = [23978345, 23977613];
+// const TEST_RUN_BLOCKS_RANGE = [23939000, 23938900];
 const STANDARD_IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
 const NOUNS_DAO_IMPLEMENTATION_SLOT = "0x0"; // Slot 0 for Nouns DAO custom proxy
 
@@ -95,6 +96,7 @@ export class DaoMonitor {
         const CONTRACT_ADDRESS = process.env.DAOMONITOR_CONTRACT_ADDRESS || "0x000";
         const WSS_MAINNET_ENDPOINT = process.env.DAOMONITOR_WSS_MAINNET_ENDPOINT || "wss://ethereum-rpc.publicnode.com"
         const ETHERSCAN_API_KEY = process.env.DAOMONITOR_ETHERSCAN_API_KEY || ""
+        const TEST_DAOMONITOR = process.env.TEST_DAOMONITOR === "true" || false;
 
         if (ETHERSCAN_API_KEY === "") {
             elizaLogger.error(`Missing ETHERSCAN_API_KEY.`);
@@ -105,7 +107,7 @@ export class DaoMonitor {
             DAOMONITOR_WSS_MAINNET_ENDPOINT: WSS_MAINNET_ENDPOINT,
             DAOMONITOR_CONTRACT_ADDRESS: CONTRACT_ADDRESS,
             DAOMONITOR_DRY_RUN: DAOMONITOR_DRY_RUN,
-            TEST_DAOMONITOR: true,
+            TEST_DAOMONITOR: TEST_DAOMONITOR,
         }
     }
 
@@ -335,7 +337,7 @@ export class DaoMonitor {
 
         elizaLogger.warn(
             `DAO: DRY RUN: Scanning blocks ${fromBlock} → ${toBlock} ` +
-            `(${toBlock - fromBlock + 1} blocks, 3s pause between blocks)`
+            `(${toBlock - fromBlock + 1} blocks)`
         );
 
         const eventCounter = new Map<string, number>();
@@ -399,7 +401,7 @@ export class DaoMonitor {
         }
 
         // -------------- 🔥 UNIVERSAL EVENT LOGGING ----------------
-        elizaLogger.info(
+        elizaLogger.warn(
             `DAO: Event captured: ${parsed.name} ` +
             `(block=${log.blockNumber}, tx=${log.transactionHash})`
         );
@@ -548,7 +550,7 @@ export class DaoMonitor {
             id: values.id, // Use the actual proposal ID here, not the announcementId
             proposer: values.proposer,
             title,
-            descriptionPreview: truncateToCompleteSentence(descriptionBody, 3000),
+            descriptionPreview: truncateToCompleteSentence(descriptionBody, 7000),
         });
     }
 

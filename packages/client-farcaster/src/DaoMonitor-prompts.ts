@@ -53,6 +53,13 @@ Post style and directions:
 export const getCreateProposalEventPrompt =
     headerTemplate + `
 
+# Task: Write a **tweet** announcing this proposal in the voice and style of {{agentName}}.
+- Must start with "Prop {{id}}:"
+- MAXIMUM 270 chars
+- No hashtags, no @-mentions
+- End with a question or call-to-action
+Respond with **only the tweet text**. No quotes. No JSON.
+
 <PROPOSAL>
 Title: {{title}}
 #{{id}} by: {{proposer}}
@@ -60,11 +67,4 @@ Title: {{title}}
 {{descriptionPreview}}
 </PROPOSAL>
 
-# Task: Write a **tweet** announcing this proposal in the voice and style of {{agentName}}.
-- Must start with "Prop {{id}}:"
-- MAXIMUM 270 chars
-- No hashtags, no @-mentions
-- End with a question or call-to-action
-
-Respond with **only the tweet text**. No quotes. No JSON.
 `.trim();
