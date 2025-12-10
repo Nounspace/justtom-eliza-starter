@@ -127,7 +127,7 @@ export class FarcasterInteractionManager {
 
             // Check if the user is already blocked
             if (this.spamFilterManager.isUserBlocked(userId)) {
-                elizaLogger.info(
+                elizaLogger.debug(
                     `Farcaster: Not responding to cast because Security/Spam filter BLOCK ${mention.profile.username}`
                 );
                 continue; // Skip processing for blocked users
@@ -224,7 +224,7 @@ export class FarcasterInteractionManager {
         // Stage 1: Security/Spam Filter
         if (this.spamFilterManager.isUserBlocked(senderId)) {
             this.spamFilterManager.addUserToBlockList(cast.profile.username, senderId);
-            elizaLogger.warn(
+            elizaLogger.debug(
                 `Farcaster: Not responding to cast because Security/Spam filter BLOCK ${cast.profile.username}`
             );
             return
@@ -248,7 +248,7 @@ export class FarcasterInteractionManager {
         );
 
         if (securityResponse === "STOP") {
-            elizaLogger.warn(
+            elizaLogger.debug(
                 `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${cast.profile.username}`
             );
 
@@ -296,7 +296,7 @@ export class FarcasterInteractionManager {
             shouldRespondResponse === "IGNORE" ||
             shouldRespondResponse === "STOP"
         ) {
-            elizaLogger.warn(
+            elizaLogger.debug(
                 `Farcaster: Not responding to cast because shouldRespondContext was ${shouldRespondResponse}`
             );
             return;

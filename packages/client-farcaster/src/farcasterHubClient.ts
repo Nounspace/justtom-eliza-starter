@@ -1290,7 +1290,7 @@ export class FarcasterHubClient {
         const senderId = stringToUuid(cast.authorFid.toString());
         if (this.spamFilterManager.isUserBlocked(senderId)) {
             this.spamFilterManager.addUserToBlockList(deployerInfo.username, senderId);
-            elizaLogger.warn(
+            elizaLogger.debug(
                 `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${deployerInfo.username}`
             );
             return
@@ -1623,7 +1623,7 @@ export class FarcasterHubClient {
             shouldRespondResponse === "IGNORE" ||
             shouldRespondResponse === "STOP"
         ) {
-            elizaLogger.info(
+            elizaLogger.debug(
                 `Farcaster: Not responding to cast because generated ShouldRespond was ${shouldRespondResponse}`
             );
             return;

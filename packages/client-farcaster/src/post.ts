@@ -98,11 +98,11 @@ export class FarcasterPostManager {
                     elizaLogger.error(error);
                 }
             } else {
-                elizaLogger.warn(`Now is not the time to post, waiting for the next cast time`);
-                elizaLogger.warn(`Now is ${timezoneTime} and the cast time is ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`);
+                elizaLogger.debug(`Now is not the time to post, waiting for the next cast time`);
+                elizaLogger.info(`Now is ${timezoneTime} and the cast time is ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`);
             }
 
-            elizaLogger.warn(`Next cast verification for 1 hours`);
+            elizaLogger.debug(`Next cast verification for 1 hours`);
             setTimeout(generateNewCastLoop, 60 * 60 * 1000); // Re-executa a cada 1 hora
         };
 
