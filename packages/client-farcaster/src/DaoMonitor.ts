@@ -42,7 +42,7 @@ import { FarcasterClient } from "./client";
 
 type ParsedLog = ethers.LogDescription & { fragment: ethers.EventFragment };
 
-const TEST_RUN_BLOCKS_RANGE = [23978345, 23977613];
+const TEST_RUN_BLOCKS_RANGE = [24002350, 23938900];
 // const TEST_RUN_BLOCKS_RANGE = [23939000, 23938900];
 const STANDARD_IMPLEMENTATION_SLOT = "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
 const NOUNS_DAO_IMPLEMENTATION_SLOT = "0x0"; // Slot 0 for Nouns DAO custom proxy
@@ -145,6 +145,14 @@ export class DaoMonitor {
     private async initializeProvider(): Promise<void> {
         // Create provider (websocket used for live events)
         this.provider = new ethers.WebSocketProvider(this.config.DAOMONITOR_WSS_MAINNET_ENDPOINT);
+
+        this.provider.on("error", (error) => {
+            elizaLogger.error("DAO: WebSocketProvider error:", error);
+        });
+
+        this.provider.on("close", (code, reason) => {
+            elizaLogger.warn(`DAO: WebSocketProvider closed, code=${code}, reason=${reason}`);
+        });
 
         // Load combined interface (proxy ABI + implementation ABI)
         const combinedInterface = await this.loadCombinedInterface(this.config.DAOMONITOR_CONTRACT_ADDRESS);
@@ -343,21 +351,26 @@ export class DaoMonitor {
         const eventCounter = new Map<string, number>();
 
         for (let block = fromBlock; block >= toBlock; block--) {
-            console.log(`DAO: Scanning block ${block}...`);
-            await this.sleep(100); // avoid rate limits
+            try {
+                console.log(`DAO: Scanning block ${block}...`);
+                await this.sleep(500); // avoid rate limits
 
-            const logs = await this.provider.getLogs({
-                address: this.config.DAOMONITOR_CONTRACT_ADDRESS,
-                fromBlock: block,
-                toBlock: block,
-            });
+                const logs = await this.provider.getLogs({
+                    address: this.config.DAOMONITOR_CONTRACT_ADDRESS,
+                    fromBlock: block,
+                    toBlock: block,
+                });
 
-            for (const log of logs) {
-                await this.handleLog(log);
-                const parsed = this.tryParseLog(log);
-                if (parsed) {
-                    eventCounter.set(parsed.name, (eventCounter.get(parsed.name) ?? 0) + 1);
+                for (const log of logs) {
+                    await this.handleLog(log);
+                    const parsed = this.tryParseLog(log);
+                    if (parsed) {
+                        eventCounter.set(parsed.name, (eventCounter.get(parsed.name) ?? 0) + 1);
+                    }
                 }
+            } catch (error) {
+                elizaLogger.error(`DAO: Error scanning block ${block}:`, error);
+                await this.sleep(5000); // Wait longer after an error
             }
         }
 
