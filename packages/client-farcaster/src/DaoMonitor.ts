@@ -146,14 +146,6 @@ export class DaoMonitor {
         // Create provider (websocket used for live events)
         this.provider = new ethers.WebSocketProvider(this.config.DAOMONITOR_WSS_MAINNET_ENDPOINT);
 
-        this.provider.on("error", (error) => {
-            elizaLogger.error("DAO: WebSocketProvider error:", error);
-        });
-
-        this.provider.on("close", (code, reason) => {
-            elizaLogger.warn(`DAO: WebSocketProvider closed, code=${code}, reason=${reason}`);
-        });
-
         // Load combined interface (proxy ABI + implementation ABI)
         const combinedInterface = await this.loadCombinedInterface(this.config.DAOMONITOR_CONTRACT_ADDRESS);
         this.iface = combinedInterface;
@@ -284,6 +276,27 @@ export class DaoMonitor {
         }
     }
 
+    private async reconnectProvider(): Promise<void> {
+        elizaLogger.warn("DAO: Reconnecting WebSocketProvider...");
+        if (this.provider) {
+            await this.provider.destroy();
+        }
+        await this.initializeProvider();
+        elizaLogger.info("DAO: WebSocketProvider reconnected.");
+    }
+
+    private withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+        let timeoutId: NodeJS.Timeout;
+        const timeoutPromise = new Promise<T>((resolve, reject) => {
+            timeoutId = setTimeout(() => {
+                reject(new Error("Operation timed out"));
+            }, ms);
+        });
+        return Promise.race([promise, timeoutPromise]).finally(() => {
+            clearTimeout(timeoutId);
+        });
+    }
+
     private getExtraEvents() {
         return [
             {
@@ -334,6 +347,20 @@ export class DaoMonitor {
     /*  Listeners                                                          */
     /* ------------------------------------------------------------------ */
     private setupEventListeners(): void {
+        this.provider.websocket.onerror = async (event: Event) => {
+            elizaLogger.error("DAO: WebSocket error event:", event);
+            await this.reconnectProvider();
+        }
+        // this.provider.websocket.onclose = async (event: CloseEvent) => {
+        //     elizaLogger.error(`DAO: WebSocket closed (code=${event.code}, reason=${event.reason})`);
+        //     await this.reconnectProvider();
+        // }
+
+        this.provider.on("error", async (error) => {
+            elizaLogger.error("DAO: WebSocketProvider error:", error);
+            await this.reconnectProvider();
+        });
+
         this.provider.on({
             address: this.config.DAOMONITOR_CONTRACT_ADDRESS
         }, log => this.handleLog(log));
@@ -355,11 +382,14 @@ export class DaoMonitor {
                 console.log(`DAO: Scanning block ${block}...`);
                 await this.sleep(500); // avoid rate limits
 
-                const logs = await this.provider.getLogs({
-                    address: this.config.DAOMONITOR_CONTRACT_ADDRESS,
-                    fromBlock: block,
-                    toBlock: block,
-                });
+                const logs = await this.withTimeout(
+                    this.provider.getLogs({
+                        address: this.config.DAOMONITOR_CONTRACT_ADDRESS,
+                        fromBlock: block,
+                        toBlock: block,
+                    }),
+                    30000 // 30 seconds timeout for getLogs
+                );
 
                 for (const log of logs) {
                     await this.handleLog(log);
@@ -369,8 +399,14 @@ export class DaoMonitor {
                     }
                 }
             } catch (error) {
-                elizaLogger.error(`DAO: Error scanning block ${block}:`, error);
-                await this.sleep(5000); // Wait longer after an error
+                if (error instanceof Error && error.message === "Operation timed out") {
+                    elizaLogger.error(`DAO: getLogs for block ${block} timed out. Reconnecting...`);
+                    await this.reconnectProvider();
+                    continue; // Skip to next block after reconnecting
+                } else {
+                    elizaLogger.error(`DAO: Error scanning block ${block}:`, error);
+                    await this.sleep(5000); // Wait longer after other errors
+                }
             }
         }
 
