@@ -1069,13 +1069,13 @@ importers:
     dependencies:
       '@discordjs/opus':
         specifier: github:discordjs/opus
-        version: https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9(encoding@0.1.13)
+        version: https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6(encoding@0.1.13)
       '@discordjs/rest':
         specifier: 2.4.0
         version: 2.4.0
       '@discordjs/voice':
         specifier: 0.17.0
-        version: 0.17.0(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9(encoding@0.1.13))(bufferutil@4.0.9)(ffmpeg-static@5.2.0)(utf-8-validate@6.0.5)
+        version: 0.17.0(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6(encoding@0.1.13))(bufferutil@4.0.9)(ffmpeg-static@5.2.0)(utf-8-validate@6.0.5)
       '@elizaos/core':
         specifier: workspace:*
         version: link:../core
@@ -1090,7 +1090,7 @@ importers:
         version: 0.7.15
       prism-media:
         specifier: 1.3.5
-        version: 1.3.5(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9(encoding@0.1.13))(ffmpeg-static@5.2.0)
+        version: 1.3.5(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6(encoding@0.1.13))(ffmpeg-static@5.2.0)
       whatwg-url:
         specifier: 7.1.0
         version: 7.1.0
@@ -1144,6 +1144,9 @@ importers:
       neverthrow:
         specifier: ^8.1.1
         version: 8.2.0
+      web3:
+        specifier: ^4.9.0
+        version: 4.16.0(bufferutil@4.0.9)(encoding@0.1.13)(typescript@5.8.3)(utf-8-validate@6.0.5)(zod@3.25.62)
     devDependencies:
       tsup:
         specifier: ^8.3.5
@@ -7395,8 +7398,8 @@ packages:
     resolution: {integrity: sha512-YJOVVZ545x24mHzANfYoy0BJX5PDyeZlpiJjDkUBM/V/Ao7TFX9lcUvCN4nr0tbr5ubeaXxtEBILUrHtTphVeQ==}
     hasBin: true
 
-  '@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9':
-    resolution: {tarball: https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9}
+  '@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6':
+    resolution: {tarball: https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6}
     version: 0.10.0
     engines: {node: '>=18.0.0'}
 
@@ -34597,7 +34600,7 @@ snapshots:
       - encoding
       - supports-color
 
-  '@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9(encoding@0.1.13)':
+  '@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6(encoding@0.1.13)':
     dependencies:
       '@discordjs/node-pre-gyp': 0.4.5(encoding@0.1.13)
       node-addon-api: 8.5.0
@@ -34619,11 +34622,11 @@ snapshots:
 
   '@discordjs/util@1.1.1': {}
 
-  '@discordjs/voice@0.17.0(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9(encoding@0.1.13))(bufferutil@4.0.9)(ffmpeg-static@5.2.0)(utf-8-validate@6.0.5)':
+  '@discordjs/voice@0.17.0(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6(encoding@0.1.13))(bufferutil@4.0.9)(ffmpeg-static@5.2.0)(utf-8-validate@6.0.5)':
     dependencies:
       '@types/ws': 8.18.1
       discord-api-types: 0.37.83
-      prism-media: 1.3.5(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9(encoding@0.1.13))(ffmpeg-static@5.2.0)
+      prism-media: 1.3.5(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6(encoding@0.1.13))(ffmpeg-static@5.2.0)
       tslib: 2.8.1
       ws: 8.18.0(bufferutil@4.0.9)(utf-8-validate@6.0.5)
     transitivePeerDependencies:
@@ -67705,9 +67708,9 @@ snapshots:
       extend-shallow: 2.0.1
       js-beautify: 1.15.4
 
-  prism-media@1.3.5(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9(encoding@0.1.13))(ffmpeg-static@5.2.0):
+  prism-media@1.3.5(@discordjs/opus@https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6(encoding@0.1.13))(ffmpeg-static@5.2.0):
     optionalDependencies:
-      '@discordjs/opus': https://codeload.github.com/discordjs/opus/tar.gz/ae53a4d9538dc7942cf9a8a2bb4bc77a0d5685d9(encoding@0.1.13)
+      '@discordjs/opus': https://codeload.github.com/discordjs/opus/tar.gz/88b802fb12d6811623c8d92c16928a3a57e9c1c6(encoding@0.1.13)
       ffmpeg-static: 5.2.0
 
   prism-react-renderer@2.3.1(react@18.3.1):

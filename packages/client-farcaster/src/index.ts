@@ -5,7 +5,8 @@ import { FarcasterInteractionManager } from "./interactions";
 import { Configuration, NeynarAPIClient } from "@neynar/nodejs-sdk";
 import { validateFarcasterConfig, type FarcasterConfig } from "./environment";
 import { FarcasterHubClient } from "./farcasterHubClient"
-import { DaoMonitor } from "./DaoMonitor"
+// import { DaoMonitor } from "./DaoMonitor"
+import { DaoMonitor } from "./DaoMonitor.web3"
 
 /**
  * A manager that orchestrates all Farcaster operations:
