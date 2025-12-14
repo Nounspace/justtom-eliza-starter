@@ -178,8 +178,10 @@ export class DaoMonitor {
     private startHealthCheck(): void {
         this.stopHealthCheck(); // Ensure no multiple timers
 
-        const HEALTHCHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 min
+        // const HEALTHCHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 min
         // const HEALTHCHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+        const HEALTHCHECK_INTERVAL = parseInt(process.env.DAOMONITOR_HEALTHCHECK_INTERVAL_MS || "60") ; // minutes
+        const HEALTHCHECK_INTERVAL_MS = HEALTHCHECK_INTERVAL * 60 * 1000; // 1 hour
 
         this.healthCheckTimer = setInterval(() => {
             elizaLogger.info("DAO: Health check - I'm alive.");
