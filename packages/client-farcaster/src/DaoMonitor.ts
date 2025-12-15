@@ -546,6 +546,7 @@ export class DaoMonitor {
                 roomId,
                 signerUuid: this.client.signerUuid,
                 profile: agentProfile,
+                channelId: process.env.DAOMONITOR_FARCASTER_CHANNEL,
             });
 
             const announcementMemory: Memory = {

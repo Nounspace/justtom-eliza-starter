@@ -670,6 +670,7 @@ export class DaoMonitor {
                 roomId,
                 signerUuid: this.client.signerUuid,
                 profile: agentProfile,
+                channelId: process.env.DAOMONITOR_FARCASTER_CHANNEL,
             });
 
             elizaLogger.info(`DAO: Successfully announced and recorded proposal #${values.id}`);
