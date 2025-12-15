@@ -30,6 +30,7 @@ import {
     UUID,
 } from "@elizaos/core";
 import { getCreateProposalEventPrompt } from "./DaoMonitor-prompts";
+// import { createCastMemory } from "./memory";
 
 import { sendChannelCast } from "./actions";
 
@@ -41,6 +42,7 @@ import { AbiItem, Log } from "web3-types";
 // import { NounsDaoAccountConfig } from "./DaoMonitor-environment";
 import { formatValue } from "./DaoMonitor-utils";
 import { FarcasterClient } from "./client";
+import { Cast } from "./types";
 
 type ParsedLog = {
     eventName: string;
@@ -658,7 +660,7 @@ export class DaoMonitor {
             const agentProfile = await this.client.getProfile(this.client.farcasterConfig.FARCASTER_FID);
             const roomId = stringToUuid("dao-monitor-events") as UUID;
 
-            await sendChannelCast({
+            const [{ cast: theCast, memory: castMemory }] = await sendChannelCast({
                 client: this.client,
                 runtime: this.runtime,
                 content: {
@@ -670,20 +672,9 @@ export class DaoMonitor {
                 profile: agentProfile,
             });
 
-            const announcementMemory: Memory = {
-                id: announcementId,
-                agentId: this.runtime.agentId,
-                userId: stringToUuid("dao-monitor") as UUID,
-                roomId,
-                content: {
-                    text: `Announcement cast for proposal ${values.id}`,
-                    source: "dao-monitor",
-                },
-                createdAt: Date.now(),
-                embedding: getEmbeddingZeroVector(),
-            };
-            await this.runtime.messageManager.createMemory(announcementMemory);
             elizaLogger.info(`DAO: Successfully announced and recorded proposal #${values.id}`);
+            elizaLogger.debug(`DAO: the Cast ${theCast.hash}`);
+            elizaLogger.debug(`DAO: the Memory: ${castMemory.id}`);
 
         } catch (error) {
             const err = error instanceof Error ? error.stack : String(error)
@@ -692,10 +683,12 @@ export class DaoMonitor {
     }
 
     private async buildProposalState(announcementId: UUID, values: Record<string, string>): Promise<State> {
-        const dummyMemory: Memory = {
+        const proposalyMemory: Memory = {
             id: announcementId,
             agentId: this.runtime.agentId,
-            userId: stringToUuid("dao-monitor") as UUID,
+            userId: this.client.farcasterConfig.FARCASTER_FID
+                ? stringToUuid(this.client.farcasterConfig.FARCASTER_FID.toString())
+                : stringToUuid("unknown-user"),
             roomId: stringToUuid("dao-monitor-events") as UUID,
             content: {
                 text: `Proposal ${values.id} created`,
@@ -711,7 +704,7 @@ export class DaoMonitor {
         const title = descriptionLines[0] || '';
         const descriptionBody = descriptionLines.slice(1).join('\n');
 
-        return this.runtime.composeState(dummyMemory, {
+        return this.runtime.composeState(proposalyMemory, {
             agentName: character.name || "Tom",
             farcasterUsername: this.client.farcasterConfig.FARCASTER_USERNAME || "nounspaceTom",
             bio: character.bio,
