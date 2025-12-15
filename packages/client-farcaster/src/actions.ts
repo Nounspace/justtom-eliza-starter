@@ -66,6 +66,7 @@ export async function sendChannelCast({
     roomId,
     inReplyTo,
     profile,
+    channelId, // Added optional channelId parameter
 }: {
     profile: Profile;
     client: FarcasterClient;
@@ -74,21 +75,23 @@ export async function sendChannelCast({
     roomId: UUID;
     signerUuid: string;
     inReplyTo?: CastId;
+    channelId?: string; // Added to interface
 }): Promise<{ memory: Memory; cast: Cast }[]> {
     const chunks = splitPostContent(content.text);
     const sent: Cast[] = [];
     let parentCastId = inReplyTo;
 
     for (const chunk of chunks) {
-        const channelId = runtime.getSetting("FARCASTER_TARGET_CHANNEL");
-        if(!channelId){
-            throw new Error("Farcaster Action: FARCASTER_TARGET_CHANNEL is missing or undefined");
+        // Prioritize channelId argument, then fallback to runtime setting
+        const targetChannelId = channelId || runtime.getSetting("FARCASTER_TARGET_CHANNEL");
+        if(!targetChannelId){
+            throw new Error("Farcaster Action: Channel ID is missing. Provide it either as an argument or set FARCASTER_TARGET_CHANNEL in settings.");
         }
         const embeds: PostCastReqBodyEmbeds[] = [];
         if (content.url) {
             embeds.push({ url: content.url as string });
         }
-        const neynarCast = await client.publishChannelCast(chunk, parentCastId, channelId, embeds);
+        const neynarCast = await client.publishChannelCast(chunk, parentCastId, targetChannelId, embeds);
 
         if (neynarCast) {
             const cast: Cast = {
