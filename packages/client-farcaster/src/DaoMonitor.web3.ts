@@ -118,6 +118,7 @@ export class DaoMonitor {
     private eventsProcessed = 0;
     private lastBlockNumber: bigint = 0n;
     private readonly WATCHDOG_TIMEOUT_MS = 120000; // 2 minutes
+    private isReconnecting = false;
 
     constructor(
         public client: FarcasterClient,
@@ -216,12 +217,25 @@ export class DaoMonitor {
     }
 
     private async reconnect(): Promise<void> {
+        if (this.isReconnecting) {
+            elizaLogger.warn("DAO: Reconnect already in progress. Skipping.");
+            return;
+        }
+
         elizaLogger.info("DAO: Attempting to reconnect...");
-        await this.stop();
-        // A short delay before attempting to start again.
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        await this.start();
-        elizaLogger.info("DAO: Reconnect attempt finished.");
+        this.isReconnecting = true;
+
+        try {
+            await this.stop();
+            // A short delay before attempting to start again.
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            await this.start();
+            elizaLogger.info("DAO: Reconnect attempt finished.");
+        } catch (error) {
+            elizaLogger.error("DAO: Reconnect attempt failed with error:", error);
+        } finally {
+            this.isReconnecting = false;
+        }
     }
 
     public async start(): Promise<void> {
@@ -263,6 +277,16 @@ export class DaoMonitor {
     /* ------------------------------------------------------------------ */
     private async initializeProvider(): Promise<void> {
         const provider = new Web3.providers.WebsocketProvider(this.config.DAOMONITOR_WSS_MAINNET_ENDPOINT);
+
+        provider.on('error', (error: Error) => {
+            elizaLogger.error('DAO: WebSocket Provider error:', error);
+        });
+
+        provider.on('end', (event: any) => { // The 'end' event is also sometimes called 'close'
+            elizaLogger.warn(`DAO: WebSocket connection ended. Code: ${event.code}, Reason: ${event.reason}`);
+            // The watchdog is responsible for reconnecting.
+        });
+
         this.web3 = new Web3(provider);
 
         const combinedAbi = await this.loadCombinedAbi(this.config.DAOMONITOR_CONTRACT_ADDRESS);
