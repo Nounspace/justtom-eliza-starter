@@ -278,14 +278,14 @@ export class DaoMonitor {
     private async initializeProvider(): Promise<void> {
         const provider = new Web3.providers.WebsocketProvider(this.config.DAOMONITOR_WSS_MAINNET_ENDPOINT);
 
-        provider.on('error', (error: Error) => {
-            elizaLogger.error('DAO: WebSocket Provider error:', error);
-        });
+        // provider.on('error', (error: Error) => {
+        //     elizaLogger.error('DAO: WebSocket Provider error:', error);
+        // });
 
-        provider.on('end', (event: any) => { // The 'end' event is also sometimes called 'close'
-            elizaLogger.warn(`DAO: WebSocket connection ended. Code: ${event.code}, Reason: ${event.reason}`);
-            // The watchdog is responsible for reconnecting.
-        });
+        // provider.on('end', (event: any) => { // The 'end' event is also sometimes called 'close'
+        //     elizaLogger.warn(`DAO: WebSocket connection ended. Code: ${event.code}, Reason: ${event.reason}`);
+        //     // The watchdog is responsible for reconnecting.
+        // });
 
         this.web3 = new Web3(provider);
 
