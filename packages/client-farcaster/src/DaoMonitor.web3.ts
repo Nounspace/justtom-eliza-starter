@@ -50,6 +50,13 @@ type ParsedLog = {
     log: Log;
 };
 
+interface DaoMetrics {
+    totalEventsProcessed: number;
+    totalProposalsCreated: number;
+    totalVotesCast: number;
+    totalReconnections: number;
+}
+
 
 // const TEST_RUN_BLOCKS_RANGE = [39088859, 39033795]; // base
 // const TEST_RUN_BLOCKS_RANGE = [39045670, 39033795]; // base
@@ -115,7 +122,12 @@ export class DaoMonitor {
     private lastBlockTime: number;
     private watchdogTimer?: NodeJS.Timeout;
     private healthCheckTimer?: NodeJS.Timeout;
-    private eventsProcessed = 0;
+    private metrics: DaoMetrics = {
+        totalEventsProcessed: 0,
+        totalProposalsCreated: 0,
+        totalVotesCast: 0,
+        totalReconnections: 0,
+    };
     private lastBlockNumber: bigint = 0n;
     private readonly WATCHDOG_TIMEOUT_MS = 120000; // 2 minutes
     private isReconnecting = false;
@@ -187,10 +199,13 @@ export class DaoMonitor {
         const HEALTHCHECK_INTERVAL_MS = HEALTHCHECK_INTERVAL * 60 * 1000; // 1 hour
 
         this.healthCheckTimer = setInterval(() => {
-            elizaLogger.info("DAO: Health check - I'm alive.");
+            elizaLogger.info("DAO: Report processing summary.");
             elizaLogger.info(`DAO:   - Last block: #${this.lastBlockNumber}`);
             elizaLogger.info(`DAO:   - Last block time: ${new Date(this.lastBlockTime).toISOString()}`);
-            elizaLogger.info(`DAO:   - Events processed (since start): ${this.eventsProcessed}`);
+            elizaLogger.info(`DAO:   - Events processed: ${this.metrics.totalEventsProcessed}`);
+            elizaLogger.info(`DAO:   - Proposals created: ${this.metrics.totalProposalsCreated}`);
+            elizaLogger.info(`DAO:   - Votes cast: ${this.metrics.totalVotesCast}`);
+            elizaLogger.info(`DAO:   - Reconnections: ${this.metrics.totalReconnections}`);
 
             const provider = this.web3.currentProvider as any;
             if (provider && typeof provider.readyState !== 'undefined') {
@@ -224,6 +239,7 @@ export class DaoMonitor {
 
         elizaLogger.info("DAO: Attempting to reconnect...");
         this.isReconnecting = true;
+        this.metrics.totalReconnections++;
 
         try {
             await this.stop();
@@ -250,7 +266,6 @@ export class DaoMonitor {
         }
 
         elizaLogger.info("DAO: Starting DAO Monitor...");
-        this.eventsProcessed = 0;
         await this.initializeProvider();
         this.startWatchdog();
         if (this.config.TEST_DAOMONITOR) {
@@ -266,8 +281,15 @@ export class DaoMonitor {
         this.stopHealthCheck();
         this.subscription?.unsubscribe?.();
         this.blockSubscription?.unsubscribe?.();
-        if (this.web3 && this.web3.currentProvider && typeof (this.web3.currentProvider as any).disconnect === 'function') {
-            (this.web3.currentProvider as any).disconnect();
+
+        if (this.web3 && this.web3.currentProvider) {
+            const provider = this.web3.currentProvider as any;
+            if (typeof provider.removeAllListeners === 'function') {
+                provider.removeAllListeners(); // Clean up listeners before disconnecting
+            }
+            if (typeof provider.disconnect === 'function') {
+                provider.disconnect(1000, "Normal closure");
+            }
         }
         elizaLogger.info("DAO: DAO Monitor stopped");
     }
@@ -602,7 +624,7 @@ export class DaoMonitor {
             const count = eventCounter.get(parsed.eventName) || 0;
             eventCounter.set(parsed.eventName, count + 1);
         }
-        this.eventsProcessed++;
+        this.metrics.totalEventsProcessed++;
 
         // -------------- 🔥 UNIVERSAL EVENT LOGGING ----------------
         elizaLogger.warn(
@@ -642,6 +664,7 @@ export class DaoMonitor {
     /* ------------------------------------------------------------------ */
 
     private async handleProposalCreated(parsed: ParsedLog, log: Log): Promise<void> {
+        this.metrics.totalProposalsCreated++;
         const values = this.extractValues(parsed);
         elizaLogger.warn(`DAO: Proposal Created: #${values.id} by ${values.proposer}`);
 
@@ -744,6 +767,7 @@ export class DaoMonitor {
     }
 
     private async handleVoteCast(parsed: ParsedLog, _log: Log): Promise<void> {
+        this.metrics.totalVotesCast++;
         const { voter, proposalId, support, votes, reason } = parsed.returnValues;
         elizaLogger.warn(`DAO: Vote Cast: voter=${voter} prop=${proposalId} support=${support} votes=${votes} reason=${reason}`);
     }
