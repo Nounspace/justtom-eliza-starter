@@ -279,18 +279,37 @@ export class DaoMonitor {
     public async stop(): Promise<void> {
         this.stopWatchdog();
         this.stopHealthCheck();
-        this.subscription?.unsubscribe?.();
-        this.blockSubscription?.unsubscribe?.();
 
-        if (this.web3 && this.web3.currentProvider) {
-            const provider = this.web3.currentProvider as any;
-            if (typeof provider.removeAllListeners === 'function') {
-                provider.removeAllListeners(); // Clean up listeners before disconnecting
-            }
-            if (typeof provider.disconnect === 'function') {
-                provider.disconnect(1000, "Normal closure");
+        // It's important to await the unsubscribe calls to prevent unhandled promise rejections,
+        // especially when the connection may be closing.
+        if (this.subscription) {
+            try {
+                await this.subscription.unsubscribe();
+            } catch (error) {
+                elizaLogger.warn('DAO: Error during log subscription unsubscribe, connection likely already closed.');
+            } finally {
+                this.subscription = undefined;
             }
         }
+
+        if (this.blockSubscription) {
+            try {
+                await this.blockSubscription.unsubscribe();
+            } catch (error) {
+                elizaLogger.warn('DAO: Error during block subscription unsubscribe, connection likely already closed.');
+            } finally {
+                this.blockSubscription = undefined;
+            }
+        }
+
+        if (this.web3 && this.web3.currentProvider && typeof (this.web3.currentProvider as any).disconnect === 'function') {
+            (this.web3.currentProvider as any).disconnect();
+        }
+        
+        // Release resources to be safe
+        this.contract = null!;
+        this.web3 = null!;
+
         elizaLogger.info("DAO: DAO Monitor stopped");
     }
 
