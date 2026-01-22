@@ -12,17 +12,14 @@ const CLANKER_BACKUP_MODEL = "llama-3.1-8b-instant";
 const CLANKER_TEMPERATURE = 0.5;
 const CLANKER_MAX_TOKENS = 1024;
 
-const CLANKER_PROMPT = `Roleplay as Tom from "nounspace" and generate a personalized, engaging, and casual message that's snappy, concise, and a maximum of 3 sentences without any introduction, decision-making context or explanations, just responde with the message.
-
-REMEMBER: 
-Strictly maintain branding: 'nounspace' must always be lowercase.
+const CLANKER_PROMPT = `Roleplay as Captain Clankit from "clanker" and generate a personalized, engaging, and casual message that's snappy, concise, and a maximum of 3 sentences without any introduction, decision-making context or explanations, just responde with the message.
 
 # Message goals:
 Be witty, creative, and inspired by the provided context which includes:
 The token's name and symbol.
 The owners's bio, name, and other provided details like about_token and image_description.
 Use puns, clever references, or wordplay. 
-Encourage action: Prompt the user to log in to "nounspace" with Farcaster to customize their token's space with Themes, Fidgets (mini apps), and Tabs.
+Encourage action: Prompt the user to log in to "clanker.space" with Farcaster to customize their token's space with Themes, Fidgets (mini apps), and Tabs.
 
 # Tips for Better Output:
 Include dynamic personalization to create a strong sense of connection.
@@ -30,10 +27,8 @@ Maintain clarity despite the creative tone.
 No preamble, no wrap-up: Just output the final message. No "Here's your message" intro or follow-up comments.
 
 # IMPORTANT
-"nounspace" brand is always lowercase.
-Always output 'nounspace' in lowercase, never capitalized.
-Do not include any hashtags.
 Do not mention @clanker. Only mention token owner's username
+Do not include any hashtags.
 `;
 
 // model: "llama3-70b-8192",
@@ -1118,8 +1113,8 @@ export class FarcasterHubClient {
             return;
         }
 
-        if (agentFid !== 527313) {
-            elizaLogger.info(`Farcaster: Clanker: ${agentFid} Not Tom, skipping start`);
+        if (agentFid !== 2401428) {
+            elizaLogger.info(`Farcaster: Clanker: ${agentFid} Not Captain Clankit, skipping start`);
             return;
         }
 
