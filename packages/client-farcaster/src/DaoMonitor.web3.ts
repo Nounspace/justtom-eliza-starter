@@ -195,7 +195,7 @@ export class DaoMonitor {
 
         // const HEALTHCHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 min
         // const HEALTHCHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
-        const HEALTHCHECK_INTERVAL = parseInt(process.env.DAOMONITOR_HEALTHCHECK_INTERVAL_MS || "60") ; // minutes
+        const HEALTHCHECK_INTERVAL = parseInt(process.env.DAOMONITOR_HEALTHCHECK_INTERVAL_MS || "60"); // minutes
         const HEALTHCHECK_INTERVAL_MS = HEALTHCHECK_INTERVAL * 60 * 1000; // 1 hour
 
         this.healthCheckTimer = setInterval(() => {
@@ -216,7 +216,7 @@ export class DaoMonitor {
                     2: "CLOSING",
                     3: "CLOSED"
                 };
-                elizaLogger.info(`DAO:   - WebSocket state: ${stateMap[provider.readyState] || 'UNKNOWN'}`);
+                elizaLogger.debug(`DAO:   - WebSocket state: ${stateMap[provider.readyState] || 'UNKNOWN'}`);
             }
         }, HEALTHCHECK_INTERVAL_MS);
 
@@ -233,11 +233,11 @@ export class DaoMonitor {
 
     private async reconnect(): Promise<void> {
         if (this.isReconnecting) {
-            elizaLogger.warn("DAO: Reconnect already in progress. Skipping.");
+            elizaLogger.debug("DAO: Reconnect already in progress. Skipping.");
             return;
         }
 
-        elizaLogger.info("DAO: Attempting to reconnect...");
+        elizaLogger.debug("DAO: Attempting to reconnect...");
         this.isReconnecting = true;
         this.metrics.totalReconnections++;
 
@@ -246,7 +246,7 @@ export class DaoMonitor {
             // A short delay before attempting to start again.
             await new Promise(resolve => setTimeout(resolve, 5000));
             await this.start();
-            elizaLogger.info("DAO: Reconnect attempt finished.");
+            elizaLogger.debug("DAO: Reconnect attempt finished.");
         } catch (error) {
             elizaLogger.error("DAO: Reconnect attempt failed with error:", error);
         } finally {
@@ -257,11 +257,11 @@ export class DaoMonitor {
     public async start(): Promise<void> {
         const agentFid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         if (!agentFid) {
-            elizaLogger.info(`DAO: Farcaster: No FID found, skipping interactions`);
+            elizaLogger.debug(`DAO: Farcaster: No FID found, skipping interactions`);
             return;
         }
         if (agentFid !== 527313) {
-            elizaLogger.info(`DAO: Farcaster: ${agentFid} Not Tom, skipping start`);
+            elizaLogger.debug(`DAO: Farcaster: ${agentFid} Not Tom, skipping start`);
             return;
         }
 
@@ -305,7 +305,7 @@ export class DaoMonitor {
         if (this.web3 && this.web3.currentProvider && typeof (this.web3.currentProvider as any).disconnect === 'function') {
             (this.web3.currentProvider as any).disconnect();
         }
-        
+
         // Release resources to be safe
         this.contract = null!;
         this.web3 = null!;
@@ -352,7 +352,7 @@ export class DaoMonitor {
         }
 
         const eventNames = eventAbis.map(e => (e as any).name).filter((n: any) => !!n);
-        elizaLogger.info("DAO: Loaded events:", eventNames.join(", "));
+        elizaLogger.debug("DAO: Loaded events:", eventNames.join(", "));
     }
 
     /**
@@ -369,7 +369,7 @@ export class DaoMonitor {
 
         // Fetch proxy ABI (the address you listen to emits events)
         const proxyAbi = await this.fetchAbiForExplorer(proxyAddress, explorer);
-        elizaLogger.info(`DAO: Fetched proxy ABI (fragments=${proxyAbi.length}) from ${explorer}`);
+        elizaLogger.debug(`DAO: Fetched proxy ABI (fragments=${proxyAbi.length}) from ${explorer}`);
 
         // Attempt to read implementation address from standard ERC-1967 slot
         const implAddress = await this.getImplementationAddress(proxyAddress);
@@ -386,7 +386,7 @@ export class DaoMonitor {
 
         // Fetch implementation ABI from corresponding explorer (same explorer; but impl might be on same chain)
         const implAbi = await this.fetchAbiForExplorer(implAddress, explorer);
-        elizaLogger.info(`DAO: Fetched implementation ABI (fragments=${implAbi.length}) from ${explorer} for ${implAddress}`);
+        elizaLogger.debug(`DAO: Fetched implementation ABI (fragments=${implAbi.length}) from ${explorer} for ${implAddress}`);
 
         // Merge ABIs - keep proxy fragments, then add implementation fragments not already present
         const merged: any[] = [
@@ -542,7 +542,7 @@ export class DaoMonitor {
                 try {
                     this.lastBlockNumber = BigInt(blockHeader.number);
                 } catch (e) {
-                    elizaLogger.warn(`DAO: Could not convert block number to BigInt: ${blockHeader.number}`);
+                    elizaLogger.error(`DAO: Could not convert block number to BigInt: ${blockHeader.number}`);
                 }
             }
             // elizaLogger.debug(`DAO: New block received: #${blockHeader.number}`);
@@ -551,7 +551,7 @@ export class DaoMonitor {
             elizaLogger.error("DAO: Error in block header subscription:", error);
         });
 
-        elizaLogger.info("DAO: Listening for all DAO events...");
+        elizaLogger.debug("DAO: Listening for all DAO events...");
     }
 
     private async testBlocksRange(): Promise<void> {
@@ -646,7 +646,7 @@ export class DaoMonitor {
         this.metrics.totalEventsProcessed++;
 
         // -------------- 🔥 UNIVERSAL EVENT LOGGING ----------------
-        elizaLogger.warn(
+        elizaLogger.debug(
             `DAO: Event captured: ${parsed.eventName} ` +
             `(block=${log.blockNumber}, tx=${log.transactionHash})`
         );
@@ -685,20 +685,20 @@ export class DaoMonitor {
     private async handleProposalCreated(parsed: ParsedLog, log: Log): Promise<void> {
         this.metrics.totalProposalsCreated++;
         const values = this.extractValues(parsed);
-        elizaLogger.warn(`DAO: Proposal Created: #${values.id} by ${values.proposer}`);
+        elizaLogger.debug(`DAO: Proposal Created: #${values.id} by ${values.proposer}`);
 
         const announcementId: UUID = stringToUuid(`dao-proposal-announcement-${values.id}`) as UUID;
         const existingMemory = await this.runtime.messageManager.getMemoryById(announcementId);
 
         if (existingMemory) {
-            elizaLogger.info(`DAO: Already announced proposal #${values.id}. Skipping.`);
+            elizaLogger.debug(`DAO: Already announced proposal #${values.id}. Skipping.`);
             return;
         }
 
         const state = await this.buildProposalState(announcementId, values);
         const context = composeContext({ state, template: getCreateProposalEventPrompt });
 
-        elizaLogger.warn(`DAO: Context for proposal #${values.id}: ${context}`);
+        elizaLogger.debug(`DAO: Context for proposal #${values.id}: ${context}`);
 
         const castTextRaw = await generateText({
             runtime: this.runtime,
@@ -788,22 +788,22 @@ export class DaoMonitor {
     private async handleVoteCast(parsed: ParsedLog, _log: Log): Promise<void> {
         this.metrics.totalVotesCast++;
         const { voter, proposalId, support, votes, reason } = parsed.returnValues;
-        elizaLogger.warn(`DAO: Vote Cast: voter=${voter} prop=${proposalId} support=${support} votes=${votes} reason=${reason}`);
+        elizaLogger.debug(`DAO: Vote Cast: voter=${voter} prop=${proposalId} support=${support} votes=${votes} reason=${reason}`);
     }
 
     private async handleProposalExecuted(parsed: ParsedLog, _log: Log): Promise<void> {
         const { id } = parsed.returnValues;
-        elizaLogger.warn(`DAO: Proposal Executed: #${id}`);
+        elizaLogger.debug(`DAO: Proposal Executed: #${id}`);
     }
 
     private async handleProposalCanceled(parsed: ParsedLog, _log: Log): Promise<void> {
         const { id } = parsed.returnValues;
-        elizaLogger.warn(`DAO: Proposal Canceled: #${id}`);
+        elizaLogger.debug(`DAO: Proposal Canceled: #${id}`);
     }
 
     private async handleProposalQueued(parsed: ParsedLog, _log: Log): Promise<void> {
         const { id, eta } = parsed.returnValues;
-        elizaLogger.warn(`DAO: Proposal Queued: #${id} eta=${eta}`);
+        elizaLogger.debug(`DAO: Proposal Queued: #${id} eta=${eta}`);
     }
 
     /* ------------------------------------------------------------------ */
