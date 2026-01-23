@@ -136,6 +136,35 @@ For detailed instructions on using the start script, including character managem
 
 ---
 
+### Start All Agents
+
+You can configure multiple agents to start simultaneously by adding them to your root `package.json`:
+
+```json
+{
+  "characters": [
+    "./characters/character1.json",
+    "./characters/character2.json"
+  ],
+  "characters-dryrun": [
+    "./characters/character1-dryrun.json",
+    "./characters/character2-dryrun.json"
+  ]
+}
+```
+
+Then use the following commands:
+
+```bash
+# Start all configured agents
+pnpm start:all-agents
+
+# Start all configured agents in dry-run mode
+pnpm start:all-agents-dryrun
+```
+
+---
+
 #### Additional Requirements
 
 You may need to install Sharp. If you see an error when starting up, try installing it with the following command:

@@ -1,6 +1,18 @@
 {
   "name": "eliza",
+  "characters": [
+    "./characters/nounspaceTom.json",
+    "./characters/noun584.json",
+    "./characters/captainClankit.json"
+  ],
+  "characters-dryrun": [
+    "./characters/nounspaceTom-dryrun.json",
+    "./characters/noun584-dryrun.json",
+    "./characters/captainClankit-dryrun.json"
+  ],
   "scripts": {
+    "start:all-agents": "pnpm start --characters=$(node -e \"console.log(require('./package.json').characters.join(','))\")",
+    "start:all-agents-dryrun": "pnpm start --characters=$(node -e \"console.log(require('./package.json')['characters-dryrun'].join(','))\")",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "check": "biome check --apply .",
@@ -60,9 +72,7 @@
       "bs58": "5.0.0",
       "@coral-xyz/anchor": "0.28.0"
     },
-    "patchedDependencies": {
-      
-    }
+    "patchedDependencies": {}
   },
   "engines": {
     "node": "23.3.0"
