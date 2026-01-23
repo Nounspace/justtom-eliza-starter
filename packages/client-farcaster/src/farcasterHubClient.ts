@@ -1329,7 +1329,8 @@ export class FarcasterHubClient {
         const username = deployerInfo.username;
         const bio = deployerInfo.profile.bio.text;
 
-        const nounspacePage = `https://nounspace.com/t/base/${contractAddress}`;
+        // const nounspacePage = `https://nounspace.com/t/base/${contractAddress}`;
+        const nounspacePage = `https://clanker.space/t/base/${contractAddress}`;
         // const thread_hash = CastConversation.conversation.cast.thread_hash;
         // const thread_hash = CastConversation?.conversation.cast.thread_hash || cast.hash || "";
         const thread_hash = CastConversation?.conversation.cast.thread_hash ?? cast.hash ?? "";
