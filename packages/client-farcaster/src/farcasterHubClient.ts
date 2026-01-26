@@ -1282,14 +1282,14 @@ export class FarcasterHubClient {
             elizaLogger.debug(`Farcaster: Clanker: Score Ok for "${deployerInfo.username}": ${score}`);
         }
 
-        const senderId = stringToUuid(cast.authorFid.toString());
-        if (this.spamFilterManager.isUserBlocked(senderId)) {
-            this.spamFilterManager.addUserToBlockList(deployerInfo.username, senderId);
-            elizaLogger.debug(
-                `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${deployerInfo.username}`
-            );
-            return
-        }
+        // const senderId = stringToUuid(cast.authorFid.toString());
+        // if (this.spamFilterManager.isUserBlocked(senderId)) {
+        //     this.spamFilterManager.addUserToBlockList(deployerInfo.username, senderId);
+        //     elizaLogger.debug(
+        //         `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${deployerInfo.username}`
+        //     );
+        //     return
+        // }
 
         elizaLogger.debug(`Farcaster: Processing Clanker cast for ${deployerInfo.username}`);
 
