@@ -75,7 +75,7 @@ class FarcasterManager {
 
     async start() {
         this.hubClient.start();
-        this.daoMonitor.start();
+        // this.daoMonitor.start();
 
         await Promise.all([
             this.posts.start(),

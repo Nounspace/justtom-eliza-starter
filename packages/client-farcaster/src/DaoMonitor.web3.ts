@@ -200,12 +200,12 @@ export class DaoMonitor {
 
         this.healthCheckTimer = setInterval(() => {
             elizaLogger.info("DAO: Report processing summary.");
-            elizaLogger.info(`DAO:   - Last block: #${this.lastBlockNumber}`);
-            elizaLogger.info(`DAO:   - Last block time: ${new Date(this.lastBlockTime).toISOString()}`);
-            elizaLogger.info(`DAO:   - Events processed: ${this.metrics.totalEventsProcessed}`);
-            elizaLogger.info(`DAO:   - Proposals created: ${this.metrics.totalProposalsCreated}`);
-            elizaLogger.info(`DAO:   - Votes cast: ${this.metrics.totalVotesCast}`);
-            elizaLogger.info(`DAO:   - Reconnections: ${this.metrics.totalReconnections}`);
+            elizaLogger.info(`DAO:  - Last block: #${this.lastBlockNumber}`);
+            elizaLogger.info(`DAO:  - Last block time: ${new Date(this.lastBlockTime).toISOString()}`);
+            elizaLogger.info(`DAO:  - Events processed: ${this.metrics.totalEventsProcessed}`);
+            elizaLogger.info(`DAO:  - Proposals created: ${this.metrics.totalProposalsCreated}`);
+            elizaLogger.info(`DAO:  - Votes cast: ${this.metrics.totalVotesCast}`);
+            elizaLogger.info(`DAO:  - Reconnections: ${this.metrics.totalReconnections}`);
 
             const provider = this.web3.currentProvider as any;
             if (provider && typeof provider.readyState !== 'undefined') {
@@ -216,7 +216,7 @@ export class DaoMonitor {
                     2: "CLOSING",
                     3: "CLOSED"
                 };
-                elizaLogger.debug(`DAO:   - WebSocket state: ${stateMap[provider.readyState] || 'UNKNOWN'}`);
+                elizaLogger.debug(`DAO:  - WebSocket state: ${stateMap[provider.readyState] || 'UNKNOWN'}`);
             }
         }, HEALTHCHECK_INTERVAL_MS);
 
