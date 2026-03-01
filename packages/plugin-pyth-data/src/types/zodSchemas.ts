@@ -11,6 +11,8 @@ const AssetType = z.enum([
   "commodities",
   "crypto_index",
   "crypto_nav",
+  "eco",
+  "kalshi",
 ]);
 const asset_type = AssetType.nullish();
 const RpcPriceIdentifier = z.string();
@@ -64,21 +66,6 @@ const LatestPublisherStakeCapsUpdateDataResponse = z
     parsed: z.array(ParsedPublisherStakeCapsUpdate).nullish(),
   })
   .passthrough();
-const ParsedPriceFeedTwap = z
-  .object({
-    down_slots_ratio: z.string(),
-    end_timestamp: z.number().int(),
-    id: RpcPriceIdentifier,
-    start_timestamp: z.number().int(),
-    twap: RpcPrice,
-  })
-  .passthrough();
-const TwapsResponse = z
-  .object({
-    binary: BinaryUpdate,
-    parsed: z.array(ParsedPriceFeedTwap).nullish(),
-  })
-  .passthrough();
 
 export const schemas = {
   AssetType,
@@ -95,8 +82,6 @@ export const schemas = {
   ParsedPublisherStakeCap,
   ParsedPublisherStakeCapsUpdate,
   LatestPublisherStakeCapsUpdateDataResponse,
-  ParsedPriceFeedTwap,
-  TwapsResponse,
 };
 
 const endpoints = makeApi([
@@ -275,50 +260,6 @@ Clients should implement reconnection logic to maintain continuous price updates
       },
     ],
     response: LatestPublisherStakeCapsUpdateDataResponse,
-  },
-  {
-    method: "get",
-    path: "/v2/updates/twap/:window_seconds/latest",
-    alias: "latest_twaps",
-    description: `Get the latest TWAP by price feed id with a custom time window.
-
-Given a collection of price feed ids, retrieve the latest Pyth TWAP price for each price feed.`,
-    requestFormat: "json",
-    parameters: [
-      {
-        name: "window_seconds",
-        type: "Path",
-        schema: z.number().int().gte(0),
-      },
-      {
-        name: "ids[]",
-        type: "Query",
-        schema: z.array(PriceIdInput),
-      },
-      {
-        name: "encoding",
-        type: "Query",
-        schema: z.enum(["hex", "base64"]).optional(),
-      },
-      {
-        name: "parsed",
-        type: "Query",
-        schema: z.boolean().optional(),
-      },
-      {
-        name: "ignore_invalid_price_ids",
-        type: "Query",
-        schema: z.boolean().optional(),
-      },
-    ],
-    response: TwapsResponse,
-    errors: [
-      {
-        status: 404,
-        description: `Price ids not found`,
-        schema: z.void(),
-      },
-    ],
   },
 ]);
 
