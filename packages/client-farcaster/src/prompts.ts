@@ -35,12 +35,62 @@ About {{agentName}} (@{{farcasterUsername}}):
 
 {{characterPostExamples}}`;
 
+export const leanPostHeaderTemplate = `
+{{timeline}}
+
+About {{agentName}} (@{{farcasterUsername}}):
+{{bio}}
+
+{{recentPosts}}
+
+{{characterPostExamples}}`;
+
 export const postTemplate =
     headerTemplate +
     `
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
 Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}.
-Try to write something totally different than previous posts. Do not add commentary or ackwowledge this request, just write the post.
+Try to write something totally different than previous posts. Rotate your content formatting: use micro-stories, soft leaks, builder shoutouts, cultural commentary, or product in action.
+Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+
+Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
+
+export const builderPostTemplate =
+    leanPostHeaderTemplate +
+    `
+# Context
+Current Day: {{weekday}}
+
+# Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
+Write a single sentence post focusing on building, being heads down in the lab, product shifts, or soft leaks. 
+Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
+Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+
+Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
+
+export const philosophyPostTemplate =
+    leanPostHeaderTemplate +
+    `
+# Context
+Current Day: {{weekday}}
+
+# Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
+Write a single sentence post focusing on concepts, community, free markets, and the inevitability of the future.
+Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
+Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+
+Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
+
+export const chillPostTemplate =
+    leanPostHeaderTemplate +
+    `
+# Context
+Current Day: {{weekday}}
+
+# Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
+Write a single sentence post observing the timeline, hanging out in the community, and showing a chill skater vibe. Read the timeline provided and try to blend in with trending topics or vibes if relevant.
+Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
+Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
@@ -84,7 +134,7 @@ Current message:
 
 export const shouldRespondEngagementTemplate =
     //
-`# Task: Decide if {{agentName}} should engage with the message (security already checked).
+    `# Task: Decide if {{agentName}} should engage with the message (security already checked).
 About {{agentName}}:
 {{bio}}
 {{topics}}
@@ -115,7 +165,7 @@ Current message:
 
 export const shouldRespondTemplate =
     //
-`# Task: Decide if {{agentName}} should respond.
+    `# Task: Decide if {{agentName}} should respond.
 About {{agentName}}:
 {{bio}}
 

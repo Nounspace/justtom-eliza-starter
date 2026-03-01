@@ -8,7 +8,7 @@ import {
 } from "@elizaos/core";
 
 import type { FarcasterClient } from "./client";
-import { formatTimeline, postTemplate } from "./prompts";
+import { formatTimeline, postTemplate, builderPostTemplate, philosophyPostTemplate, chillPostTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
 import { sendChannelCast } from "./actions";
@@ -183,6 +183,8 @@ export class FarcasterPostManager {
 
             const generateRoomId = stringToUuid("farcaster_generate_room");
 
+            const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
+
             const state = await this.runtime.composeState(
                 {
                     roomId: generateRoomId,
@@ -193,15 +195,26 @@ export class FarcasterPostManager {
                 {
                     farcasterUserName: profile.username,
                     timeline: formattedHomeTimeline,
+                    weekday: weekday,
                 }
             );
+
+            // Select template based on weekday
+            let selectedTemplate = postTemplate;
+            if (['Monday', 'Tuesday'].includes(weekday)) {
+                selectedTemplate = builderPostTemplate;
+            } else if (['Wednesday', 'Thursday'].includes(weekday)) {
+                selectedTemplate = philosophyPostTemplate;
+            } else {
+                selectedTemplate = chillPostTemplate;
+            }
 
             // Generate new cast
             const context = composeContext({
                 state,
                 template:
                     this.runtime.character.templates?.farcasterPostTemplate ||
-                    postTemplate,
+                    selectedTemplate,
             });
 
             const newContent = await generateText({
@@ -210,7 +223,11 @@ export class FarcasterPostManager {
                 modelClass: ModelClass.LARGE,
             });
 
-            const slice = newContent.replaceAll(/\\n/g, "\n").trim();
+            const slice = newContent
+                .replaceAll(/\\n/g, "\n")
+                .replace(/\s*[—–]\s*/g, ", ")
+                .replace(/ \s*-\s* /g, ", ")
+                .trim();
 
             let content = slice.slice(0, MAX_CAST_LENGTH);
 
