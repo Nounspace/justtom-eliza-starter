@@ -26,7 +26,11 @@ export async function sendCast({
     let parentCastId = inReplyTo;
 
     for (const chunk of chunks) {
-        const neynarCast = await client.publishCast(chunk, parentCastId);
+        const embeds: PostCastReqBodyEmbeds[] = [];
+        if (content.url) {
+            embeds.push({ url: content.url as string });
+        }
+        const neynarCast = await client.publishCast(chunk, parentCastId, embeds);
 
         if (neynarCast) {
             const cast: Cast = {
@@ -84,7 +88,7 @@ export async function sendChannelCast({
     for (const chunk of chunks) {
         // Prioritize channelId argument, then fallback to runtime setting
         const targetChannelId = channelId || runtime.getSetting("FARCASTER_TARGET_CHANNEL");
-        if(!targetChannelId){
+        if (!targetChannelId) {
             throw new Error("Farcaster Action: Channel ID is missing. Provide it either as an argument or set FARCASTER_TARGET_CHANNEL in settings.");
         }
         const embeds: PostCastReqBodyEmbeds[] = [];

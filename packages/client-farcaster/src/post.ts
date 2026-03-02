@@ -5,7 +5,9 @@ import {
     ModelClass,
     stringToUuid,
     elizaLogger,
+    generateImage,
 } from "@elizaos/core";
+import { v2 as cloudinary } from "cloudinary";
 
 import type { FarcasterClient } from "./client";
 import { formatTimeline, postTemplate, builderPostTemplate, philosophyPostTemplate, chillPostTemplate } from "./prompts";
@@ -252,12 +254,70 @@ export class FarcasterPostManager {
             }
 
             try {
+                let imageUrl: string | undefined = undefined;
+
+                if (this.client.farcasterConfig.FARCASTER_POST_IMAGE) {
+                    try {
+                        let imageSettings = this.runtime.character.settings?.imageSettings || {};
+                        const imageStyle = this.runtime.getSetting("IMAGE_GENERATE_STYLE") || "64-bit Retro Sci-fi Art";
+                        const imagePromptText = `generate an image in **${imageStyle} style"** for this post: "${content}"`;
+
+                        const imageResult = await generateImage({
+                            prompt: imagePromptText,
+                            width: imageSettings.width || 1024,
+                            height: imageSettings.height || 1024,
+                            count: imageSettings.count || 1,
+                            negativePrompt: imageSettings.negativePrompt || undefined,
+                            numIterations: imageSettings.numIterations || 50,
+                            guidanceScale: imageSettings.guidanceScale || 7.5,
+                            seed: imageSettings.seed || undefined,
+                            modelId: imageSettings.modelId || undefined,
+                            jobId: imageSettings.jobId || undefined,
+                            stylePreset: imageSettings.stylePreset || "",
+                            hideWatermark: imageSettings.hideWatermark ?? true,
+                            safeMode: imageSettings.safeMode ?? true,
+                            cfgScale: imageSettings.cfgScale || undefined,
+                        }, this.runtime);
+
+                        if (imageResult.success && imageResult.data && imageResult.data.length > 0) {
+                            const cloudName = this.client.farcasterConfig["CLOUDINARY_CLOUD_NAME"];
+                            const apiKey = this.client.farcasterConfig["CLOUDINARY_API_KEY"];
+                            const apiSecret = this.client.farcasterConfig["CLOUDINARY_API_SECRET"];
+
+                            if (cloudName && apiKey && apiSecret) {
+                                cloudinary.config({
+                                    cloud_name: cloudName,
+                                    api_key: apiKey,
+                                    api_secret: apiSecret,
+                                });
+
+                                const uploadResult = await cloudinary.uploader.upload(imageResult.data[0], {
+                                    folder: this.runtime.character.name.toLowerCase(),
+                                });
+                                imageUrl = uploadResult.secure_url;
+                            } else {
+                                elizaLogger.warn("Cloudinary credentials missing, skipping image upload");
+                            }
+                        } else {
+                            elizaLogger.warn("Failed to generate image or no image data returned");
+                        }
+                    } catch (imageError) {
+                        elizaLogger.error("Error generating or uploading image:", imageError);
+                        // Continuing to post text-only even if image fails
+                    }
+                }
+
+                const postContent = {
+                    text: content,
+                    url: imageUrl
+                };
+
                 const [{ cast }] = await sendChannelCast({
                     client: this.client,
                     runtime: this.runtime,
                     signerUuid: this.signerUuid,
                     roomId: generateRoomId,
-                    content: { text: content },
+                    content: postContent,
                     profile,
                 });
 

@@ -19,13 +19,14 @@
 		"dist"
 	],
 	"dependencies": {
-		"@farcaster/hub-nodejs": "^0.13.5",
-		"grapheme-splitter": "^1.0.4",
-		"neverthrow": "^8.1.1",
 		"@elizaos/core": "workspace:*",
+		"@farcaster/hub-nodejs": "^0.13.5",
 		"@neynar/nodejs-sdk": "^2.0.3",
-		"groq-sdk": "^0.7.0",
+		"cloudinary": "^2.9.0",
 		"ethers": "^6.15.0",
+		"grapheme-splitter": "^1.0.4",
+		"groq-sdk": "^0.7.0",
+		"neverthrow": "^8.1.1",
 		"web3": "^4.9.0"
 	},
 	"devDependencies": {

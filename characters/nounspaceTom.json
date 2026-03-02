@@ -25,6 +25,7 @@
         "FARCASTER_HUB_RPC": "hub-grpc-api.neynar.com",
         "FARCASTER_FAVORITE_FRONTEND": "",
         "FARCASTER_USERNAME": "nounspacetom",
+        "FARCASTER_POST_IMAGE": "true",
         "FARCASTER_TARGETS_USERS": [
             874542
         ],
