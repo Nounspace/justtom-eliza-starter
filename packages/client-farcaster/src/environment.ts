@@ -6,7 +6,7 @@ import {
 import { z, ZodError } from "zod";
 
 export const DEFAULT_MAX_CAST_LENGTH = 320;
-const DEFAULT_POLL_INTERVAL= 120; // 2 minutes
+const DEFAULT_POLL_INTERVAL = 120; // 2 minutes
 const DEFAULT_POST_INTERVAL_MIN = 90; // 1.5 hours
 const DEFAULT_POST_INTERVAL_MAX = 180; // 3 hours
 /**
@@ -32,7 +32,11 @@ export const farcasterEnvSchema = z.object({
     FARCASTER_TARGETS_USERS: z.array(z.number()).default([]),
     FARCASTER_TARGET_CHANNEL: z.string().min(1, "Farcaster channel is required"),
     LAST_CONVERSATION_LIMIT: z.number().int().default(10),
-    FARCASTER_CAST_HOURS:  z.array(z.number()).default([16]),
+    FARCASTER_CAST_HOURS: z.array(z.number()).default([16]),
+    FARCASTER_POST_IMAGE: z.boolean().default(false),
+    "CLOUDINARY_CLOUD_NAME": z.string().optional(),
+    "CLOUDINARY_API_KEY": z.string().optional(),
+    "CLOUDINARY_API_SECRET": z.string().optional(),
 });
 
 export type FarcasterConfig = z.infer<typeof farcasterEnvSchema>;
@@ -58,69 +62,69 @@ export async function validateFarcasterConfig(
             FARCASTER_DRY_RUN:
                 parseBooleanFromText(
                     runtime.getSetting("FARCASTER_DRY_RUN") ||
-                        process.env.FARCASTER_DRY_RUN ||
-                        "false"
+                    process.env.FARCASTER_DRY_RUN ||
+                    "false"
                 ),
 
             FARCASTER_FID: safeParseInt(
                 runtime.getSetting("FARCASTER_FID") ||
-                    process.env.FARCASTER_FID,
+                process.env.FARCASTER_FID,
                 0
             ),
 
             MAX_CAST_LENGTH: safeParseInt(
                 runtime.getSetting("MAX_CAST_LENGTH") ||
-                    process.env.MAX_CAST_LENGTH,
+                process.env.MAX_CAST_LENGTH,
                 DEFAULT_MAX_CAST_LENGTH
             ),
 
             FARCASTER_POLL_INTERVAL: safeParseInt(
                 runtime.getSetting("FARCASTER_POLL_INTERVAL") ||
-                    process.env.FARCASTER_POLL_INTERVAL,
+                process.env.FARCASTER_POLL_INTERVAL,
                 DEFAULT_POLL_INTERVAL
             ),
 
             ENABLE_POST: parseBooleanFromText(
                 runtime.getSetting("ENABLE_POST") ||
-                    process.env.ENABLE_POST ||
-                    "true"
+                process.env.ENABLE_POST ||
+                "true"
             ),
 
             POST_INTERVAL_MIN: safeParseInt(
                 runtime.getSetting("POST_INTERVAL_MIN") ||
-                    process.env.POST_INTERVAL_MIN,
+                process.env.POST_INTERVAL_MIN,
                 DEFAULT_POST_INTERVAL_MIN
             ),
 
             POST_INTERVAL_MAX: safeParseInt(
                 runtime.getSetting("POST_INTERVAL_MAX") ||
-                    process.env.POST_INTERVAL_MAX,
+                process.env.POST_INTERVAL_MAX,
                 DEFAULT_POST_INTERVAL_MAX
             ),
 
             ENABLE_ACTION_PROCESSING:
                 parseBooleanFromText(
                     runtime.getSetting("ENABLE_ACTION_PROCESSING") ||
-                        process.env.ENABLE_ACTION_PROCESSING ||
-                        "false"
+                    process.env.ENABLE_ACTION_PROCESSING ||
+                    "false"
                 ) ?? false,
 
             ACTION_INTERVAL: safeParseInt(
                 runtime.getSetting("ACTION_INTERVAL") ||
-                    process.env.ACTION_INTERVAL,
+                process.env.ACTION_INTERVAL,
                 5 // 5 minutes
             ),
 
             POST_IMMEDIATELY:
                 parseBooleanFromText(
                     runtime.getSetting("POST_IMMEDIATELY") ||
-                        process.env.POST_IMMEDIATELY ||
-                        "false"
+                    process.env.POST_IMMEDIATELY ||
+                    "false"
                 ) ?? false,
 
             MAX_ACTIONS_PROCESSING: safeParseInt(
                 runtime.getSetting("MAX_ACTIONS_PROCESSING") ||
-                    process.env.MAX_ACTIONS_PROCESSING,
+                process.env.MAX_ACTIONS_PROCESSING,
                 1
             ),
 
@@ -133,7 +137,7 @@ export async function validateFarcasterConfig(
             FARCASTER_HUB_SSL:
                 parseBooleanFromText(
                     runtime.getSetting("FARCASTER_HUB_SSL") ||
-                        "true"
+                    "true"
                 ) ?? true,
 
             FARCASTER_HUB_RPC: (
@@ -164,6 +168,28 @@ export async function validateFarcasterConfig(
 
             FARCASTER_CAST_HOURS: (
                 runtime.getSetting("FARCASTER_CAST_HOURS")
+            ),
+
+            FARCASTER_POST_IMAGE:
+                parseBooleanFromText(
+                    runtime.getSetting("FARCASTER_POST_IMAGE") ||
+                    process.env.FARCASTER_POST_IMAGE ||
+                    "false"
+                ),
+
+            CLOUDINARY_CLOUD_NAME: (
+                runtime.getSetting("CLOUDINARY_CLOUD_NAME") ||
+                process.env.CLOUDINARY_CLOUD_NAME
+            ),
+
+            CLOUDINARY_API_KEY: (
+                runtime.getSetting("CLOUDINARY_API_KEY") ||
+                process.env.CLOUDINARY_API_KEY
+            ),
+
+            CLOUDINARY_API_SECRET: (
+                runtime.getSetting("CLOUDINARY_API_SECRET") ||
+                process.env.CLOUDINARY_API_SECRET
             ),
         };
 

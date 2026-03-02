@@ -51,6 +51,7 @@ export class FarcasterClient {
     async publishCast(
         cast: string,
         parentCastId: CastId | undefined,
+        embeds: PostCastReqBodyEmbeds[] = [],
         // eslint-disable-next-line
         retryTimes?: number
     ): Promise<NeynarCastResponse | undefined> {
@@ -59,6 +60,7 @@ export class FarcasterClient {
                 signerUuid: this.signerUuid,
                 text: cast,
                 parent: parentCastId?.hash,
+                embeds,
             });
             if (result.success) {
                 return {
