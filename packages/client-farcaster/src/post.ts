@@ -203,9 +203,9 @@ export class FarcasterPostManager {
 
             // Select template based on weekday
             let selectedTemplate = postTemplate;
-            if (['Monday', 'Tuesday'].includes(weekday)) {
+            if (['Monday', 'Tuesday', 'Wednesday'].includes(weekday)) {
                 selectedTemplate = builderPostTemplate;
-            } else if (['Wednesday', 'Thursday'].includes(weekday)) {
+            } else if (['Thursday'].includes(weekday)) {
                 selectedTemplate = philosophyPostTemplate;
             } else {
                 selectedTemplate = chillPostTemplate;
@@ -341,6 +341,9 @@ export class FarcasterPostManager {
                     roomId
                 );
 
+                elizaLogger.debug(
+                    `[Farcaster Debug Context] ${JSON.stringify(context)}`
+                );
                 elizaLogger.warn(
                     `[Farcaster Neynar Client] Published cast https://casterscan.com/casts/${cast.hash}`
                 );
