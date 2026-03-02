@@ -18,7 +18,7 @@
     "ENABLE_POST": "true",
     "MAX_CAST_LENGTH": "1024",
     "FARCASTER_POLL_INTERVAL": "420",
-    "ENABLE_ACTION_PROCESSING": "true",
+    "ENABLE_ACTION_PROCESSING": "false",
     "POST_IMMEDIATELY": "false",
     "FARCASTER_HUB_RPC": "hub-grpc-api.neynar.com",
     "FARCASTER_FAVORITE_FRONTEND": "",
