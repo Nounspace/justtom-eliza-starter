@@ -10,7 +10,7 @@ import {
 import { v2 as cloudinary } from "cloudinary";
 
 import type { FarcasterClient } from "./client";
-import { formatTimeline, postTemplate, builderPostTemplate, philosophyPostTemplate, chillPostTemplate } from "./prompts";
+import { formatTimeline, postTemplate, builderPostTemplate, philosophyPostTemplate, chillPostTemplate, clankerTokenTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
 import { sendChannelCast } from "./actions";
@@ -211,14 +211,25 @@ export class FarcasterPostManager {
                 }
             );
 
-            // Select template based on weekday
+            const topics = this.runtime.character.topics?.join(", ") || "";
+
+            // Check for randomized Clanker token deployment
+            const clankerProbability = this.client.farcasterConfig.FARCASTER_CLANKER_PROBABILITY;
+            const isClankerPost = Math.random() < clankerProbability;
+
             let selectedTemplate = postTemplate;
-            if (['Monday', 'Tuesday', 'Wednesday'].includes(weekday)) {
-                selectedTemplate = builderPostTemplate;
-            } else if (['Thursday'].includes(weekday)) {
-                selectedTemplate = philosophyPostTemplate;
+            if (isClankerPost) {
+                elizaLogger.warn(`[Farcaster] Clanker probability matched! Generating token deployment request.`);
+                selectedTemplate = clankerTokenTemplate;
             } else {
-                selectedTemplate = chillPostTemplate;
+                // Normal template selection based on weekday
+                if (['Monday', 'Tuesday', 'Wednesday'].includes(weekday)) {
+                    selectedTemplate = builderPostTemplate;
+                } else if (['Thursday'].includes(weekday)) {
+                    selectedTemplate = philosophyPostTemplate;
+                } else {
+                    selectedTemplate = chillPostTemplate;
+                }
             }
 
             // Generate new cast
@@ -271,11 +282,16 @@ export class FarcasterPostManager {
             try {
                 let imageUrl: string | undefined = undefined;
 
-                if (this.client.farcasterConfig.FARCASTER_POST_IMAGE) {
+                const imageProbability = this.client.farcasterConfig.FARCASTER_POST_IMAGE_PROBABILITY;
+                const shouldGenerateImage = isClankerPost || (this.client.farcasterConfig.FARCASTER_POST_IMAGE && Math.random() < imageProbability);
+
+                if (shouldGenerateImage) {
                     try {
                         let imageSettings = this.runtime.character.settings?.imageSettings || {};
                         const imageStyle = this.runtime.getSetting("IMAGE_GENERATE_STYLE") || "64-bit Retro Sci-fi Art";
                         const imagePromptText = `generate an image in **${imageStyle} style"** for this post: "${content}"`;
+
+                        elizaLogger.info(`[Farcaster] Generating image for ${isClankerPost ? "Clanker" : "normal"} post...`);
 
                         const imageResult = await generateImage({
                             prompt: imagePromptText,
@@ -320,6 +336,8 @@ export class FarcasterPostManager {
                         elizaLogger.error("Error generating or uploading image:", imageError);
                         // Continuing to post text-only even if image fails
                     }
+                } else if (this.client.farcasterConfig.FARCASTER_POST_IMAGE) {
+                    elizaLogger.info(`[Farcaster] Image probability (${imageProbability}) not met. Skipping image.`);
                 }
 
                 const postContent = {

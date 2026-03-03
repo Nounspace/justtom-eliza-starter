@@ -198,3 +198,17 @@ Current message:
 {{currentPost}}
 
 ` + shouldRespondFooter;
+export const clankerTokenTemplate = leanPostHeaderTemplate + `
+# Context
+Current Day: {{weekday}}
+Topics of Interest: {{topics}}
+
+# Task: Generate an innovative and disruptive Token deployment request for @clanker
+Write a single sentence requesting @clanker to deploy a new Token.
+The Token name and symbol must be highly innovative, disruptive, and deeply inspired by your unique bio, lore, and topics of interest. 
+Avoid common tropes or repetitive space/momentum examples. Think about the "new shapes" and "quiet building" Tom is known for.
+
+Format: "@clanker Deploy [Token Name] ([SYMBOL]) on base, vault [10-30]% for [7-30] days"
+
+Project calm confidence and a "showing, not telling" vibe. Do not add commentary or acknowledge this request.
+`;

@@ -34,6 +34,8 @@ export const farcasterEnvSchema = z.object({
     LAST_CONVERSATION_LIMIT: z.number().int().default(10),
     FARCASTER_CAST_HOURS: z.array(z.number()).default([16]),
     FARCASTER_POST_IMAGE: z.boolean().default(false),
+    FARCASTER_POST_IMAGE_PROBABILITY: z.number().min(0).max(1).default(0.3),
+    FARCASTER_CLANKER_PROBABILITY: z.number().min(0).max(1).default(0.1),
     "CLOUDINARY_CLOUD_NAME": z.string().optional(),
     "CLOUDINARY_API_KEY": z.string().optional(),
     "CLOUDINARY_API_SECRET": z.string().optional(),
