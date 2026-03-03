@@ -34,6 +34,8 @@ export const farcasterEnvSchema = z.object({
     LAST_CONVERSATION_LIMIT: z.number().int().default(10),
     FARCASTER_CAST_HOURS: z.array(z.number()).default([16]),
     FARCASTER_POST_IMAGE: z.boolean().default(false),
+    FARCASTER_CURATION_MODE: z.boolean().default(false),
+    FARCASTER_CURATION_DAY: z.string().default("Friday"),
     "CLOUDINARY_CLOUD_NAME": z.string().optional(),
     "CLOUDINARY_API_KEY": z.string().optional(),
     "CLOUDINARY_API_SECRET": z.string().optional(),
@@ -176,6 +178,19 @@ export async function validateFarcasterConfig(
                     process.env.FARCASTER_POST_IMAGE ||
                     "false"
                 ),
+
+            FARCASTER_CURATION_MODE:
+                parseBooleanFromText(
+                    runtime.getSetting("FARCASTER_CURATION_MODE") ||
+                    process.env.FARCASTER_CURATION_MODE ||
+                    "false"
+                ),
+
+            FARCASTER_CURATION_DAY: (
+                runtime.getSetting("FARCASTER_CURATION_DAY") ||
+                process.env.FARCASTER_CURATION_DAY ||
+                "Friday"
+            ),
 
             CLOUDINARY_CLOUD_NAME: (
                 runtime.getSetting("CLOUDINARY_CLOUD_NAME") ||

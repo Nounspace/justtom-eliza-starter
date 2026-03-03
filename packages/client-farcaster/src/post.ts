@@ -10,7 +10,7 @@ import {
 import { v2 as cloudinary } from "cloudinary";
 
 import type { FarcasterClient } from "./client";
-import { formatTimeline, postTemplate, builderPostTemplate, philosophyPostTemplate, chillPostTemplate } from "./prompts";
+import { formatTimeline, postTemplate, builderPostTemplate, philosophyPostTemplate, chillPostTemplate, curationPostTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
 import { sendChannelCast } from "./actions";
@@ -84,10 +84,22 @@ export class FarcasterPostManager {
             const now = new Date();
             const timezoneTime = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: 'numeric', hour12: false }).format(now);
             const [hour] = timezoneTime.split(':').map(Number);
+            const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(now);
+
+            // Check if curation mode is enabled and if it's the right day
+            if (this.client.farcasterConfig.FARCASTER_CURATION_MODE) {
+                const curationDay = this.client.farcasterConfig.FARCASTER_CURATION_DAY || "Friday";
+                if (weekday !== curationDay) {
+                    elizaLogger.info(`[Farcaster Curation] Today is ${weekday}, waiting for ${curationDay}`);
+                    setTimeout(generateNewCastLoop, 60 * 60 * 1000);
+                    return;
+                }
+            }
 
             // Check if we already posted in the last 20 hours to prevent double-posting in the same window
+            const lastPostKey = this.client.farcasterConfig.FARCASTER_CURATION_MODE ? "lastCurationPost" : "lastPost";
             const lastPost = await this.runtime.cacheManager.get<{ timestamp: number }>(
-                "farcaster/" + this.fid + "/lastPost"
+                "farcaster/" + this.fid + "/" + lastPostKey
             );
             const hoursSinceLastPost = lastPost ? (Date.now() - lastPost.timestamp) / (1000 * 60 * 60) : 24;
 
@@ -96,11 +108,15 @@ export class FarcasterPostManager {
                     const randomDelayMinutes = (Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes);
                     const delayMs = randomDelayMinutes * 60 * 1000;
 
-                    elizaLogger.warn(`[Farcaster] Cast hour ${hour} matched! Scheduling post in ${randomDelayMinutes} minutes (at approx ${new Date(Date.now() + delayMs).toLocaleTimeString()})`);
+                    elizaLogger.warn(`[Farcaster] Cast hour ${hour} matched! Scheduling ${this.client.farcasterConfig.FARCASTER_CURATION_MODE ? "curation " : ""}post in ${randomDelayMinutes} minutes (at approx ${new Date(Date.now() + delayMs).toLocaleTimeString()})`);
 
                     setTimeout(async () => {
                         try {
-                            await this.generateNewCast();
+                            if (this.client.farcasterConfig.FARCASTER_CURATION_MODE) {
+                                await this.generateCurationCast();
+                            } else {
+                                await this.generateNewCast();
+                            }
                         } catch (error) {
                             elizaLogger.error(error);
                         }
@@ -120,7 +136,11 @@ export class FarcasterPostManager {
 
         if (this.client.farcasterConfig.ENABLE_POST) {
             if (this.client.farcasterConfig.POST_IMMEDIATELY) {
-                await this.generateNewCast();
+                if (this.client.farcasterConfig.FARCASTER_CURATION_MODE) {
+                    await this.generateCurationCast();
+                } else {
+                    await this.generateNewCast();
+                }
             }
             generateNewCastLoop();
         }
@@ -168,6 +188,135 @@ export class FarcasterPostManager {
 
     public async stop() {
         if (this.timeout) clearTimeout(this.timeout);
+    }
+
+    private async generateCurationCast() {
+        elizaLogger.info("Generating curated cast");
+        try {
+            const profile = await this.client.getProfile(this.fid);
+            await this.runtime.ensureUserExists(
+                this.runtime.agentId,
+                profile.username,
+                this.runtime.character.name,
+                "farcaster"
+            );
+
+            // Fetch recent memories (last 7 days) from the target channel
+            const targetChannelId = this.client.farcasterConfig.FARCASTER_TARGET_CHANNEL;
+            const channelRoomId = stringToUuid("farcaster-channel-" + targetChannelId);
+
+            const memories = await this.runtime.messageManager.getMemories({
+                roomId: channelRoomId,
+                count: 50,
+            });
+
+            const curatedMemories = memories
+                .filter(m => m.userId !== this.runtime.agentId) // Focus on others' activity
+                .map(m => `- ${m.content.text}`)
+                .join("\n");
+
+            const generateRoomId = stringToUuid("farcaster_generate_room");
+            const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
+
+            const state = await this.runtime.composeState(
+                {
+                    roomId: generateRoomId,
+                    userId: this.runtime.agentId,
+                    agentId: this.runtime.agentId,
+                    content: { text: "", action: "" },
+                },
+                {
+                    farcasterUserName: profile.username,
+                    curatedMemories: curatedMemories || "No recent relevant memories found.",
+                    weekday: weekday,
+                }
+            );
+
+            const context = composeContext({
+                state,
+                template:
+                    this.runtime.character.templates?.farcasterCurationPostTemplate ||
+                    curationPostTemplate,
+            });
+
+            const newContent = await generateText({
+                runtime: this.runtime,
+                context,
+                modelClass: ModelClass.LARGE,
+            });
+
+            const slice = newContent
+                .replaceAll(/\\n/g, "\n")
+                .replace(/\s*[—–]\s*/g, ", ")
+                .replace(/ \s*-\s* /g, ", ")
+                .trim();
+
+            let content = slice.slice(0, MAX_CAST_LENGTH);
+
+            // Update last curation post timestamp in cache
+            await this.runtime.cacheManager.set("farcaster/" + this.fid + "/lastCurationPost", {
+                timestamp: Date.now(),
+            });
+
+            if (content.length > MAX_CAST_LENGTH) {
+                content = content.slice(0, content.lastIndexOf("\n"));
+            }
+
+            if (content.length > MAX_CAST_LENGTH) {
+                content = content.slice(0, content.lastIndexOf("."));
+            }
+
+            if (this.runtime.getSetting("FARCASTER_DRY_RUN") === "true") {
+                elizaLogger.info(`Dry run: would have cast curated summary: ${content}`);
+                return;
+            }
+
+            try {
+                const postContent = {
+                    text: content,
+                };
+
+                const [{ cast }] = await sendChannelCast({
+                    client: this.client,
+                    runtime: this.runtime,
+                    signerUuid: this.signerUuid,
+                    roomId: generateRoomId,
+                    content: postContent,
+                    profile,
+                });
+
+                await this.runtime.cacheManager.set(
+                    `farcaster/${this.fid}/lastCast`,
+                    {
+                        hash: cast.hash,
+                        timestamp: Date.now(),
+                    }
+                );
+
+                const roomId = castUuid({
+                    agentId: this.runtime.agentId,
+                    hash: cast.hash,
+                });
+
+                await this.runtime.ensureRoomExists(roomId);
+                await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
+
+                await this.runtime.messageManager.createMemory(
+                    createCastMemory({
+                        roomId,
+                        senderId: this.runtime.agentId,
+                        runtime: this.runtime,
+                        cast,
+                    })
+                );
+
+                elizaLogger.warn(`[Farcaster Neynar Client] Published curated cast https://casterscan.com/casts/${cast.hash}`);
+            } catch (error) {
+                elizaLogger.error("Error sending curated cast:", error);
+            }
+        } catch (error) {
+            elizaLogger.error("Error generating curated cast:", error);
+        }
     }
 
     private async generateNewCast() {
