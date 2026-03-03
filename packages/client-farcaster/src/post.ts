@@ -170,6 +170,81 @@ export class FarcasterPostManager {
         if (this.timeout) clearTimeout(this.timeout);
     }
 
+    private selectImageMode(content: string): "lab" | "dashboard" | "abstract" {
+        const lower = content.toLowerCase();
+        const labKeywords = ["code", "build", "deploy", "lab", "progress", "iteration", "version", "commit", "shipping", "testing", "systems", "architecture", "folding", "emerging"];
+        const dashboardKeywords = ["dashboard", "token", "coordination", "network", "ecosystem", "activity", "growth", "holders", "governance", "signals", "metrics", "forming", "infrastructure", "launchpad"];
+
+        if (labKeywords.some(kw => lower.includes(kw))) return "lab";
+        if (dashboardKeywords.some(kw => lower.includes(kw))) return "dashboard";
+        return "abstract";
+    }
+
+    private generateArchetypePrompt(content: string, style: string): string {
+        const mode = this.selectImageMode(content);
+
+        const universe = `
+Retro-futuristic digital world inspired by ${style}.
+Visible pixel structure.
+CRT glow.
+Stylized lighting.
+No modern UI.
+`;
+
+        const constraints = `
+Cinematic framing.
+No readable text.
+No letters.
+No numbers.
+No logos.
+No captions.
+No symbols.
+No alphanumeric characters.
+Interfaces must contain only abstract shapes and geometric patterns.
+`;
+
+        let scene = "";
+
+        switch (mode) {
+            case "lab":
+                scene = `
+Inside a retro-tech builder lab.
+Monitors showing abstract geometric signal patterns.
+Glowing visual modules instead of dashboards.
+Subtle human silhouette.
+`;
+                break;
+
+
+
+            case "dashboard":
+                scene = `
+Massive panoramic window showing cosmic dust.
+Layered control consoles with abstract geometric signal patterns.
+Network activity represented as flowing light constellations suspended in the air.
+No literal UI elements.
+`;
+                //             case "dashboard":
+                //                 scene = `
+                // Retro command center.
+                // Layered glowing geometric panels.
+                // Network represented by light connections and shapes.
+                // No literal UI elements.
+                // `;
+                break;
+
+            case "abstract":
+                scene = `
+Flowing retro digital energy.
+Structured pixel-based motion.
+Glowing geometric forms.
+`;
+                break;
+        }
+
+        return `${universe}\n${scene}\n${constraints}`;
+    }
+
     private async generateNewCast() {
         elizaLogger.info("Generating new cast");
         try {
@@ -289,8 +364,9 @@ export class FarcasterPostManager {
                     try {
                         let imageSettings = this.runtime.character.settings?.imageSettings || {};
                         const imageStyle = this.runtime.getSetting("IMAGE_GENERATE_STYLE") || "64-bit Retro Sci-fi Art";
-                        const imagePromptText = `generate an image in **${imageStyle} style"** for this post: "${content}"`;
+                        const imagePromptText = this.generateArchetypePrompt(content, imageStyle);
 
+                        elizaLogger.debug(`[Farcaster] Image prompt: ${imagePromptText}`);
                         elizaLogger.info(`[Farcaster] Generating image for ${isClankerPost ? "Clanker" : "normal"} post...`);
 
                         const imageResult = await generateImage({
