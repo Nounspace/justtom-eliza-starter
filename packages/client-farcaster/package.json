@@ -30,7 +30,9 @@
 		"web3": "^4.9.0"
 	},
 	"devDependencies": {
+		"dotenv": "^17.3.1",
 		"tsup": "^8.3.5",
+		"tsx": "^4.19.2",
 		"vitest": "^2.1.5"
 	},
 	"scripts": {
