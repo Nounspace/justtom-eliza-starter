@@ -7,14 +7,14 @@ import type { Cast } from "./types";
 
 export const formatCast = (cast: Cast) => {
     return `ID: ${cast.hash}
-    From: ${cast.profile.name} (@${cast.profile.username})${cast.profile.username})${cast.inReplyTo ? `\nIn reply to: ${cast.inReplyTo.fid}` : ""}
+    From: ${cast.profile.name} (@${cast.profile.username})\nIn reply to: ${cast.inReplyTo ? cast.inReplyTo.fid : ""}
 Text: ${cast.text}`;
 };
 
 export const formatTimeline = (
     character: Character,
     timeline: Cast[]
-) => `# ${character.name}'s Home Timeline
+) => `# ${character.name}'s Timeline
 ${timeline.map(formatCast).join("\n")}
 `;
 
@@ -55,40 +55,40 @@ Show, don't tell. Project calm confidence and quiet momentum. Do not add comment
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
-export const builderPostTemplate =
+export const startWeekPostTemplate =
     leanPostHeaderTemplate +
     `
 # Context
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a single sentence post focusing on building, being heads down in the lab, product shifts, or soft leaks. 
+Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on building, being heads down in the lab, product shifts, or soft leaks. 
 Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
 Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
-export const philosophyPostTemplate =
+export const midWeekPostTemplate =
     leanPostHeaderTemplate +
     `
 # Context
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a single sentence post focusing on concepts, community, free markets, and the inevitability of the future.
+Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on concepts, community, free markets, and the inevitability of the future.
 Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
 Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
-export const chillPostTemplate =
+export const weekendPostTemplate =
     leanPostHeaderTemplate +
     `
 # Context
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a single sentence post observing the timeline, hanging out in the community, and showing a chill skater vibe. Read the timeline provided and try to blend in with trending topics or vibes if relevant.
+Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) observing the timeline, hanging out in the community, and showing a chill vibe. Read the timeline provided and try to blend in with trending topics or vibes if relevant.
 Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
 Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
 
@@ -198,6 +198,7 @@ Current message:
 {{currentPost}}
 
 ` + shouldRespondFooter;
+
 export const clankerTokenTemplate = leanPostHeaderTemplate + `
 # Context
 Current Day: {{weekday}}

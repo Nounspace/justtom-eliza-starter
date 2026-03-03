@@ -10,7 +10,7 @@ import {
 import { v2 as cloudinary } from "cloudinary";
 
 import type { FarcasterClient } from "./client";
-import { formatTimeline, postTemplate, builderPostTemplate, philosophyPostTemplate, chillPostTemplate, clankerTokenTemplate } from "./prompts";
+import { formatTimeline, postTemplate, startWeekPostTemplate, midWeekPostTemplate, weekendPostTemplate, clankerTokenTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
 import { sendChannelCast } from "./actions";
@@ -297,13 +297,22 @@ Glowing geometric forms.
                 elizaLogger.warn(`[Farcaster] Clanker probability matched! Generating token deployment request.`);
                 selectedTemplate = clankerTokenTemplate;
             } else {
-                // Normal template selection based on weekday
-                if (['Monday', 'Tuesday', 'Wednesday'].includes(weekday)) {
-                    selectedTemplate = builderPostTemplate;
-                } else if (['Thursday'].includes(weekday)) {
-                    selectedTemplate = philosophyPostTemplate;
+                // Select template based on weekday, but with a chance of random selection
+                const templates = [postTemplate, startWeekPostTemplate, midWeekPostTemplate, weekendPostTemplate];
+
+                // 70% chance to follow weekly schedule, 30% chance for total randomness
+                if (Math.random() > 0.3) {
+                    if (['Monday', 'Tuesday'].includes(weekday)) {
+                        selectedTemplate = startWeekPostTemplate;
+                    } else if (['Wednesday', 'Thursday'].includes(weekday)) {
+                        selectedTemplate = midWeekPostTemplate;
+                    } else {
+                        selectedTemplate = weekendPostTemplate;
+                    }
+                    elizaLogger.info(`Using scheduled template for ${weekday}`);
                 } else {
-                    selectedTemplate = chillPostTemplate;
+                    selectedTemplate = templates[Math.floor(Math.random() * templates.length)];
+                    elizaLogger.info(`Using random template override for variety`);
                 }
             }
 
