@@ -85,26 +85,36 @@ export class FarcasterPostManager {
             const timezoneTime = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: 'numeric', hour12: false }).format(now);
             const [hour] = timezoneTime.split(':').map(Number);
 
-            if (this.client.farcasterConfig.FARCASTER_CAST_HOURS.includes(hour)) {
+            // Check if we already posted in the last 20 hours to prevent double-posting in the same window
+            const lastPost = await this.runtime.cacheManager.get<{ timestamp: number }>(
+                "farcaster/" + this.fid + "/lastPost"
+            );
+            const hoursSinceLastPost = lastPost ? (Date.now() - lastPost.timestamp) / (1000 * 60 * 60) : 24;
+
+            if (this.client.farcasterConfig.FARCASTER_CAST_HOURS.includes(hour) && hoursSinceLastPost > 20) {
                 try {
-                    const randomDelay = (Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes) * 60 * 1000;
+                    const randomDelayMinutes = (Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes);
+                    const delayMs = randomDelayMinutes * 60 * 1000;
+
+                    elizaLogger.warn(`[Farcaster] Cast hour ${hour} matched! Scheduling post in ${randomDelayMinutes} minutes (at approx ${new Date(Date.now() + delayMs).toLocaleTimeString()})`);
+
                     setTimeout(async () => {
                         try {
                             await this.generateNewCast();
                         } catch (error) {
                             elizaLogger.error(error);
                         }
-                    }, randomDelay);
-                    elizaLogger.warn(`Next cast scheduled for ${randomDelay} minutes`);
+                    }, delayMs);
                 } catch (error) {
                     elizaLogger.error(error);
                 }
+            } else if (this.client.farcasterConfig.FARCASTER_CAST_HOURS.includes(hour) && hoursSinceLastPost <= 20) {
+                elizaLogger.debug(`[Farcaster] Still in cast hour ${hour}, but already posted ${hoursSinceLastPost.toFixed(1)} hours ago. Skipping.`);
             } else {
-                elizaLogger.debug(`Now is not the time to post, waiting for the next cast time`);
-                elizaLogger.info(`Now is ${timezoneTime} and the cast time is ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`);
+                elizaLogger.info(`[Farcaster] Time check: Chicago is ${timezoneTime} (Local: ${now.toLocaleTimeString()}). Target hours: ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`);
             }
 
-            elizaLogger.debug(`Next cast verification for 1 hours`);
+            elizaLogger.debug(`Next cast verification in 1 hour`);
             setTimeout(generateNewCastLoop, 60 * 60 * 1000); // Re-executa a cada 1 hora
         };
 
@@ -232,6 +242,11 @@ export class FarcasterPostManager {
                 .trim();
 
             let content = slice.slice(0, MAX_CAST_LENGTH);
+
+            // Update last post timestamp in cache
+            await this.runtime.cacheManager.set("farcaster/" + this.fid + "/lastPost", {
+                timestamp: Date.now(),
+            });
 
             // if it's bigger than the max limit, delete the last line
             if (content.length > MAX_CAST_LENGTH) {
