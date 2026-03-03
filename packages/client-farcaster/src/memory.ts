@@ -24,9 +24,9 @@ export function createCastMemory({
 }): Memory {
     const inReplyTo = cast.inReplyTo
         ? castUuid({
-              hash: toHex(cast.inReplyTo.hash),
-              agentId: runtime.agentId,
-          })
+            hash: toHex(cast.inReplyTo.hash),
+            agentId: runtime.agentId,
+        })
         : undefined;
 
     return {
@@ -87,14 +87,14 @@ export async function buildConversationThread({
                 "farcaster"
             );
 
-            await runtime.messageManager.createMemory(
-                createCastMemory({
-                    roomId,
-                    senderId: userId,
-                    runtime,
-                    cast: currentCast,
-                })
-            );
+            const memory = createCastMemory({
+                roomId,
+                senderId: userId,
+                runtime,
+                cast: currentCast,
+            });
+            await runtime.messageManager.addEmbeddingToMemory(memory);
+            await runtime.messageManager.createMemory(memory);
         }
 
         thread.unshift(currentCast);
