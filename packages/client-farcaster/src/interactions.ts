@@ -274,14 +274,14 @@ export class FarcasterInteractionManager {
             await this.runtime.messageManager.getMemoryById(memoryId);
 
         if (!castMemory) {
-            await this.runtime.messageManager.createMemory(
-                createCastMemory({
-                    roomId: memory.roomId,
-                    senderId,
-                    runtime: this.runtime,
-                    cast,
-                })
-            );
+            const memoryToAdd = createCastMemory({
+                roomId: memory.roomId,
+                senderId,
+                runtime: this.runtime,
+                cast,
+            });
+            await this.runtime.messageManager.addEmbeddingToMemory(memoryToAdd);
+            await this.runtime.messageManager.createMemory(memoryToAdd);
         }
 
         const shouldRespondResponse = await generateShouldRespond({
@@ -354,6 +354,7 @@ export class FarcasterInteractionManager {
                 results[0].memory.content.action = content.action;
 
                 for (const { memory } of results) {
+                    await this.runtime.messageManager.addEmbeddingToMemory(memory);
                     await this.runtime.messageManager.createMemory(memory);
                 }
                 return results.map((result) => result.memory);
@@ -488,7 +489,7 @@ export class FarcasterInteractionManager {
             // console.dir(cast)
             // Process the feed to extract topics of interest
             const userId = stringToUuid(cast.author.fid.toString());
-            const senderId = stringToUuid(userId); // Define senderId using the correct property
+            const senderId = userId; // Define senderId using the correct property
             const senderProfile: Profile = await this.client.getProfile(cast.author.fid); // Obtain the agent using the correct fid
 
             const conversationId = `${toHex(cast.hash)}-${this.runtime.agentId}`;

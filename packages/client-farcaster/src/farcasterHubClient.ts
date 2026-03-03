@@ -1400,7 +1400,7 @@ export class FarcasterHubClient {
 
         const options = {
             replyTo: thread_hash,
-            parent_author_fid: 456830,//deployerInfo.fid,
+            parent_author_fid: deployerInfo.fid,//deployerInfo.fid,
             nounspacePage: nounspacePage
         }
 
@@ -1596,14 +1596,14 @@ export class FarcasterHubClient {
             await this.runtime.messageManager.getMemoryById(memoryId);
 
         if (!castMemory) {
-            await this.runtime.messageManager.createMemory(
-                createCastMemory({
-                    roomId: memory.roomId,
-                    senderId,
-                    runtime: this.runtime,
-                    cast,
-                })
-            );
+            const memoryToAdd = createCastMemory({
+                roomId: memory.roomId,
+                senderId,
+                runtime: this.runtime,
+                cast,
+            });
+            await this.runtime.messageManager.addEmbeddingToMemory(memoryToAdd);
+            await this.runtime.messageManager.createMemory(memoryToAdd);
         }
 
         const shouldRespondResponse = await generateShouldRespond({
@@ -1676,6 +1676,7 @@ export class FarcasterHubClient {
                 results[0].memory.content.action = content.action;
 
                 for (const { memory } of results) {
+                    await this.runtime.messageManager.addEmbeddingToMemory(memory);
                     await this.runtime.messageManager.createMemory(memory);
                 }
                 return results.map((result) => result.memory);
