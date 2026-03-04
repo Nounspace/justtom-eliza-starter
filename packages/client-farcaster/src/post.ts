@@ -5,15 +5,15 @@ import {
     ModelClass,
     stringToUuid,
     elizaLogger,
-    generateImage,
 } from "@elizaos/core";
-import { v2 as cloudinary } from "cloudinary";
 
 import type { FarcasterClient } from "./client";
 import { formatTimeline, postTemplate, startWeekPostTemplate, midWeekPostTemplate, weekendPostTemplate, clankerTokenTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
 import { sendChannelCast } from "./actions";
+import { FarcasterCurationManager } from "./post-curation";
+import { FarcasterImageManager } from "./post-images";
 
 export class FarcasterPostManager {
     client: FarcasterClient;
@@ -21,6 +21,8 @@ export class FarcasterPostManager {
     fid: number;
     isDryRun: boolean;
     private timeout: NodeJS.Timeout | undefined;
+    private curationManager: FarcasterCurationManager;
+    private imageManager: FarcasterImageManager;
 
     constructor(
         client: FarcasterClient,
@@ -30,53 +32,41 @@ export class FarcasterPostManager {
     ) {
         this.client = client;
         this.runtime = runtime;
-
         this.fid = this.client.farcasterConfig?.FARCASTER_FID ?? 0;
         this.isDryRun = this.client.farcasterConfig?.FARCASTER_DRY_RUN ?? false;
+
+        this.curationManager = new FarcasterCurationManager(client, runtime, signerUuid, this.fid);
+        this.imageManager = new FarcasterImageManager(client, runtime);
 
         // Log configuration on initialization
         elizaLogger.warn("Farcaster Client Configuration:");
         elizaLogger.warn(`- FID: ${this.fid}`);
-        elizaLogger.warn(
-            `- Dry Run Mode: ${this.isDryRun ? "enabled" : "disabled"}`
-        );
-        elizaLogger.warn(
-            `- Enable Post: ${this.client.farcasterConfig.ENABLE_POST ? "enabled" : "disabled"}`
-        );
+        elizaLogger.warn(`- Dry Run Mode: ${this.isDryRun ? "enabled" : "disabled"}`);
+        elizaLogger.warn(`- Enable Post: ${this.client.farcasterConfig.ENABLE_POST ? "enabled" : "disabled"}`);
         if (this.client.farcasterConfig.ENABLE_POST) {
-
-            elizaLogger.warn(
-                `- CAST HOUR: ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`
-            );
-
-            elizaLogger.warn(
-                `- Post Interval: ${this.client.farcasterConfig.POST_INTERVAL_MIN}-${this.client.farcasterConfig.POST_INTERVAL_MAX} minutes`
-            );
-            elizaLogger.warn(
-                `- Post Immediately: ${this.client.farcasterConfig.POST_IMMEDIATELY ? "enabled" : "disabled"}`
-            );
+            elizaLogger.warn(`- CAST HOUR: ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`);
+            elizaLogger.warn(`- Post Interval: ${this.client.farcasterConfig.POST_INTERVAL_MIN}-${this.client.farcasterConfig.POST_INTERVAL_MAX} minutes`);
+            elizaLogger.warn(`- Post Immediately: ${this.client.farcasterConfig.POST_IMMEDIATELY ? "enabled" : "disabled"}`);
         }
-        elizaLogger.warn(
-            `- Action Processing: ${this.client.farcasterConfig.ENABLE_ACTION_PROCESSING ? "enabled" : "disabled"}`
-        );
-        elizaLogger.warn(
-            `- Action Interval: ${this.client.farcasterConfig.ACTION_INTERVAL} minutes`
-        );
+        elizaLogger.warn(`- Action Processing: ${this.client.farcasterConfig.ENABLE_ACTION_PROCESSING ? "enabled" : "disabled"}`);
+        elizaLogger.warn(`- Action Interval: ${this.client.farcasterConfig.ACTION_INTERVAL} minutes`);
 
         if (this.isDryRun) {
-            elizaLogger.warn(
-                "Farcaster client initialized in dry run mode - no actual casts should be posted"
-            );
+            elizaLogger.warn("Farcaster client initialized in dry run mode - no actual casts should be posted");
         }
     }
 
-
-    // Sempre agenda o post em FARCASTER_CAST_HOURS com delay de randeom(minMinutes, maxmMinutes).
-    // ✅ Garante que só posta uma vez por dia.
-    // ✅ Evita que o post saia fora do horário esperado.
-    // 🎯 Agora o post será publicado em um horário aleatório dentro da janela especificada!
     public async start() {
-        const generateNewCastLoop = async () => {
+        if (this.client.farcasterConfig.ENABLE_POST) {
+            this.startNormalPostLoop();
+        }
+        if (this.client.farcasterConfig.FARCASTER_CURATION_MODE) {
+            this.startCurationPostLoop();
+        }
+    }
+
+    private async startNormalPostLoop() {
+        const generateNormalCastLoop = async () => {
             const timezone = "America/Chicago";
             const minMinutes = this.client.farcasterConfig.POST_INTERVAL_MIN;
             const maxMinutes = this.client.farcasterConfig.POST_INTERVAL_MAX;
@@ -85,7 +75,6 @@ export class FarcasterPostManager {
             const timezoneTime = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: 'numeric', hour12: false }).format(now);
             const [hour] = timezoneTime.split(':').map(Number);
 
-            // Check if we already posted in the last 20 hours to prevent double-posting in the same window
             const lastPost = await this.runtime.cacheManager.get<{ timestamp: number }>(
                 "farcaster/" + this.fid + "/lastPost"
             );
@@ -95,154 +84,84 @@ export class FarcasterPostManager {
                 try {
                     const randomDelayMinutes = (Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes);
                     const delayMs = randomDelayMinutes * 60 * 1000;
-
-                    elizaLogger.warn(`[Farcaster] Cast hour ${hour} matched! Scheduling post in ${randomDelayMinutes} minutes (at approx ${new Date(Date.now() + delayMs).toLocaleTimeString()})`);
-
+                    elizaLogger.warn(`[Farcaster] Normal cast hour ${hour} matched! Scheduling post in ${randomDelayMinutes} minutes`);
                     setTimeout(async () => {
-                        try {
-                            await this.generateNewCast();
-                        } catch (error) {
-                            elizaLogger.error(error);
-                        }
+                        try { await this.generateNewCast(); } catch (error) { elizaLogger.error(error); }
                     }, delayMs);
                 } catch (error) {
                     elizaLogger.error(error);
                 }
             } else if (this.client.farcasterConfig.FARCASTER_CAST_HOURS.includes(hour) && hoursSinceLastPost <= 20) {
-                elizaLogger.debug(`[Farcaster] Still in cast hour ${hour}, but already posted ${hoursSinceLastPost.toFixed(1)} hours ago. Skipping.`);
+                elizaLogger.debug(`[Farcaster] Still in cast hour ${hour}, but already posted ${hoursSinceLastPost.toFixed(1)}h ago. Skipping.`);
             } else {
-                elizaLogger.info(`[Farcaster] Time check: Chicago is ${timezoneTime} (Local: ${now.toLocaleTimeString()}). Target hours: ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`);
+                elizaLogger.info(`[Farcaster] Normal loop: Chicago is ${timezoneTime}. Target hours: ${this.client.farcasterConfig.FARCASTER_CAST_HOURS}`);
             }
 
-            elizaLogger.debug(`Next cast verification in 1 hour`);
-            setTimeout(generateNewCastLoop, 60 * 60 * 1000); // Re-executa a cada 1 hora
+            elizaLogger.debug(`Next normal cast verification in 1 hour`);
+            setTimeout(generateNormalCastLoop, 60 * 60 * 1000);
         };
 
-        if (this.client.farcasterConfig.ENABLE_POST) {
-            if (this.client.farcasterConfig.POST_IMMEDIATELY) {
-                await this.generateNewCast();
-            }
-            generateNewCastLoop();
+        if (this.client.farcasterConfig.POST_IMMEDIATELY) {
+            await this.generateNewCast();
         }
+        generateNormalCastLoop();
     }
 
-    // ORIGINAL:
-    // public async start() {
-    //     const generateNewCastLoop = async () => {
+    private async startCurationPostLoop() {
+        const generateCurationCastLoop = async () => {
+            const timezone = "America/Chicago";
+            const minMinutes = this.client.farcasterConfig.POST_INTERVAL_MIN;
+            const maxMinutes = this.client.farcasterConfig.POST_INTERVAL_MAX;
 
-    //         const lastPost = await this.runtime.cacheManager.get<{
-    //             timestamp: number;
-    //         }>("farcaster/" + this.fid + "/lastPost");
+            const now = new Date();
+            const timezoneTime = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: 'numeric', hour12: false }).format(now);
+            const [hour] = timezoneTime.split(':').map(Number);
+            const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(now);
 
-    //         const lastPostTimestamp = lastPost?.timestamp ?? 0;
-    //         const minMinutes = this.client.farcasterConfig.POST_INTERVAL_MIN;
-    //         const maxMinutes = this.client.farcasterConfig.POST_INTERVAL_MAX;
-    //         const randomMinutes =
-    //             Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) +
-    //             minMinutes;
-    //         const delay = randomMinutes * 60 * 1000;
+            const curationDay = this.client.farcasterConfig.FARCASTER_CURATION_DAY || "Friday";
+            const isEveryday = curationDay.toLowerCase() === "everyday";
 
-    //         if (Date.now() > lastPostTimestamp + delay) {
-    //             try {
-    //                 await this.generateNewCast();
-    //             } catch (error) {
-    //                 elizaLogger.error(error);
-    //                 return;
-    //             }
-    //         }
+            if (!isEveryday && weekday !== curationDay) {
+                elizaLogger.info(`[Farcaster Curation] Today is ${weekday}, waiting for ${curationDay}`);
+                setTimeout(generateCurationCastLoop, 60 * 60 * 1000);
+                return;
+            }
 
-    //         this.timeout = setTimeout(() => {
-    //             generateNewCastLoop(); // Set up next iteration
-    //         }, delay);
+            const lastPost = await this.runtime.cacheManager.get<{ timestamp: number }>(
+                "farcaster/" + this.fid + "/lastCurationPost"
+            );
+            const hoursSinceLastPost = lastPost ? (Date.now() - lastPost.timestamp) / (1000 * 60 * 60) : 24;
+            const targetHours = this.client.farcasterConfig.FARCASTER_CURATION_POST_TIMES || [22];
 
-    //         elizaLogger.warn(`Next cast scheduled in ${randomMinutes} minutes`);
-    //     };
+            if (targetHours.includes(hour) && hoursSinceLastPost > 20) {
+                try {
+                    const randomDelayMinutes = (Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes);
+                    const delayMs = randomDelayMinutes * 60 * 1000;
+                    elizaLogger.warn(`[Farcaster] Curation cast hour ${hour} matched! Scheduling in ${randomDelayMinutes} minutes`);
+                    setTimeout(async () => {
+                        try { await this.curationManager.generateCurationCast(); } catch (error) { elizaLogger.error(error); }
+                    }, delayMs);
+                } catch (error) {
+                    elizaLogger.error(error);
+                }
+            } else if (targetHours.includes(hour) && hoursSinceLastPost <= 20) {
+                elizaLogger.debug(`[Farcaster] Still in curation hour ${hour}, but already posted ${hoursSinceLastPost.toFixed(1)}h ago. Skipping.`);
+            } else {
+                elizaLogger.info(`[Farcaster] Curation loop: Chicago is ${timezoneTime}. Target hours: ${targetHours}`);
+            }
 
-    //     if (this.client.farcasterConfig.ENABLE_POST) {
-    //         if (this.client.farcasterConfig.POST_IMMEDIATELY) {
-    //             await this.generateNewCast();
-    //         }
-    //         generateNewCastLoop();
-    //     }
-    // }
+            elizaLogger.debug(`Next curation cast verification in 1 hour`);
+            setTimeout(generateCurationCastLoop, 60 * 60 * 1000);
+        };
+
+        if (this.client.farcasterConfig.POST_IMMEDIATELY) {
+            await this.curationManager.generateCurationCast();
+        }
+        generateCurationCastLoop();
+    }
 
     public async stop() {
         if (this.timeout) clearTimeout(this.timeout);
-    }
-
-    private selectImageMode(content: string): "lab" | "dashboard" | "abstract" {
-        const lower = content.toLowerCase();
-        const labKeywords = ["code", "build", "deploy", "lab", "progress", "iteration", "version", "commit", "shipping", "testing", "systems", "architecture", "folding", "emerging"];
-        const dashboardKeywords = ["dashboard", "token", "coordination", "network", "ecosystem", "activity", "growth", "holders", "governance", "signals", "metrics", "forming", "infrastructure", "launchpad"];
-
-        if (labKeywords.some(kw => lower.includes(kw))) return "lab";
-        if (dashboardKeywords.some(kw => lower.includes(kw))) return "dashboard";
-        return "abstract";
-    }
-
-    private generateArchetypePrompt(content: string, style: string): string {
-        const mode = this.selectImageMode(content);
-
-        const universe = `
-Retro-futuristic digital world inspired by ${style}.
-Visible pixel structure.
-CRT glow.
-Stylized lighting.
-No modern UI.
-`;
-
-        const constraints = `
-Cinematic framing.
-No readable text.
-No letters.
-No numbers.
-No logos.
-No captions.
-No symbols.
-No alphanumeric characters.
-Interfaces must contain only abstract shapes and geometric patterns.
-`;
-
-        let scene = "";
-
-        switch (mode) {
-            case "lab":
-                scene = `
-Inside a retro-tech builder lab.
-Monitors showing abstract geometric signal patterns.
-Glowing visual modules instead of dashboards.
-Subtle human silhouette.
-`;
-                break;
-
-
-
-            case "dashboard":
-                scene = `
-Massive panoramic window showing cosmic dust.
-Layered control consoles with abstract geometric signal patterns.
-Network activity represented as flowing light constellations suspended in the air.
-No literal UI elements.
-`;
-                //             case "dashboard":
-                //                 scene = `
-                // Retro command center.
-                // Layered glowing geometric panels.
-                // Network represented by light connections and shapes.
-                // No literal UI elements.
-                // `;
-                break;
-
-            case "abstract":
-                scene = `
-Flowing retro digital energy.
-Structured pixel-based motion.
-Glowing geometric forms.
-`;
-                break;
-        }
-
-        return `${universe}\n${scene}\n${constraints}`;
     }
 
     private async generateNewCast() {
@@ -256,20 +175,11 @@ Glowing geometric forms.
                 "farcaster"
             );
 
-            const { timeline } = await this.client.getTimeline({
-                fid: this.fid,
-                pageSize: 10,
-            });
-
+            const { timeline } = await this.client.getTimeline({ fid: this.fid, pageSize: 10 });
             this.cache.set("farcaster/timeline", timeline);
-
-            const formattedHomeTimeline = formatTimeline(
-                this.runtime.character,
-                timeline
-            );
+            const formattedHomeTimeline = formatTimeline(this.runtime.character, timeline);
 
             const generateRoomId = stringToUuid("farcaster_generate_room");
-
             const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
 
             const state = await this.runtime.composeState(
@@ -282,11 +192,9 @@ Glowing geometric forms.
                 {
                     farcasterUserName: profile.username,
                     timeline: formattedHomeTimeline,
-                    weekday: weekday,
+                    weekday,
                 }
             );
-
-            const topics = this.runtime.character.topics?.join(", ") || "";
 
             // Check for randomized Clanker token deployment
             const clankerProbability = this.client.farcasterConfig.FARCASTER_CLANKER_PROBABILITY;
@@ -297,10 +205,7 @@ Glowing geometric forms.
                 elizaLogger.warn(`[Farcaster] Clanker probability matched! Generating token deployment request.`);
                 selectedTemplate = clankerTokenTemplate;
             } else {
-                // Select template based on weekday, but with a chance of random selection
                 const templates = [postTemplate, startWeekPostTemplate, midWeekPostTemplate, weekendPostTemplate];
-
-                // 70% chance to follow weekly schedule, 30% chance for total randomness
                 if (Math.random() > 0.3) {
                     if (['Monday', 'Tuesday'].includes(weekday)) {
                         selectedTemplate = startWeekPostTemplate;
@@ -316,12 +221,9 @@ Glowing geometric forms.
                 }
             }
 
-            // Generate new cast
             const context = composeContext({
                 state,
-                template:
-                    this.runtime.character.templates?.farcasterPostTemplate ||
-                    selectedTemplate,
+                template: this.runtime.character.templates?.farcasterPostTemplate || selectedTemplate,
             });
 
             const newContent = await generateText({
@@ -338,25 +240,11 @@ Glowing geometric forms.
 
             let content = slice.slice(0, MAX_CAST_LENGTH);
 
-            // Update last post timestamp in cache
-            await this.runtime.cacheManager.set("farcaster/" + this.fid + "/lastPost", {
-                timestamp: Date.now(),
-            });
+            await this.runtime.cacheManager.set("farcaster/" + this.fid + "/lastPost", { timestamp: Date.now() });
 
-            // if it's bigger than the max limit, delete the last line
-            if (content.length > MAX_CAST_LENGTH) {
-                content = content.slice(0, content.lastIndexOf("\n"));
-            }
-
-            if (content.length > MAX_CAST_LENGTH) {
-                // slice at the last period
-                content = content.slice(0, content.lastIndexOf("."));
-            }
-
-            // if it's still too long, get the period before the last period
-            if (content.length > MAX_CAST_LENGTH) {
-                content = content.slice(0, content.lastIndexOf("."));
-            }
+            if (content.length > MAX_CAST_LENGTH) content = content.slice(0, content.lastIndexOf("\n"));
+            if (content.length > MAX_CAST_LENGTH) content = content.slice(0, content.lastIndexOf("."));
+            if (content.length > MAX_CAST_LENGTH) content = content.slice(0, content.lastIndexOf("."));
 
             if (this.runtime.getSetting("FARCASTER_DRY_RUN") === "true") {
                 elizaLogger.info(`Dry run: would have cast: ${content}`);
@@ -364,71 +252,9 @@ Glowing geometric forms.
             }
 
             try {
-                let imageUrl: string | undefined = undefined;
-
-                const imageProbability = this.client.farcasterConfig.FARCASTER_POST_IMAGE_PROBABILITY;
-                const shouldGenerateImage = isClankerPost || (this.client.farcasterConfig.FARCASTER_POST_IMAGE && Math.random() < imageProbability);
-
-                if (shouldGenerateImage) {
-                    try {
-                        let imageSettings = this.runtime.character.settings?.imageSettings || {};
-                        const imageStyle = this.runtime.getSetting("IMAGE_GENERATE_STYLE") || "64-bit Retro Sci-fi Art";
-                        const imagePromptText = this.generateArchetypePrompt(content, imageStyle);
-
-                        elizaLogger.debug(`[Farcaster] Image prompt: ${imagePromptText}`);
-                        elizaLogger.info(`[Farcaster] Generating image for ${isClankerPost ? "Clanker" : "normal"} post...`);
-
-                        const imageResult = await generateImage({
-                            prompt: imagePromptText,
-                            width: imageSettings.width || 1024,
-                            height: imageSettings.height || 1024,
-                            count: imageSettings.count || 1,
-                            negativePrompt: imageSettings.negativePrompt || undefined,
-                            numIterations: imageSettings.numIterations || 50,
-                            guidanceScale: imageSettings.guidanceScale || 7.5,
-                            seed: imageSettings.seed || undefined,
-                            modelId: imageSettings.modelId || undefined,
-                            jobId: imageSettings.jobId || undefined,
-                            stylePreset: imageSettings.stylePreset || "",
-                            hideWatermark: imageSettings.hideWatermark ?? true,
-                            safeMode: imageSettings.safeMode ?? true,
-                            cfgScale: imageSettings.cfgScale || undefined,
-                        }, this.runtime);
-
-                        if (imageResult.success && imageResult.data && imageResult.data.length > 0) {
-                            const cloudName = this.client.farcasterConfig["CLOUDINARY_CLOUD_NAME"];
-                            const apiKey = this.client.farcasterConfig["CLOUDINARY_API_KEY"];
-                            const apiSecret = this.client.farcasterConfig["CLOUDINARY_API_SECRET"];
-
-                            if (cloudName && apiKey && apiSecret) {
-                                cloudinary.config({
-                                    cloud_name: cloudName,
-                                    api_key: apiKey,
-                                    api_secret: apiSecret,
-                                });
-
-                                const uploadResult = await cloudinary.uploader.upload(imageResult.data[0], {
-                                    folder: this.runtime.character.name.toLowerCase(),
-                                });
-                                imageUrl = uploadResult.secure_url;
-                            } else {
-                                elizaLogger.warn("Cloudinary credentials missing, skipping image upload");
-                            }
-                        } else {
-                            elizaLogger.warn("Failed to generate image or no image data returned");
-                        }
-                    } catch (imageError) {
-                        elizaLogger.error("Error generating or uploading image:", imageError);
-                        // Continuing to post text-only even if image fails
-                    }
-                } else if (this.client.farcasterConfig.FARCASTER_POST_IMAGE) {
-                    elizaLogger.info(`[Farcaster] Image probability (${imageProbability}) not met. Skipping image.`);
-                }
-
-                const postContent = {
-                    text: content,
-                    url: imageUrl
-                };
+                const imageUrl = await this.imageManager.generateAndUploadImage(content, isClankerPost);
+                const postContent: any = { text: content };
+                if (imageUrl) postContent.attachments = [{ url: imageUrl }];
 
                 const [{ cast }] = await sendChannelCast({
                     client: this.client,
@@ -441,38 +267,18 @@ Glowing geometric forms.
 
                 await this.runtime.cacheManager.set(
                     `farcaster/${this.fid}/lastCast`,
-                    {
-                        hash: cast.hash,
-                        timestamp: Date.now(),
-                    }
+                    { hash: cast.hash, timestamp: Date.now() }
                 );
 
-                const roomId = castUuid({
-                    agentId: this.runtime.agentId,
-                    hash: cast.hash,
-                });
-
+                const roomId = castUuid({ agentId: this.runtime.agentId, hash: cast.hash });
                 await this.runtime.ensureRoomExists(roomId);
+                await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
 
-                await this.runtime.ensureParticipantInRoom(
-                    this.runtime.agentId,
-                    roomId
-                );
-
-                elizaLogger.debug(
-                    `[Farcaster Debug Context] ${JSON.stringify(context)}`
-                );
-                elizaLogger.warn(
-                    `[Farcaster Neynar Client] Published cast https://casterscan.com/casts/${cast.hash}`
-                );
+                elizaLogger.debug(`[Farcaster Debug Context] ${JSON.stringify(context)}`);
+                elizaLogger.warn(`[Farcaster Neynar Client] Published cast https://casterscan.com/casts/${cast.hash}`);
 
                 await this.runtime.messageManager.createMemory(
-                    createCastMemory({
-                        roomId,
-                        senderId: this.runtime.agentId,
-                        runtime: this.runtime,
-                        cast,
-                    })
+                    createCastMemory({ roomId, senderId: this.runtime.agentId, runtime: this.runtime, cast })
                 );
             } catch (error) {
                 elizaLogger.error("Error sending cast:", error);

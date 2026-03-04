@@ -648,7 +648,7 @@ export type Plugin = {
  * Available client platforms
  */
 export enum Clients {
-    ALEXA= "alexa",
+    ALEXA = "alexa",
     DISCORD = "discord",
     DIRECT = "direct",
     TWITTER = "twitter",
@@ -754,6 +754,7 @@ export type Character = {
         instagramMessageHandlerTemplate?: TemplateType;
         instagramShouldRespondTemplate?: TemplateType;
         farcasterPostTemplate?: TemplateType;
+        farcasterCurationPostTemplate?: TemplateType;
         lensPostTemplate?: TemplateType;
         farcasterMessageHandlerTemplate?: TemplateType;
         lensMessageHandlerTemplate?: TemplateType;

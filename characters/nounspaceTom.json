@@ -26,6 +26,7 @@
         "FARCASTER_FAVORITE_FRONTEND": "",
         "FARCASTER_USERNAME": "nounspacetom",
         "FARCASTER_POST_IMAGE": "true",
+        "FARCASTER_POST_IMAGE_PROBABILITY": "0.3",
         "FARCASTER_TARGETS_USERS": [
             874542
         ],
