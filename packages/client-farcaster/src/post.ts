@@ -232,6 +232,7 @@ export class FarcasterPostManager {
                 modelClass: ModelClass.LARGE,
             });
 
+            // Remove dashes and replace with commas. Remove extra spaces.
             const slice = newContent
                 .replaceAll(/\\n/g, "\n")
                 .replace(/\s*[—–]\s*/g, ", ")
