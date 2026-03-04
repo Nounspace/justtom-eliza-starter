@@ -1305,7 +1305,7 @@ export class FarcasterHubClient {
             "farcaster"
         );
 
-        await this.runtime.messageManager.createMemory({
+        const memory: Memory = {
             id: castUuid({
                 agentId: this.runtime.agentId,
                 hash: cast.hash,
@@ -1320,7 +1320,10 @@ export class FarcasterHubClient {
                 url: `${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${cast.profile.username}/${cast.hash}`,
             },
             createdAt: cast.timestamp.getTime(),
-        });
+        };
+
+        await this.runtime.messageManager.addEmbeddingToMemory(memory);
+        await this.runtime.messageManager.createMemory(memory);
 
         const contractAddress = this.extractContractAddress(cast.text);
         if (!contractAddress) {
