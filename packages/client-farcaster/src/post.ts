@@ -110,8 +110,8 @@ export class FarcasterPostManager {
     private async startCurationPostLoop() {
         const generateCurationCastLoop = async () => {
             const timezone = "America/Chicago";
-            const minMinutes = this.client.farcasterConfig.POST_INTERVAL_MIN;
-            const maxMinutes = this.client.farcasterConfig.POST_INTERVAL_MAX;
+            const minMinutes = 5;
+            const maxMinutes = 20;
 
             const now = new Date();
             const timezoneTime = new Intl.DateTimeFormat('en-US', { timeZone: timezone, hour: 'numeric', minute: 'numeric', hour12: false }).format(now);
