@@ -36,6 +36,9 @@ export const farcasterEnvSchema = z.object({
     FARCASTER_POST_IMAGE: z.boolean().default(false),
     FARCASTER_CURATION_MODE: z.boolean().default(false),
     FARCASTER_CURATION_DAY: z.string().default("Friday"),
+    FARCASTER_CURATION_POST_TIMES: z.array(z.number()).default([22]),
+    FARCASTER_POST_IMAGE_PROBABILITY: z.number().min(0).max(1).default(0.3),
+    FARCASTER_CLANKER_PROBABILITY: z.number().min(0).max(1).default(0.1),
     "CLOUDINARY_CLOUD_NAME": z.string().optional(),
     "CLOUDINARY_API_KEY": z.string().optional(),
     "CLOUDINARY_API_SECRET": z.string().optional(),
@@ -50,6 +53,20 @@ function safeParseInt(
     if (!value) return defaultValue;
     const parsed = Number.parseInt(value, 10);
     return Number.isNaN(parsed) ? defaultValue : Math.max(1, parsed);
+}
+
+function safeParseIntArray(
+    value: string | any | undefined | null,
+    defaultValue: number[]
+): number[] {
+    if (!value) return defaultValue;
+    if (Array.isArray(value)) return value;
+    if (typeof value !== "string") return defaultValue;
+
+    return value
+        .split(",")
+        .map((v) => Number.parseInt(v.trim(), 10))
+        .filter((v) => !Number.isNaN(v));
 }
 
 /**
@@ -190,6 +207,12 @@ export async function validateFarcasterConfig(
                 runtime.getSetting("FARCASTER_CURATION_DAY") ||
                 process.env.FARCASTER_CURATION_DAY ||
                 "Friday"
+            ),
+
+            FARCASTER_CURATION_POST_TIMES: safeParseIntArray(
+                runtime.getSetting("FARCASTER_CURATION_POST_TIMES") ||
+                process.env.FARCASTER_CURATION_POST_TIMES,
+                [22]
             ),
 
             CLOUDINARY_CLOUD_NAME: (

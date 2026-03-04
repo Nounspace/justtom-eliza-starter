@@ -28,8 +28,6 @@ import SpamFilterManager from './spamFilterManager';
 import { FeedResponse, ForYouProvider } from "@neynar/nodejs-sdk/build/api";
 
 export class FarcasterInteractionManager {
-    // Property to track last fetch records
-    private lastFetchFeeds: Map<string, Map<string, { timestamp: Date }>> = new Map();
     private timeout: NodeJS.Timeout | undefined;
     private spamFilterManager: SpamFilterManager;
 
@@ -40,7 +38,6 @@ export class FarcasterInteractionManager {
         public cache: Map<string, any>
     ) {
         this.spamFilterManager = SpamFilterManager.getInstance();
-        this.lastFetchFeeds.set(this.runtime.character.name, new Map());
     }
 
     public async start() {
@@ -78,28 +75,20 @@ export class FarcasterInteractionManager {
         }
 
         if (this.client.farcasterConfig.ENABLE_ACTION_PROCESSING) {
-            // Initialize inner map if not exists
-            if (!this.lastFetchFeeds.has(agentName)) {
-                this.lastFetchFeeds.set(agentName, new Map());
-            }
+            const cacheKey = `farcaster/${agentFid}/lastFeedRead`;
+            const cachedLastRead = await this.runtime.cacheManager.get<{ timestamp: number }>(cacheKey);
+            const lastReadTime = cachedLastRead ? new Date(cachedLastRead.timestamp) : null;
 
-            const characterFeeds = this.lastFetchFeeds.get(agentName)!;
-            const lastEntry = characterFeeds.get("dailyCheck");
-
-            for (const [character, feedMap] of this.lastFetchFeeds.entries()) {
-                elizaLogger.debug(`Farcaster: Read Feeds: Character: ${character}`);
-                for (const [key, value] of feedMap.entries()) {
-                    elizaLogger.debug(`Farcaster: Read Feeds:  ${key}: ${value.timestamp.toISOString()}`);
-                }
-            }
-
-            if (lastEntry && (now.getTime() - lastEntry.timestamp.getTime()) < 24 * 60 * 60 * 1000) {
-                elizaLogger.log(`Farcaster: ${agentName} has already read the feeds today. Last read time: ${lastEntry.timestamp.toISOString()}`);
+            if (lastReadTime && (now.getTime() - lastReadTime.getTime()) < 24 * 60 * 60 * 1000) {
+                elizaLogger.log(`Farcaster: ${agentName} has already read the feeds today. Last read time: ${lastReadTime.toISOString()}`);
             } else {
+                elizaLogger.info(`Farcaster: ${agentName} reading feeds for the day...`);
                 // Run the once-per-day logic
                 await this.fetchGlobalTrending();
                 await this.fetchForYouFeed();
-                characterFeeds.set("dailyCheck", { timestamp: now });
+
+                await this.runtime.cacheManager.set(cacheKey, { timestamp: now.getTime() });
+                elizaLogger.info(`Farcaster: ${agentName} feeds read and cache updated.`);
             }
         }
 

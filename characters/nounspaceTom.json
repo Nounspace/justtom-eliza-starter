@@ -30,7 +30,7 @@
             874542
         ],
         "FARCASTER_TARGET_CHANNEL": "nounspace",
-        "FARCASTER_LAST_CONVERSATION_LIMIT": "10",
+        "FARCASTER_LAST_CONVERSATION_LIMIT": "7",
         "FARCASTER_CAST_HOURS": [
             9
         ],
