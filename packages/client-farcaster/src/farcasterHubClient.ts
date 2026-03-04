@@ -689,8 +689,41 @@ export class FarcasterHubClient {
                         url: options.nounspacePage
                     }] as PostCastReqBodyEmbeds[] // Casted to the correct type
                 })
-                .then(response_data => {
-                    elizaLogger.info(`Farcaster: Clanker: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${response_data.cast.hash}`)
+                .then(async (response_data: any) => {
+                    const cast = response_data.cast;
+                    elizaLogger.info(`Farcaster: Clanker: Cast published successfully: ${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${this.client.farcasterConfig?.FARCASTER_USERNAME}/${cast.hash}`)
+
+                    // Save to memory so it appears in searches and curation context
+                    const roomId = castUuid({
+                        agentId: this.runtime.agentId,
+                        hash: cast.hash,
+                    });
+
+                    await this.runtime.ensureRoomExists(roomId);
+                    await this.runtime.ensureParticipantInRoom(this.runtime.agentId, roomId);
+
+                    const memory = createCastMemory({
+                        roomId,
+                        senderId: this.runtime.agentId,
+                        runtime: this.runtime,
+                        cast: {
+                            hash: cast.hash,
+                            authorFid: cast.author.fid,
+                            text: cast.text,
+                            profile: {
+                                fid: cast.author.fid,
+                                name: cast.author.display_name || cast.author.username || "",
+                                username: cast.author.username,
+                            },
+                            timestamp: new Date(cast.timestamp || Date.now()),
+                            inReplyTo: cast.parent_hash ? {
+                                hash: cast.parent_hash,
+                                fid: cast.parent_author?.fid || 0,
+                            } : undefined,
+                        },
+                    });
+
+                    await this.runtime.messageManager.createMemory(memory);
                 })
                 .catch(error => {
                     elizaLogger.error("Farcaster: Clanker: Error publishing Cast");
@@ -748,7 +781,7 @@ export class FarcasterHubClient {
         // Using the neynarClient to publish the cast.
         const options = {
             replyTo: parentHash,
-            parent_author_fid: 456830,//parentAuthorFid,
+            parent_author_fid: parentAuthorFid,
         }
 
         // Wait for a random time between 1 and 2 minutes before publishing
@@ -1256,6 +1289,38 @@ export class FarcasterHubClient {
             elizaLogger.debug("Farcaster: Clanker: Not a deploy event");
             return undefined;
         }
+
+        // Save to curation memory room for later curation (Captain Clankit feature)
+        // This ensures the agent captures high-quality signals for the weekly curation summary
+        const curationRoomId = stringToUuid("farcaster-clanker.space-room");
+        await this.runtime.ensureRoomExists(curationRoomId);
+        await this.runtime.ensureParticipantInRoom(this.runtime.agentId, curationRoomId);
+
+        const senderId = stringToUuid(cast.authorFid.toString());
+        await this.runtime.ensureConnection(
+            senderId,
+            curationRoomId,
+            cast.profile.username,
+            cast.profile.name,
+            "farcaster"
+        );
+
+        await this.runtime.messageManager.createMemory({
+            id: castUuid({
+                agentId: this.runtime.agentId,
+                hash: cast.hash,
+            }),
+            agentId: this.runtime.agentId,
+            userId: senderId,
+            roomId: curationRoomId,
+            content: {
+                text: cast.text,
+                source: "clanker-deploy",
+                hash: cast.hash,
+                url: `${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${cast.profile.username}/${cast.hash}`,
+            },
+            createdAt: cast.timestamp.getTime(),
+        });
 
         const contractAddress = this.extractContractAddress(cast.text);
         if (!contractAddress) {
