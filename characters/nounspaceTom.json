@@ -33,7 +33,7 @@
         "FARCASTER_TARGET_CHANNEL": "nounspace",
         "FARCASTER_LAST_CONVERSATION_LIMIT": "7",
         "FARCASTER_CAST_HOURS": [
-            9
+            15
         ],
         "secrets": {},
         "voice": {

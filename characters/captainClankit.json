@@ -29,7 +29,7 @@
     "FARCASTER_TARGET_CHANNEL": "clanker",
     "FARCASTER_LAST_CONVERSATION_LIMIT": "10",
     "FARCASTER_CAST_HOURS": [
-      8
+      16
     ],
     "FARCASTER_CURATION_MODE": "true",
     "FARCASTER_CURATION_DAY": "Everyday",
