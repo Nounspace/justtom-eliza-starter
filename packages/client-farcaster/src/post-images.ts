@@ -1,8 +1,11 @@
 import {
     elizaLogger,
     generateImage,
+    generateText,
+    ModelClass,
     type IAgentRuntime,
 } from "@elizaos/core";
+
 import { v2 as cloudinary } from "cloudinary";
 import type { FarcasterClient } from "./client";
 
@@ -14,15 +17,31 @@ export class FarcasterImageManager {
 
     private selectImageMode(content: string): "lab" | "dashboard" | "abstract" {
         const lower = content.toLowerCase();
-        const labKeywords = ["code", "build", "deploy", "lab", "progress", "iteration", "version", "commit", "shipping", "testing", "systems", "architecture", "folding", "emerging"];
-        const dashboardKeywords = ["dashboard", "token", "coordination", "network", "ecosystem", "activity", "growth", "holders", "governance", "signals", "metrics", "forming", "infrastructure", "launchpad"];
+
+        const labKeywords = [
+            "code", "build", "deploy", "lab", "progress", "iteration",
+            "version", "commit", "shipping", "testing", "systems",
+            "architecture", "folding", "emerging"
+        ];
+
+        const dashboardKeywords = [
+            "dashboard", "token", "coordination", "network", "ecosystem",
+            "activity", "growth", "holders", "governance", "signals",
+            "metrics", "forming", "infrastructure", "launchpad"
+        ];
 
         if (labKeywords.some(kw => lower.includes(kw))) return "lab";
         if (dashboardKeywords.some(kw => lower.includes(kw))) return "dashboard";
         return "abstract";
     }
 
+    /**
+     * OLD SYSTEM — kept for reference
+     * (currently unused)
+     */
     private generateArchetypePrompt(content: string, style: string): string {
+
+        /*
         const mode = this.selectImageMode(content);
 
         const universe = `
@@ -76,21 +95,92 @@ Glowing geometric forms.
         }
 
         return `${universe}\n${scene}\n${constraints}`;
+        */
+
+        return "";
     }
 
-    public async generateAndUploadImage(content: string, isCuration: boolean = false): Promise<string | undefined> {
+    /**
+     * NEW IMAGE PROMPT GENERATOR (LLM powered)
+     */
+    private async generateLLMImagePrompt(content: string): Promise<string> {
+
+        const IMAGE_SYSTEM_PROMPT = `
+You are an expert in writing prompts for AI art generation.
+You create vivid visual descriptions.
+Return ONLY the description of the image contents.
+Never include instructions like "create an image".
+`;
+
+        const STYLE =
+            this.runtime.getSetting("IMAGE_GENERATE_STYLE")
+            || "64-bit Retro Sci-fi Art";
+
+        elizaLogger.debug(`IMAGE_GENERATE_STYLE: "${STYLE}"`);
+
+        const IMAGE_PROMPT_INPUT = `
+Generate an image prompt from the following content.
+
+<content>
+${content}
+</content>
+
+<style>
+${STYLE}
+</style>
+
+Structure the prompt with:
+
+Main subject
+Environment
+Lighting
+Colors
+Mood
+Composition
+Style
+
+Limit the prompt to 50 words.
+Return ONLY the prompt text.
+`;
+
+        const imagePrompt = await generateText({
+            runtime: this.runtime,
+            context: IMAGE_PROMPT_INPUT,
+            modelClass: ModelClass.MEDIUM,
+            customSystemPrompt: IMAGE_SYSTEM_PROMPT,
+        });
+
+        elizaLogger.log("Image prompt received:", imagePrompt);
+
+        return imagePrompt.trim();
+    }
+
+    public async generateAndUploadImage(
+        content: string,
+        isCuration: boolean = false
+    ): Promise<string | undefined> {
+
         try {
-            const imageProbability = parseFloat(String(this.client.farcasterConfig.FARCASTER_POST_IMAGE_PROBABILITY || "0"));
-            const shouldGenerateImage = isCuration || (this.client.farcasterConfig.FARCASTER_POST_IMAGE && Math.random() < imageProbability);
+
+            const imageProbability = parseFloat(
+                String(this.client.farcasterConfig.FARCASTER_POST_IMAGE_PROBABILITY || "0")
+            );
+
+            const shouldGenerateImage =
+                isCuration ||
+                (this.client.farcasterConfig.FARCASTER_POST_IMAGE &&
+                    Math.random() < imageProbability);
 
             if (!shouldGenerateImage) return undefined;
 
-            let imageSettings = this.runtime.character.settings?.imageSettings || {};
-            const imageStyle = this.runtime.getSetting("IMAGE_GENERATE_STYLE") || "64-bit Retro Sci-fi Art";
-            const imagePromptText = this.generateArchetypePrompt(content, imageStyle);
+            const imageSettings =
+                this.runtime.character.settings?.imageSettings || {};
+
+            const imagePromptText =
+                await this.generateLLMImagePrompt(content);
 
             elizaLogger.debug(`[Farcaster] Image prompt: ${imagePromptText}`);
-            elizaLogger.info(`[Farcaster] Generating image for ${isCuration ? "Curation" : "normal"} post...`);
+            elizaLogger.info(`[Farcaster] Generating image...`);
 
             const imageResult = await generateImage({
                 prompt: imagePromptText,
@@ -109,29 +199,42 @@ Glowing geometric forms.
                 cfgScale: imageSettings.cfgScale || undefined,
             }, this.runtime);
 
-            if (imageResult.success && imageResult.data && imageResult.data.length > 0) {
-                const cloudName = this.client.farcasterConfig["CLOUDINARY_CLOUD_NAME"];
-                const apiKey = this.client.farcasterConfig["CLOUDINARY_API_KEY"];
-                const apiSecret = this.client.farcasterConfig["CLOUDINARY_API_SECRET"];
+            if (imageResult.success && imageResult.data?.length) {
+
+                const cloudName =
+                    this.client.farcasterConfig["CLOUDINARY_CLOUD_NAME"];
+                const apiKey =
+                    this.client.farcasterConfig["CLOUDINARY_API_KEY"];
+                const apiSecret =
+                    this.client.farcasterConfig["CLOUDINARY_API_SECRET"];
 
                 if (cloudName && apiKey && apiSecret) {
+
                     cloudinary.config({
                         cloud_name: cloudName,
                         api_key: apiKey,
                         api_secret: apiSecret,
                     });
 
-                    const uploadResult = await cloudinary.uploader.upload(imageResult.data[0], {
-                        folder: this.runtime.character.name.toLowerCase(),
-                    });
+                    const uploadResult = await cloudinary.uploader.upload(
+                        imageResult.data[0],
+                        {
+                            folder: this.runtime.character.name.toLowerCase(),
+                        }
+                    );
+
                     return uploadResult.secure_url;
-                } else {
-                    elizaLogger.warn("Cloudinary credentials missing, skipping image upload");
                 }
+
+                elizaLogger.warn(
+                    "Cloudinary credentials missing, skipping upload"
+                );
             }
+
         } catch (error) {
             elizaLogger.error("Error in generateAndUploadImage:", error);
         }
+
         return undefined;
     }
 }
