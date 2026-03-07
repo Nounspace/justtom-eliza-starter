@@ -5,7 +5,7 @@
         "telegram",
         "farcaster"
     ],
-    "modelProvider": "openai",
+    "modelProvider": "venice",
     "imageVisionModelProvider": "groq",
     "settings": {
         "USE_OPENAI_EMBEDDING": "true",
