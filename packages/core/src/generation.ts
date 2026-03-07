@@ -1170,7 +1170,7 @@ export async function generateText({
                 // elizaLogger.warn(response)
 
                 // response = veniceResponse;
-                elizaLogger.debug("Received response from Venice model.");
+                elizaLogger.debug("Received response from Venice model.", response);
                 break;
             }
 

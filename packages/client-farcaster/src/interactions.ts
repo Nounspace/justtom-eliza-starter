@@ -80,7 +80,7 @@ export class FarcasterInteractionManager {
             const lastReadTime = cachedLastRead ? new Date(cachedLastRead.timestamp) : null;
 
             if (lastReadTime && (now.getTime() - lastReadTime.getTime()) < 24 * 60 * 60 * 1000) {
-                elizaLogger.log(`Farcaster: ${agentName} has already read the feeds today. Last read time: ${lastReadTime.toISOString()}`);
+                elizaLogger.debug(`Farcaster: ${agentName} has already read the feeds today. Last read time: ${lastReadTime.toISOString()}`);
             } else {
                 elizaLogger.info(`Farcaster: ${agentName} reading feeds for the day...`);
                 // Run the once-per-day logic
