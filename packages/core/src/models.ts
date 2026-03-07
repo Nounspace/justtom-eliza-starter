@@ -223,9 +223,6 @@ export const models: Models = {
                 presence_penalty: 0.4,
                 temperature: 0.7,
             },
-            [ModelClass.EMBEDDING]: {
-                name: settings.EMBEDDING_GROQ_MODEL || "llama-3.1-8b-instant",
-            },
         },
     },
     [ModelProviderName.LLAMACLOUD]: {
@@ -888,6 +885,11 @@ export const models: Models = {
             },
             [ModelClass.IMAGE]: {
                 name: settings.IMAGE_VENICE_MODEL || "fluently-xl",
+            },
+            [ModelClass.EMBEDDING]: {
+                name:
+                    settings.EMBEDDING_VENICE_MODEL || "text-embedding-bge-m3",
+                dimensions: 1024,
             },
         },
     },

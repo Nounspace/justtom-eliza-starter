@@ -5,6 +5,7 @@ import elizaLogger from "./logger.ts";
 
 elizaLogger.info("Loading embedding settings:", {
     USE_OPENAI_EMBEDDING: process.env.USE_OPENAI_EMBEDDING,
+    USE_VENICE_EMBEDDING: process.env.USE_VENICE_EMBEDDING,
     USE_OLLAMA_EMBEDDING: process.env.USE_OLLAMA_EMBEDDING,
     OLLAMA_EMBEDDING_MODEL:
         process.env.OLLAMA_EMBEDDING_MODEL || "mxbai-embed-large",
@@ -141,6 +142,8 @@ export const settings = isBrowser() ? environmentSettings : loadEnvConfig();
 elizaLogger.info("Parsed settings:", {
     USE_OPENAI_EMBEDDING: settings.USE_OPENAI_EMBEDDING,
     USE_OPENAI_EMBEDDING_TYPE: typeof settings.USE_OPENAI_EMBEDDING,
+    USE_VENICE_EMBEDDING: settings.USE_VENICE_EMBEDDING,
+    USE_VENICE_EMBEDDING_TYPE: typeof settings.USE_VENICE_EMBEDDING,
     USE_OLLAMA_EMBEDDING: settings.USE_OLLAMA_EMBEDDING,
     USE_OLLAMA_EMBEDDING_TYPE: typeof settings.USE_OLLAMA_EMBEDDING,
     OLLAMA_EMBEDDING_MODEL:
