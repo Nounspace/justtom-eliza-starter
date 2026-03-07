@@ -1,12 +1,32 @@
 import type { ActionResponse } from "./types.ts";
 const jsonBlockPattern = /```json\n([\s\S]*?)\n```/;
 
-export const messageCompletionFooter = `\nResponse format should be formatted in a valid JSON block like this:
+// export const messageCompletionFooter = `\nResponse format should be formatted in a valid JSON block like this:
+// \`\`\`json
+// { "user": "{{agentName}}", "text": "<string>", "action": "<string>" }
+// \`\`\`
+
+// The “action” field should be one of the options in [Available Actions] and the "text" field should be the response you want to send.
+// `;
+
+export const messageCompletionFooter = `
+
+Return ONLY a valid JSON block.
+
+Example format:
+
 \`\`\`json
-{ "user": "{{agentName}}", "text": "<string>", "action": "<string>" }
+{
+  "user": "{{agentName}}",
+  "text": "your reply message here",
+  "action": "RESPOND"
+}
 \`\`\`
 
-The “action” field should be one of the options in [Available Actions] and the "text" field should be the response you want to send.
+Rules:
+- Replace the text field with the message you want to send.
+- The action field must be one of the Available Actions.
+- Do not explain anything outside the JSON block.
 `;
 
 export const shouldRespondFooter = `The available options are [RESPOND], [IGNORE], or [STOP]. Choose the most appropriate option.
