@@ -1843,6 +1843,23 @@ export const generateImage = async (
             const base64s = await Promise.all(base64Promises);
             return { success: true, data: base64s };
         } else if (runtime.imageModelProvider === ModelProviderName.VENICE) {
+            const body = {
+                model: model,
+                prompt: data.prompt,
+                cfg_scale: data.guidanceScale,
+                negative_prompt: data.negativePrompt,
+                width: data.width,
+                height: data.height,
+                steps: data.numIterations,
+                safe_mode: data.safeMode,
+                seed: data.seed,
+                style_preset: data.stylePreset,
+                hide_watermark: data.hideWatermark,
+            };
+
+            // Remove undefined/null values
+            Object.keys(body).forEach(key => body[key] === undefined && delete body[key]);
+
             const response = await fetch(
                 "https://api.venice.ai/api/v1/image/generate",
                 {
@@ -1851,25 +1868,19 @@ export const generateImage = async (
                         Authorization: `Bearer ${apiKey}`,
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({
-                        model: model,
-                        prompt: data.prompt,
-                        cfg_scale: data.guidanceScale,
-                        negative_prompt: data.negativePrompt,
-                        width: data.width,
-                        height: data.height,
-                        steps: data.numIterations,
-                        safe_mode: data.safeMode,
-                        seed: data.seed,
-                        style_preset: data.stylePreset,
-                        hide_watermark: data.hideWatermark,
-                    }),
+                    body: JSON.stringify(body),
                 }
             );
 
             const result = await response.json();
 
+            if (!response.ok) {
+                elizaLogger.error("Venice AI image generation failed:", result);
+                throw new Error(`Venice AI image generation failed: ${response.statusText}`);
+            }
+
             if (!result.images || !Array.isArray(result.images)) {
+                elizaLogger.error("Invalid response format from Venice AI:", result);
                 throw new Error("Invalid response format from Venice AI");
             }
 
@@ -1879,7 +1890,7 @@ export const generateImage = async (
                         "Empty base64 string in Venice AI response"
                     );
                 }
-                return `data:image/png;base64,${base64String}`;
+                return `data:image/webp;base64,${base64String}`;
             });
 
             return { success: true, data: base64s };
