@@ -37,6 +37,8 @@ export const getEmbeddingConfig = (): EmbeddingConfig => ({
             ? getEmbeddingModelSettings(ModelProviderName.OPENAI).dimensions
             : settings.USE_OLLAMA_EMBEDDING?.toLowerCase() === "true"
               ? getEmbeddingModelSettings(ModelProviderName.OLLAMA).dimensions
+              : settings.USE_VENICE_EMBEDDING?.toLowerCase() === "true"
+              ? getEmbeddingModelSettings(ModelProviderName.VENICE).dimensions
               : settings.USE_GAIANET_EMBEDDING?.toLowerCase() === "true"
                 ? getEmbeddingModelSettings(ModelProviderName.GAIANET)
                       .dimensions
