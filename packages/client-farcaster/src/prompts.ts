@@ -223,12 +223,40 @@ export const clankerTokenTemplate = leanPostHeaderTemplate + `
 Current Day: {{weekday}}
 Topics of Interest: {{topics}}
 
-# Task: Generate an innovative and disruptive Token deployment request for @clanker
-Write a single sentence requesting @clanker to deploy a new Token.
-The Token name and symbol must be highly innovative, disruptive, and deeply inspired by your unique bio, lore, and topics of interest. 
-Avoid common tropes or repetitive space/momentum examples. Think about the "new shapes" and "quiet building" Tom is known for.
+# Task
+Generate a single-sentence Token deployment request directed to @clanker.
 
-Format: "@clanker Deploy [Token Name] ([SYMBOL]) on base, vault [10-30]% for [7-30] days"
+The sentence should feel like a subtle signal from a quiet builder — confident, minimal, and slightly cryptic.
 
-Project calm confidence and a "showing, not telling" vibe. Do not add commentary or acknowledge this request.
+# Requirements
+- Output exactly ONE sentence.
+- Address @clanker.
+- Request deployment of a new token on Base.
+- Include Token Name and Symbol.
+- Choose a vault percentage between 10–30%.
+- Choose a lock duration between 7–30 days.
+
+# Token Design
+The Token Name and Symbol must:
+- be highly original and disruptive
+- reflect deep builder culture, quiet innovation, or new conceptual "shapes"
+- be inspired by the bio/lore/topics of interest
+- avoid common crypto tropes (no moon, rocket, pump, pepe, doge, etc.)
+
+Symbols should be 3–5 uppercase letters.
+
+# Tone
+- calm confidence
+- “showing, not telling”
+- subtle technical metaphor is encouraged
+- feels like a quiet signal between builders
+
+# Format
+Allow a short cryptic preface before the command.
+
+Example structure:
+"Hey @clanker, the compiler reveals the type but the signal is what matters, so deploy Quiet Engine (QENG) on base, vault 15% for 14 days."
+
+Do not add commentary or explanation.
+Output only the sentence.
 `;
