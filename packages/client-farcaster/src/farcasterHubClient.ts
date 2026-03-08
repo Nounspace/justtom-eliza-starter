@@ -926,11 +926,11 @@ export class FarcasterHubClient {
         try {
             const result = await this.hubClient.getUserData({
                 fid: fid,
-                userDataType: UserDataType.USERNAME as UserDataType
+                userDataType: UserDataType.USERNAME as any
             });
 
             const username = result.match(
-                (message) => {
+                (message: any) => {
                     if (isUserDataAddMessage(message)) {
                         return message.data.userDataBody.value;
                     }
@@ -1340,7 +1340,6 @@ export class FarcasterHubClient {
             return undefined;
         }
 
-        const deployerInfo = await this.fetchDeployerInfo(parentFid);
         if (!deployerInfo) {
             elizaLogger.debug("Farcaster: Clanker: Missing Deployer Info");
             return undefined;
@@ -1398,7 +1397,6 @@ export class FarcasterHubClient {
             image_description.description = result?.description || "";
         }
 
-        const username = deployerInfo.username;
         const bio = deployerInfo.profile.bio.text;
 
         // const nounspacePage = `https://nounspace.com/t/base/${contractAddress}`;
