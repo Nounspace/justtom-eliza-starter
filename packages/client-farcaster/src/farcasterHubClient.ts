@@ -1305,6 +1305,9 @@ export class FarcasterHubClient {
             "farcaster"
         );
 
+        const deployerInfo = await this.fetchDeployerInfo(cast.inReplyTo?.fid!);
+        const username = deployerInfo?.username || "unknown";
+
         const memory: Memory = {
             id: castUuid({
                 agentId: this.runtime.agentId,
@@ -1314,7 +1317,7 @@ export class FarcasterHubClient {
             userId: senderId,
             roomId: curationRoomId,
             content: {
-                text: cast.text,
+                text: `${cast.text} (by @${username})`,
                 source: "clanker-deploy",
                 hash: cast.hash,
                 url: `${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${cast.profile.username}/${cast.hash}`,
