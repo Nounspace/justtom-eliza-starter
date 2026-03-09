@@ -1305,6 +1305,8 @@ export class FarcasterHubClient {
             "farcaster"
         );
 
+        const contractAddress = this.extractContractAddress(cast.text);
+        const clankerSpaceLink = contractAddress ? `https://clanker.space/t/base/${contractAddress}` : "";
         const deployerInfo = await this.fetchDeployerInfo(cast.inReplyTo?.fid!);
         const username = deployerInfo?.username || "unknown";
 
@@ -1317,10 +1319,11 @@ export class FarcasterHubClient {
             userId: senderId,
             roomId: curationRoomId,
             content: {
-                text: `${cast.text} (by @${username})`,
+                text: `${cast.text} (by @${username}) [Link: ${clankerSpaceLink}]`,
                 source: "clanker-deploy",
                 hash: cast.hash,
                 url: `${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${cast.profile.username}/${cast.hash}`,
+                clankerSpaceLink,
             },
             createdAt: cast.timestamp.getTime(),
         };
@@ -1328,7 +1331,6 @@ export class FarcasterHubClient {
         await this.runtime.messageManager.addEmbeddingToMemory(memory);
         await this.runtime.messageManager.createMemory(memory);
 
-        const contractAddress = this.extractContractAddress(cast.text);
         if (!contractAddress) {
             elizaLogger.debug("Farcaster: Clanker: Missing Contract Address");
             return undefined;

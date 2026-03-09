@@ -108,7 +108,7 @@ Using your unique bio, lore, and the Context provided, identify the most interes
 Structure:
 1. Start with a lore-infused count observation (e.g., "Today I see {{totalCuratedCount}} tokens...", "Observed {{totalCuratedCount}} attempts at new shapes..."). 
 2. Weave the Vibe Analysis into a cohesive reflection on the current builder energy.
-3. List the top highlights (max 3) concisely using the pattern: "[TOKEN] by @user".
+3. List the top highlights (max 3) concisely using the pattern: "TOKEN: clanker.space link".
 4. End with a sharp, observant statement in your unique voice.
 
 Style: Professional, observant, builder-focused. No generic praise. Be extremely concise (max 280 chars total). No emojis. Show, don't tell.`;
@@ -226,7 +226,7 @@ Topics of Interest: {{topics}}
 # Task
 Generate a single-sentence Token deployment request directed to @clanker.
 
-The sentence should feel like a subtle signal from a quiet builder — confident, minimal, and slightly cryptic.
+The sentence should feel like a subtle signal from a quiet builder, confident, minimal, and slightly cryptic.
 
 # Requirements
 - Output exactly ONE sentence.

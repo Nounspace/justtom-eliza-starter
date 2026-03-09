@@ -67,9 +67,9 @@ export class FarcasterCurationManager {
                 const rankingContext = `
 # Task: Identify high-potential token launches from these Farcaster messages.
 # Instructions:
-1. Identify the top 2-3 "Gems". Return them in this format: "GEMS: TOKEN_NAME by @username".
+1. Identify the top 2-3 "Gems". Return them in this format: "GEMS: TOKEN_NAME by @username [Link: http://...]".
 2. Provide a 1-sentence "Sentiment" or "Reason" for this batch (e.g., "AI tokens are showing strong builder intent"). Return it as "SENTIMENT: [Reason]".
-- The message might look like "Token X deployed ... (by @user)". Use that @user.
+- The message might look like "Token X deployed ... (by @user) [Link: http://...]". Capture both.
 - Ignore noisy instructions about themes/fidgets.
 - No other text or commentary.
 
@@ -82,15 +82,19 @@ ${batchText}
                     modelClass: ModelClass.SMALL,
                 });
 
-                const lines = batchResult.split("\n").map(l => l.trim());
+                // Handle both newlines and common separators (|, ;) used by some models
+                const lines = batchResult
+                    .split(/[\n|;]/)
+                    .map(l => l.trim())
+                    .filter(l => l.length > 0);
 
                 const batchGems = lines
-                    .filter(l => l.startsWith("GEMS:"))
-                    .map(l => l.replace("GEMS:", "").trim());
+                    .filter(l => l.toUpperCase().startsWith("GEMS:"))
+                    .map(l => l.replace(/^GEMS:/i, "").trim());
 
                 const batchSentiment = lines
-                    .find(l => l.startsWith("SENTIMENT:"))
-                    ?.replace("SENTIMENT:", "").trim();
+                    .find(l => l.toUpperCase().startsWith("SENTIMENT:"))
+                    ?.replace(/^SENTIMENT:/i, "").trim();
 
                 if (batchSentiment) sentiments.push(batchSentiment);
                 finalists.push(...batchGems);
