@@ -103,7 +103,7 @@ Glowing geometric forms.
     /**
      * NEW IMAGE PROMPT GENERATOR (LLM powered)
      */
-    private async generateLLMImagePrompt(content: string): Promise<string> {
+    private async generateLLMImagePrompt(content: string, isCuration: boolean = false, isClankerPost: boolean = false): Promise<string> {
 
         const IMAGE_SYSTEM_PROMPT = `
 You are an expert in writing prompts for AI art generation.
@@ -118,7 +118,40 @@ Never include instructions like "create an image".
 
         elizaLogger.debug(`IMAGE_GENERATE_STYLE: "${STYLE}"`);
 
-        const IMAGE_PROMPT_INPUT = `
+        let input = "";
+        elizaLogger.log(`Generating ${isCuration ? "curation" : "clanker"} post image prompt`);
+
+        if (isClankerPost) {
+            input = `
+Generate a minimalist digital coin logo or futuristic token symbol prompt from the following content.
+The symbol should be the central focus, representing a new technical "shape" or concept.
+
+<content>
+${content}
+</content>
+
+<style>
+${STYLE}
+</style>
+
+Important Constraints:
+- Focus on abstract geometric patterns and technical metaphors.
+- Single central icon.
+
+Structure the prompt with:
+Main symbol
+Environment (minimalist/void/technical)
+Lighting (glowing/circuitry/geometric)
+Colors
+Mood
+Composition (perfectly centered)
+Style
+
+Limit the prompt to 50 words.
+Return ONLY the prompt text.
+`;
+        } else {
+            input = `
 Generate an image prompt from the following content.
 
 <content>
@@ -142,10 +175,11 @@ Style
 Limit the prompt to 50 words.
 Return ONLY the prompt text.
 `;
+        }
 
         const imagePrompt = await generateText({
             runtime: this.runtime,
-            context: IMAGE_PROMPT_INPUT,
+            context: input,
             modelClass: ModelClass.MEDIUM,
             customSystemPrompt: IMAGE_SYSTEM_PROMPT,
         });
@@ -157,7 +191,8 @@ Return ONLY the prompt text.
 
     public async generateAndUploadImage(
         content: string,
-        isCuration: boolean = false
+        isCuration: boolean = false,
+        isClankerPost: boolean = false
     ): Promise<string | undefined> {
 
         try {
@@ -168,6 +203,7 @@ Return ONLY the prompt text.
 
             const shouldGenerateImage =
                 isCuration ||
+                isClankerPost ||
                 (this.client.farcasterConfig.FARCASTER_POST_IMAGE &&
                     Math.random() < imageProbability);
 
@@ -177,10 +213,10 @@ Return ONLY the prompt text.
                 this.runtime.character.settings?.imageSettings || {};
 
             const imagePromptText =
-                await this.generateLLMImagePrompt(content);
+                await this.generateLLMImagePrompt(content, isCuration, isClankerPost);
 
-            elizaLogger.debug(`[Farcaster] Image prompt: ${imagePromptText}`);
-            elizaLogger.info(`[Farcaster] Generating image...`);
+            elizaLogger.debug(`[Farcaster][${this.runtime.character.name}] Image prompt: ${imagePromptText}`);
+            elizaLogger.info(`[Farcaster][${this.runtime.character.name}] Generating image...`);
 
             const imageResult = await generateImage({
                 prompt: imagePromptText,

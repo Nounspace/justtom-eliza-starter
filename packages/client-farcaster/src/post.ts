@@ -199,10 +199,11 @@ export class FarcasterPostManager {
             // Check for randomized Clanker token deployment
             const clankerProbability = this.client.farcasterConfig.FARCASTER_CLANKER_PROBABILITY;
             const isClankerPost = Math.random() < clankerProbability;
+            const isCuration = false;   //new cast not curation
 
             let selectedTemplate = postTemplate;
             if (isClankerPost) {
-                elizaLogger.warn(`[Farcaster] Clanker probability matched! Generating token deployment request.`);
+                elizaLogger.warn(`[Farcaster][${this.runtime.character.name}] Clanker probability matched! Generating token deployment request.`);
                 selectedTemplate = clankerTokenTemplate;
             } else {
                 const templates = [postTemplate, startWeekPostTemplate, midWeekPostTemplate, weekendPostTemplate];
@@ -253,7 +254,7 @@ export class FarcasterPostManager {
             }
 
             try {
-                const imageUrl = await this.imageManager.generateAndUploadImage(content, isClankerPost);
+                const imageUrl = await this.imageManager.generateAndUploadImage(content, isCuration, isClankerPost);
                 const postContent: any = { text: content };
                 if (imageUrl) postContent.attachments = [{ url: imageUrl }];
 
