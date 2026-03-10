@@ -37,11 +37,16 @@ export class FarcasterCurationManager {
                 "farcaster"
             );
 
-            // 1. Fetch deep memories from the dedicated curation room
+            // 1. Fetch memories from the dedicated curation room (last 24 hours only)
             const curationRoomId = stringToUuid("farcaster-clanker.space-room");
+            const now = Date.now();
+            const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
+
             const memories = await this.runtime.messageManager.getMemories({
                 roomId: curationRoomId,
                 count: 150,
+                start: twentyFourHoursAgo,
+                end: now,
             });
 
             // 2. Initial Filter: Filter out self and focus on signal
@@ -50,7 +55,12 @@ export class FarcasterCurationManager {
                 .map(m => m.content.text);
 
             const totalCuratedCount = rawSignals.length;
-            elizaLogger.info(`Processing ${totalCuratedCount} potential curation signals`);
+            elizaLogger.info(`Processing ${totalCuratedCount} potential curation signals (last 24h)`);
+
+            if (totalCuratedCount === 0) {
+                elizaLogger.warn("No curation signals in the last 24 hours, skipping post");
+                return;
+            }
 
             // 3. Score & Batch Curation
             const batchSize = 30;
