@@ -49,13 +49,30 @@ export class FarcasterCurationManager {
                 end: now,
             });
 
-            // 2. Initial Filter: Filter out self and focus on signal
-            const rawSignals = memories
-                .filter(m => m.userId !== this.runtime.agentId)
+            // 2. Spam Filter: Remove all tokens from users who deployed > 5 in 24h
+            const MAX_DEPLOYS_PER_USER = 5;
+            const nonSelfMemories = memories.filter(m => m.userId !== this.runtime.agentId);
+
+            const deployCountByUser = new Map<string, number>();
+            for (const m of nonSelfMemories) {
+                const uid = m.userId as string;
+                deployCountByUser.set(uid, (deployCountByUser.get(uid) || 0) + 1);
+            }
+
+            const spammers = new Set<string>();
+            for (const [uid, count] of deployCountByUser) {
+                if (count > MAX_DEPLOYS_PER_USER) {
+                    spammers.add(uid);
+                    elizaLogger.info(`Curation spam filter: Removing user ${uid} (${count} deploys in 24h)`);
+                }
+            }
+
+            const rawSignals = nonSelfMemories
+                .filter(m => !spammers.has(m.userId as string))
                 .map(m => m.content.text);
 
             const totalCuratedCount = rawSignals.length;
-            elizaLogger.info(`Processing ${totalCuratedCount} potential curation signals (last 24h)`);
+            elizaLogger.info(`Processing ${totalCuratedCount} curation signals (last 24h, ${spammers.size} spammers filtered)`);
 
             if (totalCuratedCount === 0) {
                 elizaLogger.warn("No curation signals in the last 24 hours, skipping post");
