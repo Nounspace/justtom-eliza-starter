@@ -239,7 +239,7 @@ export class FarcasterInteractionManager {
         );
 
         if (securityResponse === "STOP") {
-            elizaLogger.debug(
+            elizaLogger.info(
                 `Farcaster: Not responding to cast because Security/Spam filter returned BLOCK ${cast.profile.username}`
             );
 
@@ -279,15 +279,15 @@ export class FarcasterInteractionManager {
             modelClass: ModelClass.SMALL,
         });
 
-        elizaLogger.warn(
-            `Farcaster: Engagement/Context Filter: Result: ${shouldRespondResponse} | ${cast.profile.name} said: ${cast.text}`
-        );
+        // elizaLogger.info(
+        //     `Farcaster: Engagement/Context Filter: Result: ${shouldRespondResponse} | ${cast.profile.name} said: ${cast.text}`
+        // );
 
         if (
             shouldRespondResponse === "IGNORE" ||
             shouldRespondResponse === "STOP"
         ) {
-            elizaLogger.debug(
+            elizaLogger.info(
                 `Farcaster: Not responding to cast because shouldRespondContext was ${shouldRespondResponse}`
             );
             return;

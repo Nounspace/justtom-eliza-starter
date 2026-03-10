@@ -49,8 +49,8 @@ export const postTemplate =
     headerTemplate +
     `
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}.
-Try to write something totally different than previous posts. Rotate your content formatting: use micro-stories, soft leaks, builder shoutouts, cultural commentary, or product in action.
+Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}.
+Avoid repeating specific phrases or metaphors from the timeline. Rotate your content formatting: use micro-stories, soft leaks, builder shoutouts, cultural commentary, or product in action.
 Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
@@ -62,9 +62,9 @@ export const startWeekPostTemplate =
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on building, being heads down in the lab, product shifts, or soft leaks. 
+Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on building, being heads down in the lab, product shifts, or soft leaks. 
 Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
-Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+Avoid repeating specific phrases or metaphors from the timeline. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
@@ -75,9 +75,9 @@ export const midWeekPostTemplate =
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on concepts, community, free markets, and the inevitability of the future.
+Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on concepts, community, free markets, and the inevitability of the future.
 Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
-Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+Avoid repeating specific phrases or metaphors from the timeline. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
@@ -88,9 +88,9 @@ export const weekendPostTemplate =
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a single sentence post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) observing the timeline, hanging out in the community, and showing a chill vibe. Read the timeline provided and try to blend in with trending topics or vibes if relevant.
+Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) reflecting the vibe of the timeline, hanging out in the community, and showing a chill vibe. Read the timeline provided and try to blend in with trending topics or vibes if relevant.
 Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
-Try to write something totally different than previous posts. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+Avoid repeating specific phrases or metaphors from the timeline. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
 
 Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
 
