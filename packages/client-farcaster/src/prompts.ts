@@ -5,21 +5,27 @@ import {
 } from "@elizaos/core";
 import type { Cast } from "./types";
 
-export const formatCast = (cast: Cast) => {
+export const formatCast = (cast: any) => {
     return `ID: ${cast.hash}
-    From: ${cast.profile.name} (@${cast.profile.username})\nIn reply to: ${cast.inReplyTo ? cast.inReplyTo.fid : ""}
+    From: ${cast.author?.display_name || cast.profile?.name || "anon"} (@${cast.author?.username || cast.profile?.username || "unknown"})\nIn reply to: ${cast.parent_author?.fid || cast.inReplyTo?.fid || ""}
 Text: ${cast.text}`;
 };
 
 export const formatTimeline = (
     character: Character,
-    timeline: Cast[]
+    timeline: any[]
 ) => `# ${character.name}'s Timeline
 ${timeline.map(formatCast).join("\n")}
 `;
 
+export const formatFeed = (feed: any[]) => {
+    return `# Recent Feed Activity (Global Trending/For You)
+${feed.map(formatCast).join("\n")}
+`;
+};
+
 export const headerTemplate = `
-{{timeline}}
+{{feed}}
 
 # Knowledge
 {{knowledge}}
@@ -36,7 +42,7 @@ About {{agentName}} (@{{farcasterUsername}}):
 {{characterPostExamples}}`;
 
 export const leanPostHeaderTemplate = `
-{{timeline}}
+{{feed}}
 
 About {{agentName}} (@{{farcasterUsername}}):
 {{bio}}
@@ -49,11 +55,18 @@ export const postTemplate =
     headerTemplate +
     `
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly), from the perspective of {{agentName}}.
-Avoid repeating specific phrases or metaphors from the timeline. Rotate your content formatting: use micro-stories, soft leaks, builder shoutouts, cultural commentary, or product in action.
-Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly).
+Respond to the current community vibe in the {{feed}} with a unique perspective. 
 
-Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
+# CRITICAL RULES
+1. LIMIT: EXACTLY 1-2 SHORT SENTENCES. NEVER MORE.
+2. NO SLOP: BAN words: "delve", "tapestry", "vibrant", "crucial", "seamless", "landscape", "showcase", "embark", "meticulous", "humming", "innovation", "lab".
+3. HUMAN: Vary sentence length (Short + Long). Have a specific opinion. Be slightly messy/casual.
+4. NO FILLER: NO "mark a pivotal moment", "the future looks bright", "it's worth noting", "serves as a testament".
+5. NO EMOJIS.
+6. PERSIST: Ignore character lore if it makes you sound like a chatbot. Priorities humanness over lore-accuracy.
+
+Use \\n\\n (double spaces) between statements.`;
 
 export const startWeekPostTemplate =
     leanPostHeaderTemplate +
@@ -62,11 +75,18 @@ export const startWeekPostTemplate =
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on building, being heads down in the lab, product shifts, or soft leaks. 
-Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
-Avoid repeating specific phrases or metaphors from the timeline. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on building or soft leaks. 
+Respond to the {{feed}} and any interesting builder trends.
 
-Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
+# CRITICAL RULES
+1. LIMIT: EXACTLY 1-2 SHORT SENTENCES. NEVER MORE.
+2. NO SLOP: BAN words: "delve", "tapestry", "vibrant", "crucial", "seamless", "landscape", "showcase", "humming", "innovation", "lab".
+3. HUMAN: Vary sentence length. Be opinionated. Skip the poetic fluff.
+4. NO FILLER: NO "In order to", "serves as a testament", "it is worth noting", "marking a pivotal moment".
+5. NO EMOJIS.
+6. PERSIST: Priorities humanness over lore-accuracy.
+
+Use \\n\\n (double spaces) between statements.`;
 
 export const midWeekPostTemplate =
     leanPostHeaderTemplate +
@@ -75,11 +95,18 @@ export const midWeekPostTemplate =
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on concepts, community, free markets, and the inevitability of the future.
-Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
-Avoid repeating specific phrases or metaphors from the timeline. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) focusing on concepts, community, or the future.
+Look at the {{feed}} and anchor your thoughts in current community discussions.
 
-Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
+# CRITICAL RULES
+1. LIMIT: EXACTLY 1-2 SHORT SENTENCES. NEVER MORE.
+2. NO SLOP: BAN words: "delve", "tapestry", "vibrant", "crucial", "seamless", "landscape", "showcase", "humming", "innovation", "lab".
+3. HUMAN: Vary sentence length. Be opinionated. 
+4. NO FILLER: NO "it is worth noting", "serves as a testament", "the future looks bright".
+5. NO EMOJIS.
+6. PERSIST: Priorities humanness over lore-accuracy.
+
+Use \\n\\n (double spaces) between statements.`;
 
 export const weekendPostTemplate =
     leanPostHeaderTemplate +
@@ -88,11 +115,18 @@ export const weekendPostTemplate =
 Current Day: {{weekday}}
 
 # Task: Generate a post in the voice and style of {{agentName}}, aka @{{farcasterUsername}}
-Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) reflecting the vibe of the timeline, hanging out in the community, and showing a chill vibe. Read the timeline provided and try to blend in with trending topics or vibes if relevant.
-Use the current day as subtle background context for the vibe, but do not explicitly mention the day.
-Avoid repeating specific phrases or metaphors from the timeline. Show, don't tell. Project calm confidence and quiet momentum. Do not add commentary or acknowledge this request.
+Write a Farcaster post that is {{adjective}} about {{topic}} (without mentioning {{topic}} directly) reflecting the vibe of the community.
+Read the {{feed}} and blend in with trending topics or vibes.
 
-Your response should not contain any questions. Brief, concise statements only. No emojis. Use \\n\\n (double spaces) between statements.`;
+# CRITICAL RULES
+1. LIMIT: EXACTLY 1-2 SHORT SENTENCES. NEVER MORE.
+2. NO SLOP: BAN words: "delve", "tapestry", "vibrant", "crucial", "seamless", "landscape", "showcase", "humming", "innovation", "lab".
+3. HUMAN: Be chill. Acknowledge messiness. No sterile structure.
+4. NO FILLER: NO "serves as a testament", "it is worth noting".
+5. NO EMOJIS.
+6. PERSIST: Priorities humanness over lore-accuracy.
+
+Use \\n\\n (double spaces) between statements.`;
 
 export const curationPostTemplate =
     headerTemplate +

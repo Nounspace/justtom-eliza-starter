@@ -8,7 +8,7 @@ import {
 } from "@elizaos/core";
 
 import type { FarcasterClient } from "./client";
-import { formatTimeline, postTemplate, startWeekPostTemplate, midWeekPostTemplate, weekendPostTemplate, clankerTokenTemplate } from "./prompts";
+import { formatTimeline, formatFeed, postTemplate, startWeekPostTemplate, midWeekPostTemplate, weekendPostTemplate, clankerTokenTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
 import { sendChannelCast } from "./actions";
@@ -177,10 +177,19 @@ export class FarcasterPostManager {
 
             const { timeline } = await this.client.getTimeline({ fid: this.fid, pageSize: 10 });
             this.cache.set("farcaster/timeline", timeline);
-            const formattedHomeTimeline = formatTimeline(this.runtime.character, timeline);
+            
+            const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
+
+            // Fetch either Global Trending or Personalized "For You" feed
+            // Mon/Wed/Fri: For You (following)
+            // Tue/Thu/Sat/Sun: Global Trending
+            const usePersonalizedFeed = ['Monday', 'Wednesday', 'Friday'].includes(weekday);
+            elizaLogger.info(`[Farcaster] Fetching ${usePersonalizedFeed ? "For You" : "Global Trending"} feed for ${weekday}`);
+            
+            const { timeline: feedResponse } = await this.client.getFeed(usePersonalizedFeed ? this.fid : undefined);
+            const formattedFeed = formatFeed(feedResponse.casts);
 
             const generateRoomId = stringToUuid("farcaster_generate_room");
-            const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
 
             const state = await this.runtime.composeState(
                 {
@@ -191,7 +200,7 @@ export class FarcasterPostManager {
                 },
                 {
                     farcasterUserName: profile.username,
-                    timeline: formattedHomeTimeline,
+                    feed: formattedFeed,
                     weekday,
                 }
             );
