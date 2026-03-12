@@ -49,26 +49,33 @@ export class FarcasterCurationManager {
                 end: now,
             });
 
-            // 2. Spam Filter: Remove all tokens from users who deployed > 5 in 24h
+            // 2. Spam Filter: Remove all tokens from deployers who launched > 5 in 24h
+            //    Note: userId is always Clanker's FID (the bot posting deploys), so we
+            //    extract the actual deployer from the text pattern "(by @username)"
             const MAX_DEPLOYS_PER_USER = 5;
             const nonSelfMemories = memories.filter(m => m.userId !== this.runtime.agentId);
 
+            const extractDeployer = (text: string): string => {
+                const match = text?.match(/\(by @([^)]+)\)/);
+                return match ? match[1] : "unknown";
+            };
+
             const deployCountByUser = new Map<string, number>();
             for (const m of nonSelfMemories) {
-                const uid = m.userId as string;
-                deployCountByUser.set(uid, (deployCountByUser.get(uid) || 0) + 1);
+                const deployer = extractDeployer(m.content.text);
+                deployCountByUser.set(deployer, (deployCountByUser.get(deployer) || 0) + 1);
             }
 
             const spammers = new Set<string>();
-            for (const [uid, count] of deployCountByUser) {
+            for (const [deployer, count] of deployCountByUser) {
                 if (count > MAX_DEPLOYS_PER_USER) {
-                    spammers.add(uid);
-                    elizaLogger.info(`Curation spam filter: Removing user ${uid} (${count} deploys in 24h)`);
+                    spammers.add(deployer);
+                    elizaLogger.info(`Curation spam filter: Removing @${deployer} (${count} deploys in 24h)`);
                 }
             }
 
             const rawSignals = nonSelfMemories
-                .filter(m => !spammers.has(m.userId as string))
+                .filter(m => !spammers.has(extractDeployer(m.content.text)))
                 .map(m => m.content.text);
 
             const totalCuratedCount = rawSignals.length;
