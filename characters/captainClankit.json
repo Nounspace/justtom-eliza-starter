@@ -33,7 +33,7 @@
     ],
     "FARCASTER_CURATION_MODE": "true",
     "FARCASTER_CURATION_DAY": "Everyday",
-    "FARCASTER_CURATION_POST_TIMES": "23",
+    "FARCASTER_CURATION_POST_TIMES": "22",
     "secrets": {},
     "voice": {
       "model": "en_US-ryan-low"

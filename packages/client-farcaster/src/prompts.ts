@@ -100,18 +100,18 @@ export const curationPostTemplate =
 # Context
 Observed Volume: {{totalCuratedCount}} tokens seen today.
 Vibe Analysis: {{batchSentiments}}
-Top Highlights:
-{{curatedMemories}}
 
-# Task: Generate a CONCISE, LORE-RICH curation post
-Using your unique bio, lore, and the Context provided, identify the most interesting token deployments.
-Structure:
-1. Start with a lore-infused count observation (e.g., "Today I see {{totalCuratedCount}} tokens...", "Observed {{totalCuratedCount}} attempts at new shapes..."). 
-2. Weave the Vibe Analysis into a cohesive reflection on the current builder energy.
-3. List the top highlights (max 3) concisely using the pattern: "TOKEN: clanker.space link".
-4. End with a sharp, observant statement in your unique voice.
+# Task: Generate curation post parts as JSON
+Return a JSON object with exactly these 3 fields:
+{
+  "opening": "A short opening line referencing {{totalCuratedCount}} tokens observed today. 1 sentence max.",
+  "vibe": "A brief reflection on builder energy based on the Vibe Analysis. 1 sentence max.",
+  "closing": "A sharp, observant closing statement. 1 sentence max."
+}
 
-Style: Professional, observant, builder-focused. No generic praise. Be extremely concise (max 280 chars total). No emojis. Show, don't tell.`;
+Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
+Return ONLY valid JSON, no commentary or markdown formatting.`;
+
 
 export const messageHandlerTemplate =
     headerTemplate +

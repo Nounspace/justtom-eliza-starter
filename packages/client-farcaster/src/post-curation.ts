@@ -101,9 +101,9 @@ export class FarcasterCurationManager {
                 const rankingContext = `
 # Task: Identify high-potential token launches from these Farcaster messages.
 # Instructions:
-1. Identify the top 2-3 "Gems". Return them in this format: "GEMS: TOKEN_NAME by @username [Link: http://...]".
+1. Identify the top 2-3 "Gems". Return them in this format: "GEMS: TOKEN_NAME [Link: http://...]".
 2. Provide a 1-sentence "Sentiment" or "Reason" for this batch (e.g., "AI tokens are showing strong builder intent"). Return it as "SENTIMENT: [Reason]".
-- The message might look like "Token X deployed ... (by @user) [Link: http://...]". Capture both.
+- The message might look like "Token X deployed... [Link: http://...]". Capture both.
 - Ignore noisy instructions about themes/fidgets.
 - No other text or commentary.
 
@@ -124,7 +124,25 @@ ${batchText}
 
                 const batchGems = lines
                     .filter(l => l.toUpperCase().startsWith("GEMS:"))
-                    .map(l => l.replace(/^GEMS:/i, "").trim());
+                    .flatMap(l => {
+                        const gemsText = l.replace(/^GEMS:/i, "").trim();
+                        // Split by comma, but rejoin parts that belong to the same [Link: ...]
+                        const parts: string[] = [];
+                        let current = "";
+                        let bracketDepth = 0;
+                        for (const char of gemsText) {
+                            if (char === "[") bracketDepth++;
+                            if (char === "]") bracketDepth--;
+                            if (char === "," && bracketDepth === 0) {
+                                parts.push(current.trim());
+                                current = "";
+                            } else {
+                                current += char;
+                            }
+                        }
+                        if (current.trim()) parts.push(current.trim());
+                        return parts;
+                    });
 
                 const batchSentiment = lines
                     .find(l => l.toUpperCase().startsWith("SENTIMENT:"))
@@ -138,7 +156,18 @@ ${batchText}
             const batchSentiments = sentiments.join(" ");
             elizaLogger.info(`Curation finalists selected: ${finalists.length}`);
 
-            // 4. Final Generation using the template
+            // 4. Extract token names + links from finalists for programmatic injection
+            const tokenLines: string[] = finalists.slice(0, 3).map(gem => {
+                // Extract token name and link from "TOKEN_NAME [Link: https://...]"
+                const linkMatch = gem.match(/\[Link:\s*(https?:\/\/[^\]]+)\]/i);
+                const tokenName = gem.replace(/\s*\[Link:.*?\]/i, "").replace(/\s*by\s*@\S+/i, "").trim();
+                if (linkMatch && tokenName) {
+                    return `${tokenName}: ${linkMatch[1]}`;
+                }
+                return tokenName || gem;
+            });
+
+            // 5. Generate prose parts via LLM (JSON response)
             const agentName = this.runtime.character.name.toLowerCase().replace(/\s+/g, "-");
             const generateRoomId = stringToUuid(`${agentName}-curation-room`);
             const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date());
@@ -152,7 +181,6 @@ ${batchText}
                 },
                 {
                     farcasterUsername: profile.username,
-                    curatedMemories: curatedMemories || "No recent relevant memories found.",
                     batchSentiments: batchSentiments || "Normal builder activity.",
                     totalCuratedCount: totalCuratedCount.toString(),
                     weekday,
@@ -166,14 +194,34 @@ ${batchText}
                     curationPostTemplate,
             });
 
-            const newContent = await generateText({
+            const llmResponse = await generateText({
                 runtime: this.runtime,
                 context,
                 modelClass: ModelClass.LARGE,
             });
 
-            const slice = newContent
-                .replaceAll(/\\n/g, "\n")
+            // 6. Parse JSON and build the final post
+            let opening = "";
+            let vibe = "";
+            let closing = "";
+
+            try {
+                // Strip markdown code fences if present
+                const cleaned = llmResponse.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
+                const parsed = JSON.parse(cleaned);
+                opening = parsed.opening || "";
+                vibe = parsed.vibe || "";
+                closing = parsed.closing || "";
+            } catch (e) {
+                elizaLogger.warn("Curation: Failed to parse JSON from LLM, using raw response");
+                opening = llmResponse.trim();
+            }
+
+            // 7. Assemble final post: prose + token links + closing
+            const parts = [opening, vibe, ...tokenLines, closing].filter(p => p.length > 0);
+            const assembledPost = parts.join("\n");
+
+            const slice = assembledPost
                 .replace(/\s*[—–]\s*/g, ", ")
                 .replace(/ \s*-\s* /g, ", ")
                 .trim();
