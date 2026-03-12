@@ -217,8 +217,13 @@ ${batchText}
             }
 
             // 7. Assemble final post: prose + token links + closing
-            const parts = [opening, vibe, ...tokenLines, closing].filter(p => p.length > 0);
-            const assembledPost = parts.join("\n");
+            const proseTop = [opening, vibe].filter(p => p.length > 0).join("\n");
+            const tokenBlock = tokenLines.join("\n");
+            const assembledPost = [proseTop, "", tokenBlock, "", closing].filter((p, i) => {
+                // Keep empty strings (blank lines) between sections, but not at start/end
+                if (p === "") return i > 0 && i < 4;
+                return p.length > 0;
+            }).join("\n");
 
             const slice = assembledPost
                 .replace(/\s*[—–]\s*/g, ", ")
