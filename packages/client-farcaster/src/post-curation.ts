@@ -182,7 +182,6 @@ ${batchText}
                 {
                     farcasterUsername: profile.username,
                     batchSentiments: batchSentiments || "Normal builder activity.",
-                    totalCuratedCount: totalCuratedCount.toString(),
                     weekday,
                 }
             );

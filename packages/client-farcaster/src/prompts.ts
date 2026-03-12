@@ -98,18 +98,18 @@ export const curationPostTemplate =
     headerTemplate +
     `
 # Context
-Observed Volume: {{totalCuratedCount}} tokens seen today.
 Vibe Analysis: {{batchSentiments}}
 
 # Task: Generate curation post parts as JSON
 Return a JSON object with exactly these 3 fields:
 {
-  "opening": "A short opening line referencing {{totalCuratedCount}} tokens observed today. 1 sentence max.",
-  "vibe": "A brief reflection on builder energy based on the Vibe Analysis. 1 sentence max.",
+  "opening": "A short opening line about today's token activity and what caught your attention. 1 sentence max.",
+  "vibe": "A brief reflection on builder energy and sentiment based on the Vibe Analysis. 1 sentence max.",
   "closing": "A sharp, observant closing statement. 1 sentence max."
 }
 
 Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
+Do NOT mention specific token counts or numbers.
 Return ONLY valid JSON, no commentary or markdown formatting.`;
 
 
