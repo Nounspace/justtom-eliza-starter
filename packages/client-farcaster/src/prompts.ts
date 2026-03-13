@@ -143,9 +143,11 @@ Return a JSON object with exactly these 3 fields:
 }
 
 Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
+
 CRITICAL RULES:
 - Do NOT mention specific token counts or numbers.
 - Do NOT hallucinate token names or users (e.g., absolutely no "TOKEN by @user"). Make the prose about the *general* activity.
+
 Return ONLY valid JSON, no commentary or markdown formatting.`;
 
 
