@@ -111,6 +111,11 @@ async function main() {
         .map(m => m.content.text);
 
     console.log(`Processing ${rawSignals.length} valid signals (after filtering ${spammers.size} spammers).`);
+    
+    if (rawSignals.length > 0) {
+        console.log("\n--- Valid Signals sent to LLM ---");
+        rawSignals.forEach((s, i) => console.log(`${i + 1}. ${s}`));
+    }
 
     if (rawSignals.length === 0) return;
 
@@ -136,6 +141,11 @@ ${batchText}
     });
 
     const rankText = rankRes.choices[0].message.content || "";
+    
+    console.log("\n--- Raw LLM Ranking Response ---");
+    console.log(rankText);
+    console.log("--------------------------------\n");
+
     const lines = rankText.split(/[\n|;]/).map(l => l.trim()).filter(l => l.length > 0);
 
     const batchGems = lines
