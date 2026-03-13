@@ -8,7 +8,7 @@ import {
 } from "@elizaos/core";
 
 import type { FarcasterClient } from "./client";
-import { curationPostTemplate } from "./prompts";
+import { curationPostTemplate, curationStatsTemplate } from "./prompts";
 import { castUuid, MAX_CAST_LENGTH } from "./utils";
 import { createCastMemory } from "./memory";
 import { sendCast, sendChannelCast } from "./actions";
@@ -86,7 +86,71 @@ export class FarcasterCurationManager {
                 return;
             }
 
-            // 3. Score & Batch Curation
+            // Phase 1: Stats Post
+            // ---------------------
+            const today = new Date().toISOString().split('T')[0];
+            const deployCountStr = await this.runtime.cacheManager.get<string>(`farcaster/stats/${today}/total_deployments`) || "0";
+            const lowRepCountStr = await this.runtime.cacheManager.get<string>(`farcaster/stats/${today}/low_reputation_filtered`) || "0";
+
+            const statsState = await this.runtime.composeState(
+                {
+                    roomId: curationRoomId,
+                    userId: this.runtime.agentId,
+                    agentId: this.runtime.agentId,
+                    content: { text: "", action: "" },
+                },
+                {
+                    farcasterUsername: profile.username,
+                    totalDeployments: deployCountStr,
+                    lowRepFiltered: lowRepCountStr,
+                    engagedGems: totalCuratedCount.toString(),
+                }
+            );
+
+            const statsContext = composeContext({
+                state: statsState,
+                template: curationStatsTemplate,
+            });
+
+            const statsResponse = await generateText({
+                runtime: this.runtime,
+                context: statsContext,
+                modelClass: ModelClass.SMALL,
+            });
+
+            const statsContent = statsResponse.replace(/^"|"$/g, '').trim().slice(0, MAX_CAST_LENGTH);
+
+            // Update last curation post timestamp in cache immediately so we don't trigger again
+            await this.runtime.cacheManager.set("farcaster/" + this.fid + "/lastCurationPost", {
+                timestamp: Date.now(),
+            });
+
+            if (this.runtime.getSetting("FARCASTER_DRY_RUN") === "true") {
+                elizaLogger.info(`DRY RUN: Stats cast would be: ${statsContent}`);
+            } else {
+                try {
+                    await sendCast({
+                        client: this.client,
+                        runtime: this.runtime,
+                        signerUuid: this.signerUuid,
+                        roomId: curationRoomId,
+                        content: { text: statsContent },
+                        profile,
+                    });
+                    elizaLogger.info(`Successfully posted curation stats preamble.`);
+                } catch (error) {
+                    elizaLogger.error("Failed to post curation stats cast:", error);
+                }
+            }
+
+            // Wait 10 minutes before ranking and posting the actual Gems
+            elizaLogger.info("Waiting 10 minutes before ranking and posting final curation gems...");
+            if (this.runtime.getSetting("FARCASTER_DRY_RUN") !== "true") {
+                await new Promise(resolve => setTimeout(resolve, 600000)); // 600000ms = 10 mins
+            }
+
+            // Phase 2: Score & Batch Curation gems
+            // ---------------------
             const batchSize = 30;
             const batches: string[][] = [];
             for (let i = 0; i < rawSignals.length; i += batchSize) {
@@ -231,11 +295,6 @@ ${batchText}
                 .trim();
 
             let content = slice.slice(0, MAX_CAST_LENGTH);
-
-            // Update last curation post timestamp in cache
-            await this.runtime.cacheManager.set("farcaster/" + this.fid + "/lastCurationPost", {
-                timestamp: Date.now(),
-            });
 
             if (content.length > MAX_CAST_LENGTH) content = content.slice(0, content.lastIndexOf("\n"));
             if (content.length > MAX_CAST_LENGTH) content = content.slice(0, content.lastIndexOf("."));

@@ -1329,46 +1329,15 @@ export class FarcasterHubClient {
             return undefined;
         }
 
-        // Save to curation memory room for later curation (Captain Clankit feature)
-        // This ensures the agent captures high-quality signals for the weekly curation summary
-        const curationRoomId = stringToUuid("farcaster-clanker.space-room");
-        await this.runtime.ensureRoomExists(curationRoomId);
-        await this.runtime.ensureParticipantInRoom(this.runtime.agentId, curationRoomId);
-
-        const senderId = stringToUuid(cast.authorFid.toString());
-        await this.runtime.ensureConnection(
-            senderId,
-            curationRoomId,
-            cast.profile.username,
-            cast.profile.name,
-            "farcaster"
-        );
+        // Track total deployments seen today
+        const today = new Date().toISOString().split('T')[0];
+        const deployCountStr = await this.runtime.cacheManager.get<string>(`farcaster/stats/${today}/total_deployments`) || "0";
+        await this.runtime.cacheManager.set(`farcaster/stats/${today}/total_deployments`, (parseInt(deployCountStr) + 1).toString());
 
         const contractAddress = this.extractContractAddress(cast.text);
         const clankerSpaceLink = contractAddress ? `https://clanker.space/t/base/${contractAddress}` : "";
         const deployerInfo = await this.fetchDeployerInfo(cast.inReplyTo?.fid!);
         const username = deployerInfo?.username || "unknown";
-
-        const memory: Memory = {
-            id: castUuid({
-                agentId: this.runtime.agentId,
-                hash: cast.hash,
-            }),
-            agentId: this.runtime.agentId,
-            userId: senderId,
-            roomId: curationRoomId,
-            content: {
-                text: `${cast.text} (by @${username}) [Link: ${clankerSpaceLink}]`,
-                source: "clanker-deploy",
-                hash: cast.hash,
-                url: `${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${cast.profile.username}/${cast.hash}`,
-                clankerSpaceLink,
-            },
-            createdAt: cast.timestamp.getTime(),
-        };
-
-        await this.runtime.messageManager.addEmbeddingToMemory(memory);
-        await this.runtime.messageManager.createMemory(memory);
 
         if (!contractAddress) {
             elizaLogger.debug("Farcaster: Clanker: Missing Contract Address");
@@ -1389,6 +1358,9 @@ export class FarcasterHubClient {
         const score = deployerInfo.score;
         if (score === undefined || score < this.MIN_NEYNAR_SCORE) {
             elizaLogger.debug(`Farcaster: Clanker: Score Low for "${deployerInfo.username}": ${score}`);
+            // Track low reputation filter
+            const lowRepCountStr = await this.runtime.cacheManager.get<string>(`farcaster/stats/${today}/low_reputation_filtered`) || "0";
+            await this.runtime.cacheManager.set(`farcaster/stats/${today}/low_reputation_filtered`, (parseInt(lowRepCountStr) + 1).toString());
             return undefined;
         } else {
             elizaLogger.debug(`Farcaster: Clanker: Score Ok for "${deployerInfo.username}": ${score}`);
@@ -1509,6 +1481,41 @@ export class FarcasterHubClient {
 
         elizaLogger.debug("Farcaster: Reply: " + theTokenReply);
         this.publishToFarcaster(theTokenReply, options);
+
+        // Save successfully engaged deployment to curation memory room for the daily curation summary
+        const curationRoomId = stringToUuid("farcaster-clanker.space-room");
+        await this.runtime.ensureRoomExists(curationRoomId);
+        await this.runtime.ensureParticipantInRoom(this.runtime.agentId, curationRoomId);
+
+        const senderId = stringToUuid(cast.authorFid.toString());
+        await this.runtime.ensureConnection(
+            senderId,
+            curationRoomId,
+            cast.profile.username,
+            cast.profile.name,
+            "farcaster"
+        );
+
+        const memory: Memory = {
+            id: castUuid({
+                agentId: this.runtime.agentId,
+                hash: cast.hash,
+            }),
+            agentId: this.runtime.agentId,
+            userId: senderId,
+            roomId: curationRoomId,
+            content: {
+                text: `${cast.text} (by @${username}) [Link: ${clankerSpaceLink}]`,
+                source: "clanker-deploy",
+                hash: cast.hash,
+                url: `${this.client.farcasterConfig?.FAVORITE_FRONTEND}/${cast.profile.username}/${cast.hash}`,
+                clankerSpaceLink,
+            },
+            createdAt: cast.timestamp.getTime(),
+        };
+
+        await this.runtime.messageManager.addEmbeddingToMemory(memory);
+        await this.runtime.messageManager.createMemory(memory);
     }
 
     async filterImageUrls(urls: string[]): Promise<string[]> {

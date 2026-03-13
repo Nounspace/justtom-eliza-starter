@@ -150,6 +150,24 @@ CRITICAL RULES:
 
 Return ONLY valid JSON, no commentary or markdown formatting.`;
 
+export const curationStatsTemplate =
+    headerTemplate +
+    `
+# Context
+Today's Scan Results:
+Total Deployments Seen: {{totalDeployments}}
+Low Reputation Filtered: {{lowRepFiltered}}
+Engaged (Valid Gems): {{engagedGems}}
+
+# Task: Generate a "Captain's Log" style daily stats post.
+Write a 1-2 sentence Farcaster post reporting these numbers to the community.
+Mention that the daily curation Gems report is coming up shortly.
+
+Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
+Use the exact numbers provided.
+
+Example: "Scanning deployments today: 45 new contracts seen. 12 low-reputation deployments filtered out, and engaged with 8 strong builders. Standby for today's top gems report."`;
+
 
 export const messageHandlerTemplate =
     headerTemplate +

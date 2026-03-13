@@ -119,6 +119,31 @@ async function main() {
 
     if (rawSignals.length === 0) return;
 
+    // Step 1.5: Generate Stats Post
+    console.log("\nGenerating Stats Preamble...");
+    const statsPrompt = `
+# Context
+Today's Scan Results:
+Total Deployments Seen: 80 (Simulated)
+Low Reputation Filtered: ${spammers.size}
+Engaged (Valid Gems): ${rawSignals.length}
+
+# Task: Generate a "Captain's Log" style daily stats post.
+Write a 1-2 sentence Farcaster post reporting these numbers to the community.
+Mention that the daily curation Gems report is coming up shortly.
+
+Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
+Use the exact numbers provided.
+`;
+    const statsRes = await groq.chat.completions.create({
+        messages: [{ role: "user", content: statsPrompt }],
+        model,
+    });
+    
+    console.log("--- STATS PREAMBLE POST ---");
+    console.log(statsRes.choices[0].message.content?.replace(/^"|"$/g, '').trim());
+    console.log("---------------------------\n");
+
     // Step 2: Rank the signals into Gems using Groq
     console.log("\nRanking signals (Extracting top 3 gems)...");
     const batchText = rawSignals.map(t => `- ${t}`).join("\n");
