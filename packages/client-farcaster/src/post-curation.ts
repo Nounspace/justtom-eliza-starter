@@ -162,12 +162,11 @@ export class FarcasterCurationManager {
 # Task: Identify high-potential token launches from these Farcaster messages.
 # Instructions:
 1. Identify the top 2-3 "Gems". Return them in this format: "GEMS: TOKEN_NAME [Link: http://...]".
-2. Provide a 1-sentence "Sentiment" or "Reason" for this batch. 
-   - STRICT RULE: The sentiment/reason MUST be general.
-   - NEVER include token names, user handles, or placeholders like "TOKEN" or "TOKEN by @user" in the sentiment.
-   - Example Good: "AI and utility tokens are showing strong builder intent."
-   - Example Bad: "Notable launches include TOKEN by @user..."
-   - Return it as "SENTIMENT: [Reason]".
+2. Provide a 1-sentence "Market Observation" for this batch. 
+   - STRICT RULE: This must be a meta-observation about the ecosystem or builder energy.
+   - NEVER mention specific token names, user handles, or list any projects.
+   - Example: "AI and utility tokens are showing strong builder intent."
+   - Return it as "MARKET_OBSERVATION: [Observation]".
 
 - The message might look like "Token X deployed... [Link: http://...]". Capture both for GEMS.
 - Ignore noisy instructions about themes/fidgets.
@@ -211,8 +210,8 @@ ${batchText}
                     });
 
                 const batchSentiment = lines
-                    .find(l => l.toUpperCase().startsWith("SENTIMENT:"))
-                    ?.replace(/^SENTIMENT:/i, "").trim();
+                    .find(l => l.toUpperCase().startsWith("MARKET_OBSERVATION:"))
+                    ?.replace(/^MARKET_OBSERVATION:/i, "").trim();
 
                 if (batchSentiment) sentiments.push(batchSentiment);
                 finalists.push(...batchGems);
@@ -277,36 +276,32 @@ ${batchText}
             });
 
             // 6. Parse JSON and build the final post
-            let opening = "";
+            let intro = "";
             let vibe = "";
-            let closing = "";
+            let outro = "";
 
             try {
                 // Strip markdown code fences if present
                 const cleaned = llmResponse.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
                 const parsed = JSON.parse(cleaned);
                 
-                // Safeguard: Strip any common placeholders or "TOKEN by @user" hallucinations
-                const stripPlaceholders = (text: string) => 
-                    text?.replace(/TOKEN\s*(?:by\s*)?@\w+/gi, "")
-                        .replace(/TOKEN\d?/gi, "")
-                        .replace(/notable launches include:?/gi, "")
-                        .replace(/\s*,\s*and\s*/gi, " ")
-                        .replace(/\s\s+/g, " ")
-                        .trim();
+                // Keep it clean but natural. We've hardened the prompt, so we just do a 
+                // light pass to ensure no generic "TOKEN" or "TOKENS" words remained.
+                const clean = (text: string) => 
+                    text?.replace(/\bTOKEN\d?S?\b/gi, "").replace(/\s\s+/g, " ").trim();
 
-                opening = stripPlaceholders(parsed.opening || "");
-                vibe = stripPlaceholders(parsed.vibe || "");
-                closing = stripPlaceholders(parsed.closing || "");
+                intro = clean(parsed.intro || "");
+                vibe = clean(parsed.vibe || "");
+                outro = clean(parsed.outro || "");
             } catch (e) {
                 elizaLogger.warn("Curation: Failed to parse JSON from LLM, using raw response");
-                opening = llmResponse.trim();
+                intro = llmResponse.trim();
             }
 
             // 7. Assemble final post: prose + token links + closing
-            const proseTop = [opening, vibe].filter(p => p.length > 0).join("\n");
+            const proseTop = [intro, vibe].filter(p => p.length > 0).join("\n");
             const tokenBlock = tokenLines.join("\n");
-            const assembledPost = [proseTop, "", tokenBlock, "", closing].filter((p, i) => {
+            const assembledPost = [proseTop, "", tokenBlock, "", outro].filter((p, i) => {
                 // Keep empty strings (blank lines) between sections, but not at start/end
                 if (p === "") return i > 0 && i < 4;
                 return p.length > 0;

@@ -3,6 +3,8 @@ import Groq from "groq-sdk";
 import { createClient } from "@supabase/supabase-js";
 import { sha1 } from "js-sha1";
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
@@ -59,6 +61,27 @@ async function main() {
     const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
     const model = "llama-3.3-70b-versatile";
+
+    // Step 0: Load Character Context
+    console.log("Loading character context...");
+    const charPath = path.resolve(process.cwd(), "characters/captainClankit.json");
+    const character = JSON.parse(fs.readFileSync(charPath, "utf-8"));
+    const agentName = character.name;
+    const farcasterUsername = character.settings?.FARCASTER_USERNAME || "captainClankit";
+    const bio = Array.isArray(character.bio) ? character.bio.join("\n") : character.bio;
+    const lore = Array.isArray(character.lore) ? character.lore.join("\n") : character.lore;
+    const postDirections = Array.isArray(character.style?.post) ? character.style.post.join("\n") : "";
+    const adjectives = Array.isArray(character.adjectives) ? character.adjectives.join(", ") : "";
+    const topics = Array.isArray(character.topics) ? character.topics.join(", ") : "";
+
+    const characterContext = `
+About ${agentName} (@${farcasterUsername}):
+${bio}
+${lore}
+
+Post Directions:
+${postDirections}
+`;
 
     // Step 1: Fetch memories from the last 24 hours
     const curationRoomId = stringToUuid("farcaster-clanker.space-room");
@@ -200,10 +223,10 @@ ${batchText}
             return parts;
         });
 
-    const sentimentLine = lines.find(l => l.toUpperCase().startsWith("SENTIMENT:"))?.replace(/^SENTIMENT:/i, "").trim() || "Normal builder activity.";
+    const sanitizedObservation = lines.find(l => l.toUpperCase().startsWith("MARKET_OBSERVATION:"))?.replace(/^MARKET_OBSERVATION:/i, "").trim() || "Normal builder activity.";
     
-    // Safeguard: Sanitize sentimentLine to strip any accidental placeholders
-    const sanitizedSentiment = sentimentLine
+    // Safeguard: Sanitize observation to strip any accidental placeholders
+    const cleanObservation = sanitizedObservation
         .replace(/TOKEN\s*(?:by\s*)?@\w+/gi, "")
         .replace(/TOKEN\d?/gi, "")
         .replace(/notable launches include:?/gi, "")
@@ -212,7 +235,7 @@ ${batchText}
         .trim() || "Professional builder energy remains steady.";
 
     console.log("Gems:", batchGems);
-    console.log("Sentiment:", sanitizedSentiment);
+    console.log("Observation:", cleanObservation);
 
     // Step 3: Extract token name: link lines
     const tokenLines = batchGems.slice(0, 3).map(gem => {
@@ -225,26 +248,26 @@ ${batchText}
     // Step 4: Ask LLM for prose parts only (JSON)
     console.log("\nGenerating prose (JSON)...");
     const prosePrompt = `
-# Context
-Vibe Analysis: ${sanitizedSentiment}
+${characterContext}
 
-# Task: Generate curation post parts as JSON
+# Context
+Market Observation: ${cleanObservation}
+
+# Task: Generate curation post surrounding commentary as JSON in the voice of ${agentName}.
 Return a JSON object with exactly these 3 fields:
 {
-  "opening": "A short opening line about today's token activity and what caught your attention. 1 sentence max.",
-  "vibe": "A brief reflection on builder energy and sentiment based on the Vibe Analysis. 1 sentence max.",
-  "closing": "A sharp, observant closing statement. 1 sentence max."
+  "intro": "A short opening sentence about the overall token activity or builder energy. 1 sentence max.",
+  "vibe": "A brief reflection on the general ecosystem sentiment based on the Market Observation. 1 sentence max.",
+  "outro": "A sharp, observant closing statement. 1 sentence max."
 }
 
-Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
+Style: ${adjectives}. ${character.style?.all?.join(". ") || ""}
 
 STRICT NEGATIVE CONSTRAINTS:
-- NEVER mention specific token names (e.g., do not say "Skillbot AI launched...").
-- NEVER mention user handles (e.g., no "@user1").
+- NEVER mention specific token names, projects, or list anything in these fields.
 - NEVER use placeholders like "TOKEN" or "TOKEN by @user".
-- NEVER mention "notable launches" or list specific projects in these prose fields.
-- focus ONLY on general market trends, builder energy, and ecosystem sentiment.
-- The actual token list is appended automatically by the system; your job is only the surrounding commentary.
+- NEVER mention "notable launches" or "what caught your attention".
+- These fields provide surrounding context only; the actual list of projects is injected by the system separately.
 
 Return ONLY valid JSON, no commentary or markdown formatting.`;
 
@@ -256,32 +279,28 @@ Return ONLY valid JSON, no commentary or markdown formatting.`;
     const raw = res.choices[0].message.content || "";
     
     // Step 5: Parse JSON
-    let opening = "", vibe = "", closing = "";
+    let intro = "", vibe = "", outro = "";
     try {
         const cleaned = raw.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
         const parsed = JSON.parse(cleaned);
         
-        // Safeguard: Strip any common placeholders or "TOKEN by @user" hallucinations
-        const stripPlaceholders = (text: string) => 
-            text?.replace(/TOKEN\s*(?:by\s*)?@\w+/gi, "")
-                .replace(/TOKEN\d?/gi, "")
-                .replace(/notable launches include:?/gi, "")
-                .replace(/\s*,\s*and\s*/gi, " ")
-                .replace(/\s\s+/g, " ")
-                .trim();
+        // Keep it clean but natural. We've hardened the prompt, so we just do a 
+        // light pass to ensure no generic "TOKEN" or "TOKENS" words remained.
+        const clean = (text: string) => 
+            text?.replace(/\bTOKEN\d?S?\b/gi, "").replace(/\s\s+/g, " ").trim();
 
-        opening = stripPlaceholders(parsed.opening || "");
-        vibe = stripPlaceholders(parsed.vibe || "");
-        closing = stripPlaceholders(parsed.closing || "");
+        intro = clean(parsed.intro || "");
+        vibe = clean(parsed.vibe || "");
+        outro = clean(parsed.outro || "");
     } catch (e) {
         console.error("Failed to parse JSON, using raw response");
-        opening = raw.trim();
+        intro = raw.trim();
     }
 
     // Step 6: Assemble final post with blank lines around tokens
-    const proseTop = [opening, vibe].filter(p => p.length > 0).join("\n");
+    const proseTop = [intro, vibe].filter(p => p.length > 0).join("\n");
     const tokenBlock = tokenLines.join("\n");
-    const assembledPost = [proseTop, "", tokenBlock, "", closing].filter((p, i) => {
+    const assembledPost = [proseTop, "", tokenBlock, "", outro].filter((p, i) => {
         if (p === "") return i > 0 && i < 4;
         return p.length > 0;
     }).join("\n");

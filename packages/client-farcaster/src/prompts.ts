@@ -132,25 +132,23 @@ export const curationPostTemplate =
     headerTemplate +
     `
 # Context
-Vibe Analysis: {{batchSentiments}}
+Market Observation: {{batchSentiments}}
 
-# Task: Generate curation post parts as JSON
+# Task: Generate curation post surrounding commentary as JSON
 Return a JSON object with exactly these 3 fields:
 {
-  "opening": "A short opening line about today's token activity and what caught your attention. 1 sentence max.",
-  "vibe": "A brief reflection on builder energy and sentiment based on the Vibe Analysis. 1 sentence max.",
-  "closing": "A sharp, observant closing statement. 1 sentence max."
+  "intro": "A short opening sentence about the overall token activity or builder energy. 1 sentence max.",
+  "vibe": "A brief reflection on the general ecosystem sentiment based on the Market Observation. 1 sentence max.",
+  "outro": "A sharp, observant closing statement. 1 sentence max."
 }
 
 Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
 
 STRICT NEGATIVE CONSTRAINTS:
-- NEVER mention specific token names (e.g., do not say "Skillbot AI launched...").
-- NEVER mention user handles (e.g., no "@user1").
+- NEVER mention specific token names, projects, or list anything in these fields.
 - NEVER use placeholders like "TOKEN" or "TOKEN by @user".
-- NEVER mention "notable launches" or list specific projects in these prose fields.
-- focus ONLY on general market trends, builder energy, and ecosystem sentiment.
-- The actual token list is appended automatically by the system; your job is only the surrounding commentary.
+- NEVER mention "notable launches" or "what caught your attention".
+- These fields provide surrounding context only; the actual list of projects is injected by the system separately.
 
 Return ONLY valid JSON, no commentary or markdown formatting.`;
 
