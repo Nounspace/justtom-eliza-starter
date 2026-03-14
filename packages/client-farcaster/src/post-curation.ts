@@ -86,8 +86,9 @@ export class FarcasterCurationManager {
                 return;
             }
 
-            // Phase 1: Stats Post
+            // Phase 1: Stats Post (Silent/Console Only by default)
             // ---------------------
+            const POST_STATS_PREAMBLE = false;
             const today = new Date().toISOString().split('T')[0];
             const deployCountStr = await this.runtime.cacheManager.get<string>(`farcaster/stats/${today}/total_deployments`) || "0";
             const lowRepCountStr = await this.runtime.cacheManager.get<string>(`farcaster/stats/${today}/low_reputation_filtered`) || "0";
@@ -120,13 +121,8 @@ export class FarcasterCurationManager {
 
             const statsContent = statsResponse.replace(/^"|"$/g, '').trim().slice(0, MAX_CAST_LENGTH);
 
-            // Update last curation post timestamp in cache immediately so we don't trigger again
-            await this.runtime.cacheManager.set("farcaster/" + this.fid + "/lastCurationPost", {
-                timestamp: Date.now(),
-            });
-
-            if (this.runtime.getSetting("FARCASTER_DRY_RUN") === "true") {
-                elizaLogger.info(`DRY RUN: Stats cast would be: ${statsContent}`);
+            if (this.runtime.getSetting("FARCASTER_DRY_RUN") === "true" || !POST_STATS_PREAMBLE) {
+                elizaLogger.info(`[SILENT STATS]: ${statsContent}`);
             } else {
                 try {
                     await sendCast({
@@ -143,9 +139,9 @@ export class FarcasterCurationManager {
                 }
             }
 
-            // Wait 10 minutes before ranking and posting the actual Gems
-            elizaLogger.info("Waiting 10 minutes before ranking and posting final curation gems...");
-            if (this.runtime.getSetting("FARCASTER_DRY_RUN") !== "true") {
+            // Wait 10 minutes before ranking and posting the actual Gems if the preamble was posted
+            if (POST_STATS_PREAMBLE && this.runtime.getSetting("FARCASTER_DRY_RUN") !== "true") {
+                elizaLogger.info("Waiting 10 minutes before ranking and posting final curation gems...");
                 await new Promise(resolve => setTimeout(resolve, 600000)); // 600000ms = 10 mins
             }
 
@@ -166,8 +162,14 @@ export class FarcasterCurationManager {
 # Task: Identify high-potential token launches from these Farcaster messages.
 # Instructions:
 1. Identify the top 2-3 "Gems". Return them in this format: "GEMS: TOKEN_NAME [Link: http://...]".
-2. Provide a 1-sentence "Sentiment" or "Reason" for this batch (e.g., "AI tokens are showing strong builder intent"). Return it as "SENTIMENT: [Reason]".
-- The message might look like "Token X deployed... [Link: http://...]". Capture both.
+2. Provide a 1-sentence "Sentiment" or "Reason" for this batch. 
+   - STRICT RULE: The sentiment/reason MUST be general.
+   - NEVER include token names, user handles, or placeholders like "TOKEN" or "TOKEN by @user" in the sentiment.
+   - Example Good: "AI and utility tokens are showing strong builder intent."
+   - Example Bad: "Notable launches include TOKEN by @user..."
+   - Return it as "SENTIMENT: [Reason]".
+
+- The message might look like "Token X deployed... [Link: http://...]". Capture both for GEMS.
 - Ignore noisy instructions about themes/fidgets.
 - No other text or commentary.
 
@@ -217,7 +219,18 @@ ${batchText}
             }
 
             const curatedMemories = finalists.join("\n");
-            const batchSentiments = sentiments.join(" ");
+            
+            // Safeguard: Sanitize batch sentiments to strip any accidental placeholders
+            const sanitizeSentiment = (text: string) => 
+                text?.replace(/TOKEN\s*(?:by\s*)?@\w+/gi, "")
+                    .replace(/TOKEN\d?/gi, "")
+                    .replace(/notable launches include:?/gi, "")
+                    .replace(/\s*,\s*and\s*/gi, " ")
+                    .replace(/\s\s+/g, " ")
+                    .trim();
+
+            const processedSentiments = sentiments.map(s => sanitizeSentiment(s)).filter(s => s.length > 0);
+            const batchSentiments = processedSentiments.join(" ");
             elizaLogger.info(`Curation finalists selected: ${finalists.length}`);
 
             // 4. Extract token names + links from finalists for programmatic injection
@@ -272,9 +285,19 @@ ${batchText}
                 // Strip markdown code fences if present
                 const cleaned = llmResponse.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
                 const parsed = JSON.parse(cleaned);
-                opening = parsed.opening || "";
-                vibe = parsed.vibe || "";
-                closing = parsed.closing || "";
+                
+                // Safeguard: Strip any common placeholders or "TOKEN by @user" hallucinations
+                const stripPlaceholders = (text: string) => 
+                    text?.replace(/TOKEN\s*(?:by\s*)?@\w+/gi, "")
+                        .replace(/TOKEN\d?/gi, "")
+                        .replace(/notable launches include:?/gi, "")
+                        .replace(/\s*,\s*and\s*/gi, " ")
+                        .replace(/\s\s+/g, " ")
+                        .trim();
+
+                opening = stripPlaceholders(parsed.opening || "");
+                vibe = stripPlaceholders(parsed.vibe || "");
+                closing = stripPlaceholders(parsed.closing || "");
             } catch (e) {
                 elizaLogger.warn("Curation: Failed to parse JSON from LLM, using raw response");
                 opening = llmResponse.trim();
@@ -295,6 +318,11 @@ ${batchText}
                 .trim();
 
             let content = slice.slice(0, MAX_CAST_LENGTH);
+
+            // Update last curation post timestamp in cache so it doesn't spam Farcaster repeatedly
+            await this.runtime.cacheManager.set("farcaster/" + this.fid + "/lastCurationPost", {
+                timestamp: Date.now(),
+            });
 
             if (content.length > MAX_CAST_LENGTH) content = content.slice(0, content.lastIndexOf("\n"));
             if (content.length > MAX_CAST_LENGTH) content = content.slice(0, content.lastIndexOf("."));

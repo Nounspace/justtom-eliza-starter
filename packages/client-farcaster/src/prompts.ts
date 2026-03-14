@@ -144,9 +144,13 @@ Return a JSON object with exactly these 3 fields:
 
 Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
 
-CRITICAL RULES:
-- Do NOT mention specific token counts or numbers.
-- Do NOT hallucinate token names or users (e.g., absolutely no "TOKEN by @user"). Make the prose about the *general* activity.
+STRICT NEGATIVE CONSTRAINTS:
+- NEVER mention specific token names (e.g., do not say "Skillbot AI launched...").
+- NEVER mention user handles (e.g., no "@user1").
+- NEVER use placeholders like "TOKEN" or "TOKEN by @user".
+- NEVER mention "notable launches" or list specific projects in these prose fields.
+- focus ONLY on general market trends, builder energy, and ecosystem sentiment.
+- The actual token list is appended automatically by the system; your job is only the surrounding commentary.
 
 Return ONLY valid JSON, no commentary or markdown formatting.`;
 

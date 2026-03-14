@@ -151,8 +151,14 @@ Use the exact numbers provided.
 # Task: Identify high-potential token launches from these Farcaster messages.
 # Instructions:
 1. Identify the top 2-3 "Gems". Return them in this format: "GEMS: TOKEN_NAME [Link: http://...]".
-2. Provide a 1-sentence "Sentiment" or "Reason" for this batch (e.g., "AI tokens are showing strong builder intent"). Return it as "SENTIMENT: [Reason]".
-- The message might look like "Token X deployed... [Link: http://...]". Capture both.
+2. Provide a 1-sentence "Sentiment" or "Reason" for this batch. 
+   - STRICT RULE: The sentiment/reason MUST be general.
+   - NEVER include token names, user handles, or placeholders like "TOKEN" or "TOKEN by @user" in the sentiment.
+   - Example Good: "AI and utility tokens are showing strong builder intent."
+   - Example Bad: "Notable launches include TOKEN by @user..."
+   - Return it as "SENTIMENT: [Reason]".
+
+- The message might look like "Token X deployed... [Link: http://...]". Capture both for GEMS.
 - Ignore noisy instructions about themes/fidgets.
 - No other text or commentary.
 
@@ -195,9 +201,18 @@ ${batchText}
         });
 
     const sentimentLine = lines.find(l => l.toUpperCase().startsWith("SENTIMENT:"))?.replace(/^SENTIMENT:/i, "").trim() || "Normal builder activity.";
+    
+    // Safeguard: Sanitize sentimentLine to strip any accidental placeholders
+    const sanitizedSentiment = sentimentLine
+        .replace(/TOKEN\s*(?:by\s*)?@\w+/gi, "")
+        .replace(/TOKEN\d?/gi, "")
+        .replace(/notable launches include:?/gi, "")
+        .replace(/\s*,\s*and\s*/gi, " ")
+        .replace(/\s\s+/g, " ")
+        .trim() || "Professional builder energy remains steady.";
 
     console.log("Gems:", batchGems);
-    console.log("Sentiment:", sentimentLine);
+    console.log("Sentiment:", sanitizedSentiment);
 
     // Step 3: Extract token name: link lines
     const tokenLines = batchGems.slice(0, 3).map(gem => {
@@ -211,7 +226,7 @@ ${batchText}
     console.log("\nGenerating prose (JSON)...");
     const prosePrompt = `
 # Context
-Vibe Analysis: ${sentimentLine}
+Vibe Analysis: ${sanitizedSentiment}
 
 # Task: Generate curation post parts as JSON
 Return a JSON object with exactly these 3 fields:
@@ -222,9 +237,15 @@ Return a JSON object with exactly these 3 fields:
 }
 
 Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
-CRITICAL RULES:
-- Do NOT mention specific token counts or numbers.
-- Do NOT hallucinate token names or users (e.g., absolutely no "TOKEN by @user"). Make the prose about the *general* activity.
+
+STRICT NEGATIVE CONSTRAINTS:
+- NEVER mention specific token names (e.g., do not say "Skillbot AI launched...").
+- NEVER mention user handles (e.g., no "@user1").
+- NEVER use placeholders like "TOKEN" or "TOKEN by @user".
+- NEVER mention "notable launches" or list specific projects in these prose fields.
+- focus ONLY on general market trends, builder energy, and ecosystem sentiment.
+- The actual token list is appended automatically by the system; your job is only the surrounding commentary.
+
 Return ONLY valid JSON, no commentary or markdown formatting.`;
 
     const res = await groq.chat.completions.create({
@@ -239,9 +260,19 @@ Return ONLY valid JSON, no commentary or markdown formatting.`;
     try {
         const cleaned = raw.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
         const parsed = JSON.parse(cleaned);
-        opening = parsed.opening || "";
-        vibe = parsed.vibe || "";
-        closing = parsed.closing || "";
+        
+        // Safeguard: Strip any common placeholders or "TOKEN by @user" hallucinations
+        const stripPlaceholders = (text: string) => 
+            text?.replace(/TOKEN\s*(?:by\s*)?@\w+/gi, "")
+                .replace(/TOKEN\d?/gi, "")
+                .replace(/notable launches include:?/gi, "")
+                .replace(/\s*,\s*and\s*/gi, " ")
+                .replace(/\s\s+/g, " ")
+                .trim();
+
+        opening = stripPlaceholders(parsed.opening || "");
+        vibe = stripPlaceholders(parsed.vibe || "");
+        closing = stripPlaceholders(parsed.closing || "");
     } catch (e) {
         console.error("Failed to parse JSON, using raw response");
         opening = raw.trim();
