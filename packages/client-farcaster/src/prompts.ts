@@ -144,11 +144,11 @@ Return a JSON object with exactly these 3 fields:
 
 Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
 
+These fields provide surrounding context only; the actual list of projects is injected by the system separately.
+
 STRICT NEGATIVE CONSTRAINTS:
 - NEVER mention specific token names, projects, or list anything in these fields.
-- NEVER use placeholders like "TOKEN" or "TOKEN by @user".
 - NEVER mention "notable launches" or "what caught your attention".
-- These fields provide surrounding context only; the actual list of projects is injected by the system separately.
 
 Return ONLY valid JSON, no commentary or markdown formatting.`;
 
