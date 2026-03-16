@@ -134,23 +134,23 @@ export const curationPostTemplate =
 # Context
 Market Observation: {{batchSentiments}}
 
-# Task: Generate curation post surrounding commentary as JSON
-Return a JSON object with exactly these 3 fields:
+# Task: Generate curation post surrounding commentary
+Return exactly this JSON structure:
 {
   "intro": "A short opening sentence about the overall token activity or builder energy. 1 sentence max.",
   "vibe": "A brief reflection on the general ecosystem sentiment based on the Market Observation. 1 sentence max.",
   "outro": "A sharp, observant closing statement. 1 sentence max."
 }
 
-Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
-
-These fields provide surrounding context only; the actual list of projects is injected by the system separately.
+# Rules
+- Style: Professional, observant, builder-focused. No emojis. No generic praise. Concise.
+- Use the voice of the character provided in the bio and lore.
+- These fields provide surrounding context only; the actual list of projects is injected by the system separately.
 
 STRICT NEGATIVE CONSTRAINTS:
-- NEVER mention specific token names, projects, or list anything in these fields.
+- NEVER mention specific token names, URLs, or project descriptions.
 - NEVER mention "notable launches" or "what caught your attention".
-
-Return ONLY valid JSON, no commentary or markdown formatting.`;
+- Return ONLY the JSON object. Do not wrap in markdown code fences. Do not include any other text.`;
 
 export const curationStatsTemplate =
     headerTemplate +

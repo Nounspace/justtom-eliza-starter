@@ -276,14 +276,33 @@ Return ONLY valid JSON, no commentary or markdown formatting.`;
         model,
     });
 
-    const raw = res.choices[0].message.content || "";
+    let raw = res.choices[0].message.content || "";
     
+    // Venice Hardening: Strip Llama meta-tags
+    raw = raw
+        .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, "")
+        .replace(/<\|start_header_id\|>.*?<\|end_header_id\|>\s*\n*/g, "")
+        .replace(/<\|reserved_special_token_.*?\|>\s*\n*/g, "");
+
     // Step 5: Parse JSON
     let intro = "", vibe = "", outro = "";
-    try {
-        const cleaned = raw.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
-        const parsed = JSON.parse(cleaned);
-        
+    
+    const parseJSONObjectFromText = (text: string) => {
+        const start = text.indexOf('{');
+        const end = text.lastIndexOf('}');
+        if (start !== -1 && end !== -1 && end > start) {
+            try {
+                return JSON.parse(text.substring(start, end + 1));
+            } catch (e) {
+                return null;
+            }
+        }
+        return null;
+    };
+
+    const parsed = parseJSONObjectFromText(raw);
+    
+    if (parsed && (parsed.intro || parsed.vibe || parsed.outro)) {
         // Keep it clean but natural. We've hardened the prompt, so we just do a 
         // light pass to ensure no generic "TOKEN" or "TOKENS" words remained.
         const clean = (text: string) => 
@@ -292,9 +311,9 @@ Return ONLY valid JSON, no commentary or markdown formatting.`;
         intro = clean(parsed.intro || "");
         vibe = clean(parsed.vibe || "");
         outro = clean(parsed.outro || "");
-    } catch (e) {
-        console.error("Failed to parse JSON, using raw response");
-        intro = raw.trim();
+    } else {
+        console.error("Failed to parse JSON, using fallback commentary");
+        intro = cleanObservation;
     }
 
     // Step 6: Assemble final post with blank lines around tokens

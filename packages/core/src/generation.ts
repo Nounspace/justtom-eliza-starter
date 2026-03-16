@@ -1166,7 +1166,9 @@ export async function generateText({
                 // elizaLogger.warn(veniceResponse)
                 //rferrari: remove all text from <think> to </think>\n\n
                 response = veniceResponse
-                    .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, '');
+                    .replace(/<think>[\s\S]*?<\/think>\s*\n*/g, "")
+                    .replace(/<\|start_header_id\|>.*?<\|end_header_id\|>\s*\n*/g, "")
+                    .replace(/<\|reserved_special_token_.*?\|>\s*\n*/g, "");
                 // elizaLogger.warn(response)
 
                 // response = veniceResponse;

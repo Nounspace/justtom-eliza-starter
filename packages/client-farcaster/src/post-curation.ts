@@ -5,6 +5,7 @@ import {
     ModelClass,
     stringToUuid,
     elizaLogger,
+    parseJSONObjectFromText,
 } from "@elizaos/core";
 
 import type { FarcasterClient } from "./client";
@@ -257,7 +258,7 @@ ${batchText}
                 },
                 {
                     farcasterUsername: profile.username,
-                    batchSentiments: batchSentiments || "Normal builder activity.",
+                    batchSentiments: batchSentiments || "Professional builder energy remains steady.",
                     weekday,
                 }
             );
@@ -280,11 +281,9 @@ ${batchText}
             let vibe = "";
             let outro = "";
 
-            try {
-                // Strip markdown code fences if present
-                const cleaned = llmResponse.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
-                const parsed = JSON.parse(cleaned);
-                
+            const parsed = parseJSONObjectFromText(llmResponse);
+            
+            if (parsed && (parsed.intro || parsed.vibe || parsed.outro)) {
                 // Keep it clean but natural. We've hardened the prompt, so we just do a 
                 // light pass to ensure no generic "TOKEN" or "TOKENS" words remained.
                 const clean = (text: string) => 
@@ -293,9 +292,13 @@ ${batchText}
                 intro = clean(parsed.intro || "");
                 vibe = clean(parsed.vibe || "");
                 outro = clean(parsed.outro || "");
-            } catch (e) {
-                elizaLogger.warn("Curation: Failed to parse JSON from LLM, using raw response");
-                intro = llmResponse.trim();
+            } else {
+                elizaLogger.warn("Curation: Failed to parse JSON from LLM, using fallback commentary");
+                // Safety fallback: Use the Market Observation itself if we can't get good prose
+                intro = (batchSentiments || "Professional builder energy remains steady.")
+                    .replace(/\bTOKEN\d?S?\b/gi, "")
+                    .replace(/\s\s+/g, " ")
+                    .trim();
             }
 
             // 7. Assemble final post: prose + token links + closing
