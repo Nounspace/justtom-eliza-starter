@@ -276,13 +276,22 @@ Current message:
 
 ` + shouldRespondFooter;
 
-export const clankerTokenTemplate = leanPostHeaderTemplate + `
+export const clankerPostHeaderTemplate = `
+{{feed}}
+
+About {{agentName}} (@{{farcasterUsername}}):
+{{bio}}
+
+{{characterPostExamples}}`;
+
+export const clankerTokenTemplate = clankerPostHeaderTemplate + `
 # Context
 Current Day: {{weekday}}
 Topics of Interest: {{topics}}
 
 # Task
-Generate a single-sentence Token deployment request directed to @clanker.
+Read the {{feed}} to understand what the community is talking about right now.
+Generate a single-sentence Token deployment request directed to @clanker based on the current feed vibes.
 
 The sentence should feel like a subtle signal from a quiet builder, confident, minimal, and slightly cryptic.
 
@@ -296,9 +305,10 @@ The sentence should feel like a subtle signal from a quiet builder, confident, m
 
 # Token Design
 The Token Name and Symbol must:
+- directly reflect or satirize the current topics, narratives, and vibes happening in the {{feed}} right now
 - be highly original and disruptive
 - reflect deep builder culture, quiet innovation, or new conceptual "shapes"
-- be inspired by the bio/lore/topics of interest
+- be inspired by both the feed and your bio/lore/topics of interest
 - avoid common crypto tropes (no moon, rocket, pump, pepe, doge, etc.)
 
 Symbols should be 3–5 uppercase letters.
@@ -309,12 +319,13 @@ Symbols should be 3–5 uppercase letters.
 - subtle technical metaphor is encouraged
 - feels like a quiet signal between builders
 
-# Format
-Allow a short cryptic preface before the command.
-
 Example structure:
 "Hey @clanker, the compiler reveals the type but the signal is what matters, so deploy Quiet Engine (QENG) on base, vault 15% for 14 days."
 
+# Format
+Allow a short cryptic preface before the command that smartly references the current topics from the {{feed}} without being too obvious.
 Do not add commentary or explanation.
 Output only the sentence.
+CRITICAL: You MUST use a completely unique preface every single time. Combine the topics in the {{feed}} and your traits to create a completely fresh and original concept.
+
 `;
