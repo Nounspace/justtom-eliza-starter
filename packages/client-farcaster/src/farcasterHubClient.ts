@@ -1336,8 +1336,6 @@ export class FarcasterHubClient {
 
         const contractAddress = this.extractContractAddress(cast.text);
         const clankerSpaceLink = contractAddress ? `https://clanker.space/t/base/${contractAddress}` : "";
-        const deployerInfo = await this.fetchDeployerInfo(cast.inReplyTo?.fid!);
-        const username = deployerInfo?.username || "unknown";
 
         if (!contractAddress) {
             elizaLogger.debug("Farcaster: Clanker: Missing Contract Address");
@@ -1349,6 +1347,9 @@ export class FarcasterHubClient {
             elizaLogger.debug("Farcaster: Clanker: Missing cast.inReplyTo.fid");
             return undefined;
         }
+
+        const deployerInfo = await this.fetchDeployerInfo(parentFid);
+        const username = deployerInfo?.username || "unknown";
 
         if (!deployerInfo) {
             elizaLogger.debug("Farcaster: Clanker: Missing Deployer Info");
